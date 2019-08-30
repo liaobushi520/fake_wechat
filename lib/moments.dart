@@ -13,6 +13,8 @@ class MomentsPage extends StatefulWidget {
   }
 }
 
+final items = ["1", "2", "3", "4", "5", "6", "7," "8", "9", "10"];
+
 class MomentsState extends State<MomentsPage> {
   @override
   Widget build(BuildContext context) {
@@ -33,6 +35,10 @@ class MomentsState extends State<MomentsPage> {
       ),
       SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
+          if (index == items.length - 1) {
+             items.add("#");
+          }
+
           if (index % 2 == 0) {
             return buildMomentItem(buildImageGrid2([
               "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg",
@@ -40,7 +46,7 @@ class MomentsState extends State<MomentsPage> {
             ]));
           }
           return buildMomentItem(Text("$index"));
-        }, childCount: 1000),
+        }, childCount: items.length),
       )
     ]));
   }

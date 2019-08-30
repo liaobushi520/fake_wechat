@@ -3,13 +3,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/photo_preview.dart';
+import 'package:flutter_app/test.dart';
 
 import 'package:flutter_package/image_banner.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
+
+import 'package:observable_ui/widgets.dart';
 import 'chat_model.dart';
+
 import 'moments.dart';
 
 void main() => runApp(MyApp());
@@ -74,8 +78,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       ),
       body: WillPopScope(
           onWillPop: () {
-            if (model.panelVisible) {
-              model.toggleToolkit();
+            if (model.panelVisible.value) {
+              model.panelVisible.setValue(!model.panelVisible.value);
               return Future.value(false);
             }
             return Future.value(true);
@@ -86,14 +90,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               children: <Widget>[
                 Expanded(child: DialoguePanel()),
                 ControlPanel(),
-                Visibility(
+                VisibilityEx(
                   child: ToolkitPanel(),
                   visible: model.panelVisible,
                 )
               ],
             )),
             Center(
-                child: Visibility(
+                child: VisibilityEx(
               child: SoundRecordingIndicator(),
               visible: model.recording,
             ))
@@ -109,10 +113,9 @@ class DialoguePanel extends StatelessWidget {
       color: Color(0xfff1f1f1),
       padding: EdgeInsets.only(left: 16, right: 16),
       child: Consumer<ChatModel>(builder: (context, chatModel, child) {
-        return ListView.builder(
-            itemCount: chatModel.msgList.length,
-            itemBuilder: (context, index) {
-              final item = chatModel.msgList[index];
+        return ListViewEx(
+            items: chatModel.msgList,
+            itemBuilder: (context, item) {
               StatelessWidget itemWidget;
               if (item is Message) {
                 switch (item.type) {
@@ -142,32 +145,38 @@ class DialoguePanel extends StatelessWidget {
                 itemWidget = Text("暂不支持此类型消息");
               }
 
-              return Padding(
-                  child: GestureDetector(
-                    child: itemWidget,
-                    onLongPressStart: (details) {
-                      print(details.globalPosition);
-                      print(details.localPosition);
-                      showMenu(
-                          context: context,
-                          position: RelativeRect.fromLTRB(
-                              -details.globalPosition.dx,
-                              details.globalPosition.dy,
-                              0,
-                              0),
-                          items: [
-                            PopupMenuItem(
-                              value: "删除",
-                              child: Text("删除"),
-                            ),
-                            PopupMenuItem(
-                              value: "复制",
-                              child: Text("复制"),
-                            )
-                          ]);
-                    },
-                  ),
-                  padding: EdgeInsets.only(top: 10, bottom: 10));
+              return Dismissible(
+                key: ValueKey(item),
+                child: Padding(
+                    child: GestureDetector(
+                      child: itemWidget,
+                      onLongPressStart: (details) {
+                        print(details.globalPosition);
+                        print(details.localPosition);
+                        showMenu(
+                            context: context,
+                            position: RelativeRect.fromLTRB(
+                                -details.globalPosition.dx,
+                                details.globalPosition.dy,
+                                0,
+                                0),
+                            items: [
+                              PopupMenuItem(
+                                value: "删除",
+                                child: Text("删除"),
+                              ),
+                              PopupMenuItem(
+                                value: "复制",
+                                child: Text("复制"),
+                              )
+                            ]);
+                      },
+                    ),
+                    padding: EdgeInsets.only(top: 10, bottom: 10)),
+                onDismissed: (direction) {
+                  chatModel.msgList.remove(item);
+                },
+              );
             });
       }),
     );
@@ -195,61 +204,67 @@ class InputModeTransformation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Provider.of<ChatModel>(context);
-    if (model.inputMode) {
-      return Container(
-          padding: EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: Color(0xffbdbdbd),
-              width: 1.0,
-            ),
-          ),
-          alignment: Alignment.centerLeft,
-          child: EditableText(
-              style: TextStyle(color: Color(0xff000000)),
-              cursorColor: Color(0xff246786),
-              backgroundCursorColor: Color(0xff457832),
-              focusNode: FocusNode(),
-              maxLines: 5,
-              minLines: 1,
-              textAlign: TextAlign.start,
-              controller: TextEditingController(),
-              onChanged: (text) {
-                model.inputText = text;
-              }));
-    }
 
-    return GestureDetector(
-        onLongPressStart: (details) async {
-          model.toggleSoundRecording();
-          model.recordUri = await model.flutterSound.startRecorder(null);
-          print('startRecorder: $model.recordUri');
-          model.recorderSubscription =
-              model.flutterSound.onRecorderStateChanged.listen((e) {
-            model.duration = e.currentPosition.toInt();
-            print(e.currentPosition.toInt());
-          });
-        },
-        onLongPressEnd: (details) async {
-          String result = await model.flutterSound.stopRecorder();
-          print('stopRecorder: $result');
-          if (model.recorderSubscription != null) {
-            model.recorderSubscription.cancel();
-            model.recorderSubscription = null;
-          }
-          if (model.recordUri == null || model.recordUri.length <= 0) {
-            return;
-          }
-          model.sendMessage(
-              Message(2, url: model.recordUri, duration: model.duration));
-          model.recordUri = null;
-          model.duration = 0;
-          model.toggleSoundRecording();
-        },
-        child: RaisedButton(
-          child: Text("按住 说话"),
-          onPressed: () {},
-        ));
+    return ExchangeEx(
+        child1: Container(
+            padding: EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Color(0xffbdbdbd),
+                width: 1.0,
+              ),
+            ),
+            alignment: Alignment.centerLeft,
+            child: ObservableBridge(
+              data: [model.inputText],
+              childBuilder: (context) {
+                return EditableText(
+                    style: TextStyle(color: Color(0xff000000)),
+                    cursorColor: Color(0xff246786),
+                    backgroundCursorColor: Color(0xff457832),
+                    focusNode: FocusNode(),
+                    maxLines: 5,
+                    minLines: 1,
+                    textAlign: TextAlign.start,
+                    controller:
+                        TextEditingController(text: model.inputText.value),
+                    onChanged: (text) {
+                      model.inputText.setValue(text);
+                    });
+              },
+            )),
+        child2: GestureDetector(
+            onLongPressStart: (details) async {
+              model.recording.setValue(!model.recording.value);
+              model.recordUri = await model.flutterSound.startRecorder(null);
+              print('startRecorder: ${model.recordUri}');
+              model.recorderSubscription =
+                  model.flutterSound.onRecorderStateChanged.listen((e) {
+                model.duration = e.currentPosition.toInt();
+                print(e.currentPosition.toInt());
+              });
+            },
+            onLongPressEnd: (details) async {
+              String result = await model.flutterSound.stopRecorder();
+              print('stopRecorder: $result');
+              if (model.recorderSubscription != null) {
+                model.recorderSubscription.cancel();
+                model.recorderSubscription = null;
+              }
+              if (model.recordUri == null || model.recordUri.length <= 0) {
+                return;
+              }
+              model.msgList.add(
+                  Message(2, url: model.recordUri, duration: model.duration));
+              model.recordUri = null;
+              model.duration = 0;
+              model.recording.setValue(!model.recording.value);
+            },
+            child: RaisedButton(
+              child: Text("按住 说话"),
+              onPressed: () {},
+            )),
+        status: model.inputMode);
   }
 }
 
@@ -266,7 +281,7 @@ class ControlPanel extends StatelessWidget {
             padding: EdgeInsets.all(0),
             icon: Icon(Icons.keyboard_voice),
             onPressed: () {
-              model.toggleInputMode();
+              model.inputMode.setValue(!model.inputMode.value);
             },
           ),
           Expanded(child: InputModeTransformation()),
@@ -279,7 +294,7 @@ class ControlPanel extends StatelessWidget {
               padding: EdgeInsets.all(0),
               icon: Icon(Icons.add),
               onPressed: () {
-                model.toggleToolkit();
+                model.panelVisible.setValue(!model.panelVisible.value);
               }),
           Consumer<ChatModel>(builder: (context, chatModel, child) {
             return RaisedButton(
@@ -290,8 +305,10 @@ class ControlPanel extends StatelessWidget {
               color: Color(0xFF0D47A1),
               onPressed: () {
                 FocusScope.of(context).requestFocus();
-                chatModel.addMarker(Marker(0, DateTime.now().toString()));
-                chatModel.sendMessage(Message(0, text: model.inputText));
+                chatModel.msgList.add(Marker(0, DateTime.now().toString()));
+                print("send ${model.inputText.value}");
+                chatModel.msgList.add(Message(0, text: model.inputText.value));
+                model.inputText.setValue("");
               },
             );
           })
@@ -453,7 +470,7 @@ class ToolkitPageState extends State {
   Future sendImageMessage(BuildContext context, ImageSource source) async {
     var image = await ImagePicker.pickImage(source: source);
     if (image != null) {
-      Provider.of<ChatModel>(context).sendMessage(Message(1, file: image));
+      Provider.of<ChatModel>(context).msgList.add(Message(1, file: image));
     }
   }
 

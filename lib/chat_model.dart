@@ -4,6 +4,10 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 
+import 'package:observable_ui/core.dart';
+
+
+
 class Item {}
 
 class Message implements Item {
@@ -35,41 +39,17 @@ class ChatModel extends ChangeNotifier {
 
   String recordUri;
 
-  List<Item> msgList = [];
+  ObservableList<Item> msgList = ObservableList();
 
-  bool panelVisible = false;
+  ObservableValue<bool> panelVisible = ObservableValue(false);
 
-  bool inputMode = false;
+  ObservableValue<bool> recording = ObservableValue(false);
 
-  String inputText;
+  ObservableValue<bool> inputMode = ObservableValue(false);
+
+  ObservableValue<String> inputText=ObservableValue("");
 
   num duration;
 
-  //正在录音
-  bool recording = false;
 
-  void toggleSoundRecording() {
-    recording = !recording;
-    notifyListeners();
-  }
-
-  void toggleInputMode() {
-    inputMode = !inputMode;
-    notifyListeners();
-  }
-
-  void addMarker(Marker marker) {
-    msgList.add(marker);
-    notifyListeners();
-  }
-
-  void sendMessage(Message msg) {
-    msgList.add(msg);
-    notifyListeners();
-  }
-
-  void toggleToolkit() {
-    panelVisible = !panelVisible;
-    notifyListeners();
-  }
 }
