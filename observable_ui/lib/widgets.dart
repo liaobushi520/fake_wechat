@@ -1,18 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-
 import 'core.dart';
 
 ///ObservableBridge
-typedef WidgetBuilder = Widget Function(BuildContext context);
-
 class ObservableBridge extends StatefulWidget {
-  final WidgetBuilder childBuilder;
+  final Widget Function(BuildContext context) childBuilder;
 
   final List<Observable> data;
 
-  const ObservableBridge({Key key, this.data, this.childBuilder}) : super(key: key);
+  const ObservableBridge({Key key, this.data, this.childBuilder})
+      : super(key: key);
 
   @override
   State<ObservableBridge> createState() {
@@ -51,6 +48,81 @@ class TextExState extends StateMixinObserver<TextEx> {
   @override
   Widget build(BuildContext context) {
     return Text(this.widget.data.value);
+  }
+
+  @override
+  List<Observable> collectObservables() => [this.widget.data];
+}
+
+///EditableTextEx
+class EditableTextEx extends StatefulWidget {
+  const EditableTextEx(
+      {Key key,
+      this.data,
+      @required this.focusNode,
+      @required this.cursorColor,
+      @required this.backgroundCursorColor,
+      @required this.style,
+      this.maxLines,
+      this.minLines,
+      this.textAlign})
+      : super(key: key);
+
+  final ObservableValue<String> data;
+
+  final FocusNode focusNode;
+
+  final Color cursorColor;
+
+  final Color backgroundCursorColor;
+
+  final TextStyle style;
+
+  final int maxLines;
+
+  final int minLines;
+
+  final TextAlign textAlign;
+
+  @override
+  State<StatefulWidget> createState() {
+    return EditableTextExState();
+  }
+}
+
+class EditableTextExState extends StateMixinObserver<EditableTextEx> {
+  final TextEditingController controller = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    controller.text = this.widget.data.value;
+    return EditableText(
+      onChanged: (text) {
+        this.widget.data.value = text;
+      },
+      controller: controller,
+      focusNode: this.widget.focusNode,
+      cursorColor: this.widget.cursorColor,
+      backgroundCursorColor: this.widget.backgroundCursorColor,
+      style: this.widget.style,
+      maxLines: this.widget.maxLines,
+      minLines: this.widget.minLines,
+      textAlign: this.widget.textAlign,
+    );
+  }
+
+  @override
+  void setState(fn) {
+    if (controller.text == this.widget.data.value) {
+      return;
+    }
+    super.setState(fn);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    controller.dispose();
   }
 
   @override
@@ -131,13 +203,23 @@ class ImageExState extends StateMixinObserver<ImageEx> {
 
 ///CheckBoxEx
 class CheckboxEx extends StatefulWidget {
-  final ObservableValue<bool> value;
-
-  final ValueChanged<bool> onChanged;
+  final ObservableValue<bool> data;
 
   final Color activeColor;
 
-  const CheckboxEx({Key key, this.value, this.onChanged, this.activeColor})
+  final bool tristate;
+
+  final Color checkColor;
+
+  final MaterialTapTargetSize materialTapTargetSize;
+
+  const CheckboxEx(
+      {Key key,
+      @required this.data,
+      this.activeColor,
+      this.tristate,
+      this.checkColor,
+      this.materialTapTargetSize})
       : super(key: key);
 
   @override
@@ -148,16 +230,21 @@ class CheckboxEx extends StatefulWidget {
 
 class CheckboxExState extends StateMixinObserver<CheckboxEx> {
   @override
-  List<Observable> collectObservables() => [this.widget.value];
-
-  @override
   Widget build(BuildContext context) {
     return Checkbox(
-      value: this.widget.value.value,
-      onChanged: this.widget.onChanged,
+      value: this.widget.data.value,
+      onChanged: (v) {
+        this.widget.data.value = v;
+      },
       activeColor: this.widget.activeColor,
+      tristate: this.widget.tristate,
+      materialTapTargetSize: this.widget.materialTapTargetSize,
+      checkColor: this.widget.checkColor,
     );
   }
+
+  @override
+  List<Observable> collectObservables() => [this.widget.data];
 }
 
 ///FlatButtonEx
@@ -332,11 +419,16 @@ class ContainerExState extends StateMixinObserver<ContainerEx> {
 typedef ItemWidgetBuilder<T> = Widget Function(BuildContext context, T item);
 
 class ListViewEx<T> extends StatefulWidget {
-  const ListViewEx({this.items, @required this.itemBuilder});
+  const ListViewEx(
+      {this.items, @required this.itemBuilder, this.controller, this.primary});
 
   final ObservableList<T> items;
 
   final ItemWidgetBuilder<T> itemBuilder;
+
+  final ScrollController controller;
+
+  final bool primary;
 
   @override
   State<StatefulWidget> createState() {
@@ -355,6 +447,8 @@ class ListViewExState extends StateMixinObserver<ListViewEx> {
         return this.widget.itemBuilder(context, this.widget.items[index]);
       },
       itemCount: this.widget.items.length,
+      controller: this.widget.controller,
+      primary: this.widget.primary,
     );
   }
 }

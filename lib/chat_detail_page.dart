@@ -1,20 +1,16 @@
 import 'dart:async';
-import 'dart:io';
-
-import 'package:flutter/material.dart';
-import 'package:flutter_app/photo_preview.dart';
-import 'package:flutter_app/test.dart';
-
-import 'package:flutter_package/image_banner.dart';
-import 'package:flutter_sound/flutter_sound.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
+import 'package:flutter_app/chat_list_page.dart';
+import 'package:flutter_app/photo_preview.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:observable_ui/widgets.dart';
-import 'chat_model.dart';
+import 'package:provider/provider.dart';
 
-import 'moments.dart';
+import 'chat_model.dart';
+import 'moments_page.dart';
 
 void main() => runApp(MyApp());
 
@@ -37,7 +33,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           backgroundColor: Colors.transparent),
       home: ChangeNotifierProvider<ChatModel>(
-        child: ChatDetailPage(title: 'Flutter Demo Home Page'),
+        child: HomePage(),
         builder: (context) => ChatModel(),
       ),
     );
@@ -79,7 +75,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       body: WillPopScope(
           onWillPop: () {
             if (model.panelVisible.value) {
-              model.panelVisible.setValue(!model.panelVisible.value);
+              model.panelVisible.value = false;
               return Future.value(false);
             }
             return Future.value(true);
@@ -115,6 +111,8 @@ class DialoguePanel extends StatelessWidget {
       child: Consumer<ChatModel>(builder: (context, chatModel, child) {
         return ListViewEx(
             items: chatModel.msgList,
+            primary: false,
+            controller: chatModel.dialogueScrollControl,
             itemBuilder: (context, item) {
               StatelessWidget itemWidget;
               if (item is Message) {
@@ -169,7 +167,11 @@ class DialoguePanel extends StatelessWidget {
                                 value: "复制",
                                 child: Text("复制"),
                               )
-                            ]);
+                            ]).then((v) {
+                          if ("删除" == v) {
+                            chatModel.msgList.remove(item);
+                          }
+                        });
                       },
                     ),
                     padding: EdgeInsets.only(top: 10, bottom: 10)),
@@ -187,20 +189,78 @@ class SoundRecordingIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-        width: 200,
-        height: 200,
-        child: AspectRatio(
-          aspectRatio: 1 / 1,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Color(0x88000000),
-            ),
+      width: 200,
+      height: 200,
+      child: Container(
+          decoration: BoxDecoration(
+              color: Color(0xaa000000),
+              borderRadius: BorderRadius.all(Radius.circular(10))),
+          child: Row(
+            children: <Widget>[
+              Icon(
+                Icons.keyboard_voice,
+                size: 60,
+              ),
+              SizedBox(
+                width: 50,
+                height: 60,
+                child: CustomPaint(
+                  painter: VoiceIndicator(),
+                  size: Size(60, 80),
+                ),
+              ),
+            ],
+            mainAxisAlignment: MainAxisAlignment.center,
+          )),
+    );
+  }
+}
+
+class VoiceIndicator extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    var p = Paint();
+    p.color = Color(0xFFbdbdbd);
+    var h = size.height / 15;
+    var maxW = size.width;
+    var minW = maxW / 8;
+    for (int i = 0; i <= 7; i++) {
+      canvas.drawRect(
+          Rect.fromLTRB(0, i * h * 2, (8 - i) * minW, i * h * 2 + h), p);
+    }
+  }
+
+  @override
+  SemanticsBuilderCallback get semanticsBuilder {
+    return (Size size) {
+      // Annotate a rectangle containing the picture of the sun
+      // with the label "Sun". When text to speech feature is enabled on the
+      // device, a user will be able to locate the sun on this picture by
+      // touch.
+      var rect = Offset.zero & size;
+      var width = size.shortestSide * 0.4;
+      rect = const Alignment(0.8, -0.9).inscribe(Size(width, width), rect);
+      return [
+        CustomPainterSemantics(
+          rect: rect,
+          properties: SemanticsProperties(
+            label: 'Sun',
+            textDirection: TextDirection.ltr,
           ),
-        ));
+        ),
+      ];
+    };
+  }
+
+  @override
+  bool shouldRepaint(VoiceIndicator oldDelegate) {
+    return null;
   }
 }
 
 class InputModeTransformation extends StatelessWidget {
+  final TextEditingController controller = TextEditingController(text: "");
+
   @override
   Widget build(BuildContext context) {
     final model = Provider.of<ChatModel>(context);
@@ -215,28 +275,21 @@ class InputModeTransformation extends StatelessWidget {
               ),
             ),
             alignment: Alignment.centerLeft,
-            child: ObservableBridge(
-              data: [model.inputText],
-              childBuilder: (context) {
-                return EditableText(
-                    style: TextStyle(color: Color(0xff000000)),
-                    cursorColor: Color(0xff246786),
-                    backgroundCursorColor: Color(0xff457832),
-                    focusNode: FocusNode(),
-                    maxLines: 5,
-                    minLines: 1,
-                    textAlign: TextAlign.start,
-                    controller:
-                        TextEditingController(text: model.inputText.value),
-                    onChanged: (text) {
-                      model.inputText.setValue(text);
-                    });
-              },
+            child: EditableTextEx(
+              data: model.inputText,
+              maxLines: 5,
+              minLines: 1,
+              focusNode: FocusNode(),
+              textAlign: TextAlign.start,
+              backgroundCursorColor: Color(0xff457832),
+              cursorColor: Color(0xff246786),
+              style: TextStyle(color: Color(0xff000000)),
             )),
         child2: GestureDetector(
             onLongPressStart: (details) async {
-              model.recording.setValue(!model.recording.value);
               model.recordUri = await model.flutterSound.startRecorder(null);
+
+              model.recording.value = !model.recording.value;
               print('startRecorder: ${model.recordUri}');
               model.recorderSubscription =
                   model.flutterSound.onRecorderStateChanged.listen((e) {
@@ -258,11 +311,20 @@ class InputModeTransformation extends StatelessWidget {
                   Message(2, url: model.recordUri, duration: model.duration));
               model.recordUri = null;
               model.duration = 0;
-              model.recording.setValue(!model.recording.value);
+              model.recording.value = !model.recording.value;
             },
-            child: RaisedButton(
-              child: Text("按住 说话"),
-              onPressed: () {},
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: RaisedButton(
+                    child: Text(
+                      "按住 说话",
+                      textAlign: TextAlign.center,
+                    ),
+                    onPressed: () {},
+                  ),
+                )
+              ],
             )),
         status: model.inputMode);
   }
@@ -277,13 +339,23 @@ class ControlPanel extends StatelessWidget {
       padding: EdgeInsets.only(left: 16, right: 16),
       child: Row(
         children: <Widget>[
-          IconButton(
-            padding: EdgeInsets.all(0),
-            icon: Icon(Icons.keyboard_voice),
-            onPressed: () {
-              model.inputMode.setValue(!model.inputMode.value);
-            },
-          ),
+          ExchangeEx(
+              child1: IconButton(
+                padding: EdgeInsets.all(0),
+                icon: Icon(Icons.keyboard_voice),
+                onPressed: () {
+                  model.inputMode.value = !model.inputMode.value;
+                  model.panelVisible.value = false;
+                },
+              ),
+              child2: IconButton(
+                padding: EdgeInsets.all(0),
+                icon: Icon(Icons.keyboard),
+                onPressed: () {
+                  model.inputMode.value = !model.inputMode.value;
+                },
+              ),
+              status: model.inputMode),
           Expanded(child: InputModeTransformation()),
           IconButton(
             padding: EdgeInsets.all(0),
@@ -294,24 +366,34 @@ class ControlPanel extends StatelessWidget {
               padding: EdgeInsets.all(0),
               icon: Icon(Icons.add),
               onPressed: () {
-                model.panelVisible.setValue(!model.panelVisible.value);
+                model.panelVisible.value = !model.panelVisible.value;
+                model.inputMode.value = true;
               }),
-          Consumer<ChatModel>(builder: (context, chatModel, child) {
-            return RaisedButton(
-              child: Text(
-                "发 送",
-                style: TextStyle(color: Color(0xffffffff)),
-              ),
-              color: Color(0xFF0D47A1),
-              onPressed: () {
-                FocusScope.of(context).requestFocus();
-                chatModel.msgList.add(Marker(0, DateTime.now().toString()));
-                print("send ${model.inputText.value}");
-                chatModel.msgList.add(Message(0, text: model.inputText.value));
-                model.inputText.setValue("");
-              },
-            );
-          })
+          ObservableBridge(
+              data: [model.inputMode, model.inputText],
+              childBuilder: (context) {
+                return Visibility(
+                  child: RaisedButton(
+                    child: Text(
+                      "发 送",
+                      style: TextStyle(color: Color(0xffffffff)),
+                    ),
+                    color: Color(0xFF0D47A1),
+                    onPressed: () {
+                      FocusScope.of(context).requestFocus();
+                      model.msgList.add(Marker(0, DateTime.now().toString()));
+                      model.msgList
+                          .add(Message(0, text: model.inputText.value));
+                      model.inputText.value = "";
+                      print(model.dialogueScrollControl.position.runtimeType);
+                      model.dialogueScrollControl
+                          .jumpTo((model.msgList.length * 60).toDouble());
+                    },
+                  ),
+                  visible:
+                      model.inputMode.value && model.inputText.value.length > 0,
+                );
+              })
         ],
       ),
     );
@@ -374,13 +456,12 @@ class ImageMessage extends StatelessWidget {
 class SoundMessage extends StatelessWidget {
   SoundMessage(this.message);
 
-  FlutterSound flutterSound = FlutterSound();
-
   final Message message;
 
   @override
   Widget build(BuildContext context) {
     final radio = min(max(message.duration.toInt() / (60 * 1000), 0.3), 1);
+    final model = Provider.of<ChatModel>(context);
     return Row(
       children: <Widget>[
         Image.network(
@@ -402,7 +483,7 @@ class SoundMessage extends StatelessWidget {
                   style: TextStyle(fontSize: 16),
                 ),
                 onPressed: () {
-                  flutterSound.startPlayer(message.url);
+                  model.flutterSound.startPlayer(message.url);
                 },
               )),
         ))

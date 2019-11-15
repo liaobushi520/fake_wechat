@@ -21,6 +21,54 @@ class MomentsState extends State<MomentsPage> {
     return Scaffold(
         body: CustomScrollView(slivers: [
       SliverAppBar(
+        pinned: true,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.camera),
+            onPressed: () => {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    var body=[Card(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Text("拍摄",
+                                    style: TextStyle(
+                                        color: Colors.black, fontSize: 16)),
+                              ),
+                              Align(
+                                child: Text("照片或视频",
+                                    style: TextStyle(
+                                        color: Colors.black54, fontSize: 10)),
+                                alignment: Alignment.centerLeft,
+                              ),
+                            ],
+                          ),
+                          Divider(
+                            height: 1,
+                          ),
+                          Text(
+                            "从相册选择",
+                            style: TextStyle(color: Colors.black, fontSize: 16),
+                            textAlign: TextAlign.left,
+                          )
+                        ],
+                      ),
+                    )];
+                    Widget dialogChild = Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: body,
+                    );
+                    return Dialog(child:dialogChild ,backgroundColor: Colors.transparent,);
+                  })
+            },
+          )
+        ],
         expandedHeight: 200,
         flexibleSpace: FlexibleSpaceBar(
           background: Container(
@@ -36,9 +84,8 @@ class MomentsState extends State<MomentsPage> {
       SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
           if (index == items.length - 1) {
-             items.add("#");
+            items.add("#");
           }
-
           if (index % 2 == 0) {
             return buildMomentItem(buildImageGrid2([
               "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg",

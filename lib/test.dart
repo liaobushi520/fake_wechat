@@ -2,19 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class TestPage extends StatelessWidget {
+  final TextEditingController controller = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
-
-
     return MaterialApp(
-        home: Center(
-      child: AnimationTest(),
+        home: Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        height: 100,
+        color: Colors.orange,
+        child: EditableText(
+          controller: controller,
+          maxLines: 5,
+          minLines: 1,
+          onChanged: (text) => {},
+          focusNode: FocusNode(),
+          textAlign: TextAlign.start,
+          backgroundCursorColor: Color(0xff457832),
+          cursorColor: Color(0xff246786),
+          style: TextStyle(color: Color(0xff000000), fontSize: 20),
+        ),
+      ),
     ));
   }
 }
-
-
-
 
 class AnimationTest extends StatefulWidget {
   @override
@@ -51,4 +63,3 @@ class AnimationState extends State<AnimationTest> {
     );
   }
 }
-
