@@ -29,42 +29,48 @@ class MomentsState extends State<MomentsPage> {
               showDialog(
                   context: context,
                   builder: (context) {
-                    var body=[Card(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: Text("拍摄",
-                                    style: TextStyle(
-                                        color: Colors.black, fontSize: 16)),
-                              ),
-                              Align(
-                                child: Text("照片或视频",
-                                    style: TextStyle(
-                                        color: Colors.black54, fontSize: 10)),
-                                alignment: Alignment.centerLeft,
-                              ),
-                            ],
-                          ),
-                          Divider(
-                            height: 1,
-                          ),
-                          Text(
-                            "从相册选择",
-                            style: TextStyle(color: Colors.black, fontSize: 16),
-                            textAlign: TextAlign.left,
-                          )
-                        ],
-                      ),
-                    )];
+                    var body = [
+                      Card(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: Text("拍摄",
+                                      style: TextStyle(
+                                          color: Colors.black, fontSize: 16)),
+                                ),
+                                Align(
+                                  child: Text("照片或视频",
+                                      style: TextStyle(
+                                          color: Colors.black54, fontSize: 10)),
+                                  alignment: Alignment.centerLeft,
+                                ),
+                              ],
+                            ),
+                            Divider(
+                              height: 1,
+                            ),
+                            Text(
+                              "从相册选择",
+                              style:
+                                  TextStyle(color: Colors.black, fontSize: 16),
+                              textAlign: TextAlign.left,
+                            )
+                          ],
+                        ),
+                      )
+                    ];
                     Widget dialogChild = Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: body,
                     );
-                    return Dialog(child:dialogChild ,backgroundColor: Colors.transparent,);
+                    return Dialog(
+                      child: dialogChild,
+                      backgroundColor: Colors.transparent,
+                    );
                   })
             },
           )
@@ -88,6 +94,7 @@ class MomentsState extends State<MomentsPage> {
           }
           if (index % 2 == 0) {
             return buildMomentItem(buildImageGrid2([
+              "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg",
               "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg",
               "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg"
             ]));
@@ -150,7 +157,7 @@ class MomentsState extends State<MomentsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text("廖布斯"),
+                  Text("廖布斯",style: TextStyle(color: Colors.blueAccent),),
                   content,
                   Row(
                     children: <Widget>[
@@ -161,7 +168,10 @@ class MomentsState extends State<MomentsPage> {
                     ],
                   ),
                   buildComments([
-                    Friend(name: "李四"),
+                    Friend(
+                        name: "李四",
+                        avatar:
+                            "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg"),
                     Friend(name: "李四"),
                     Friend(name: "李四"),
                     Friend(name: "张三"),

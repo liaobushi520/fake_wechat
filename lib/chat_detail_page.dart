@@ -3,54 +3,18 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
-import 'package:flutter_app/chat_list_page.dart';
 import 'package:flutter_app/photo_preview.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:observable_ui/core.dart';
 import 'package:observable_ui/widgets.dart';
 import 'package:provider/provider.dart';
 
 import 'chat_model.dart';
+import 'entities.dart';
 import 'moments_page.dart';
-
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-          // This is the theme of your application.
-          //
-          // Try running your application with "flutter run". You'll see the
-          // application has a blue toolbar. Then, without quitting the app, try
-          // changing the primarySwatch below to Colors.green and then invoke
-          // "hot reload" (press "r" in the console where you ran "flutter run",
-          // or simply save your changes to "hot reload" in a Flutter IDE).
-          // Notice that the counter didn't reset back to zero; the application
-          // is not restarted.
-          primarySwatch: Colors.blue,
-          backgroundColor: Colors.transparent),
-      home: ChangeNotifierProvider<ChatModel>(
-        child: HomePage(),
-        builder: (context) => ChatModel(),
-      ),
-    );
-  }
-}
 
 class ChatDetailPage extends StatefulWidget {
   ChatDetailPage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -86,16 +50,26 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               children: <Widget>[
                 Expanded(child: DialoguePanel()),
                 ControlPanel(),
-                VisibilityEx(
-                  child: ToolkitPanel(),
-                  visible: model.panelVisible,
+                ObservableBridge(
+                  data: [model.panelVisible],
+                  childBuilder: (context) {
+                    return Visibility(
+                      child: ToolkitPanel(),
+                      visible: model.panelVisible.value,
+                    );
+                  },
                 )
               ],
             )),
             Center(
-                child: VisibilityEx(
-              child: SoundRecordingIndicator(),
-              visible: model.recording,
+                child: ObservableBridge(
+              data: [model.recording],
+              childBuilder: (context) {
+                return Visibility(
+                  child: SoundRecordingIndicator(),
+                  visible: model.recording.value,
+                );
+              },
             ))
           ])),
     );
@@ -109,7 +83,7 @@ class DialoguePanel extends StatelessWidget {
       color: Color(0xfff1f1f1),
       padding: EdgeInsets.only(left: 16, right: 16),
       child: Consumer<ChatModel>(builder: (context, chatModel, child) {
-        return ListViewEx(
+        return ListViewEx.builder(
             items: chatModel.msgList,
             primary: false,
             controller: chatModel.dialogueScrollControl,
@@ -217,6 +191,8 @@ class SoundRecordingIndicator extends StatelessWidget {
 }
 
 class VoiceIndicator extends CustomPainter {
+  int level = 8;
+
   @override
   void paint(Canvas canvas, Size size) {
     var p = Paint();
@@ -233,10 +209,6 @@ class VoiceIndicator extends CustomPainter {
   @override
   SemanticsBuilderCallback get semanticsBuilder {
     return (Size size) {
-      // Annotate a rectangle containing the picture of the sun
-      // with the label "Sun". When text to speech feature is enabled on the
-      // device, a user will be able to locate the sun on this picture by
-      // touch.
       var rect = Offset.zero & size;
       var width = size.shortestSide * 0.4;
       rect = const Alignment(0.8, -0.9).inscribe(Size(width, width), rect);
@@ -259,8 +231,6 @@ class VoiceIndicator extends CustomPainter {
 }
 
 class InputModeTransformation extends StatelessWidget {
-  final TextEditingController controller = TextEditingController(text: "");
-
   @override
   Widget build(BuildContext context) {
     final model = Provider.of<ChatModel>(context);
@@ -277,13 +247,16 @@ class InputModeTransformation extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: EditableTextEx(
               data: model.inputText,
-              maxLines: 5,
-              minLines: 1,
-              focusNode: FocusNode(),
-              textAlign: TextAlign.start,
-              backgroundCursorColor: Color(0xff457832),
-              cursorColor: Color(0xff246786),
-              style: TextStyle(color: Color(0xff000000)),
+              child: EditableText(
+                maxLines: 5,
+                minLines: 1,
+                focusNode: FocusNode(),
+                textAlign: TextAlign.start,
+                backgroundCursorColor: Color(0xff457832),
+                cursorColor: Color(0xff246786),
+                style: TextStyle(color: Color(0xff000000)),
+                controller: TextEditingController(),
+              ),
             )),
         child2: GestureDetector(
             onLongPressStart: (details) async {
@@ -367,6 +340,7 @@ class ControlPanel extends StatelessWidget {
               icon: Icon(Icons.add),
               onPressed: () {
                 model.panelVisible.value = !model.panelVisible.value;
+                print(model.panelVisible.value);
                 model.inputMode.value = true;
               }),
           ObservableBridge(

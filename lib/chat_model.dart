@@ -1,40 +1,16 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_sound/flutter_sound.dart';
-
 import 'package:observable_ui/core.dart';
 
-class Item {}
-
-class Message implements Item {
-  const Message(this.type, {this.file, this.text, this.url, this.duration});
-
-  final int type; //0 文本  1 图片  2 声音 3 红包
-
-  final File file;
-
-  final String text;
-
-  final String url;
-
-  final num duration;
-}
-
-class Marker implements Item {
-  const Marker(this.type, this.text);
-
-  final int type;
-
-  final String text;
-}
+import 'entities.dart';
 
 class ChatModel extends ChangeNotifier {
   final FlutterSound flutterSound = new FlutterSound();
 
-  final ScrollController dialogueScrollControl = ScrollController( );
+  final ScrollController dialogueScrollControl = ScrollController();
 
   StreamSubscription<RecordStatus> recorderSubscription;
 

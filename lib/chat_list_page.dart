@@ -1,31 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_app/entities.dart';
+import 'package:observable_ui/core.dart';
 import 'package:observable_ui/widgets.dart';
 import 'package:provider/provider.dart';
 
 import 'HomeModel.dart';
 
 class HomePage extends StatelessWidget {
-  HomePage({Key key}) : super(key: key);
-
-  PageController _pageController = PageController();
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider<HomeModel>(
-      child: _HomePage(),
-      builder: (context) => HomeModel(),
-    );
-  }
-}
-
-class _HomePage extends StatelessWidget {
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
 
   @override
   Widget build(BuildContext context) {
     final model = Provider.of<HomeModel>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: Text("微信"),
@@ -35,8 +22,8 @@ class _HomePage extends StatelessWidget {
         children: <Widget>[
           ChatListPage(),
           ChatListPage(),
+          DiscoveryPage(),
           ChatListPage(),
-          TagLayout(),
         ],
       ),
       bottomNavigationBar: ObservableBridge(
@@ -74,37 +61,150 @@ class _HomePage extends StatelessWidget {
   }
 }
 
-class TagLayout extends StatelessWidget {
+class ChatListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Flex(
-      direction: Axis.horizontal,
+    var model = Provider.of<HomeModel>(context);
+    return ListViewEx.builder(
+        items: model.chatItems,
+        itemBuilder: (context, item) {
+          return _buildChatItem(context, item);
+        });
+  }
+
+  Widget _buildChatItem(BuildContext context, item) {
+    return GestureDetector(
+      child: Container(
+          padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Row(
+            children: <Widget>[
+              Subscript(
+                //圆角头像
+                content: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.all(Radius.circular(6)),
+                      color: Colors.orange,
+                      image: DecorationImage(
+                          image: NetworkImage(
+                              "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg"))),
+                ),
+                subscript: Container(
+                  width: 16,
+                  height: 16,
+                  alignment: Alignment.center,
+                  child: Text(
+                    "11",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white, fontSize: 8),
+                  ),
+                  decoration:
+                      ShapeDecoration(shape: CircleBorder(), color: Colors.red),
+                ),
+                width: 60,
+                height: 60,
+              ),
+              SizedBox(
+                width: 8,
+              ),
+              Expanded(
+                child: Container(
+                  height: 60,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Expanded(child: Text("梁朝伟")),
+                          Text("早上10:00")
+                        ],
+                      ),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Text("暂无最近消息"),
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              )
+            ],
+          )),
+      onTap: () {
+        if (item is SubscriptionMsgBoxEntrance) {
+          Navigator.of(context).pushNamed("/subscription_box");
+          return;
+        }
+
+        Navigator.of(context).pushNamed("/chat_detail");
+      },
+    );
+  }
+}
+
+class DiscoveryPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
       children: <Widget>[
-        Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(width: 1.0, color: Color(0xFFFFDFDFDF)),
-              left: BorderSide(width: 1.0, color: Color(0xFFFFDFDFDF)),
-              right: BorderSide(width: 1.0, color: Color(0xFFFF7F7F7F)),
-              bottom: BorderSide(width: 1.0, color: Color(0xFFFF7F7F7F)),
+        GestureDetector(
+          child: Container(
+            child: Row(
+              children: <Widget>[
+                Icon(Icons.camera),
+                SizedBox(
+                  width: 8,
+                ),
+                Text("朋友圈"),
+                Spacer(),
+                Icon(Icons.chevron_right)
+              ],
             ),
-            color: Color(0xFFBFBFBF),
+            padding: EdgeInsets.all(8),
           ),
-          child: Text("艺术采光好或或或军扩或扩或过错扩或军扩军或扩军扩绿过，环境铁浮屠统一"),
-        ),
-        Text("电影"),
-        Text("文学"),
+          onTap: () {
+            Navigator.of(context).pushNamed("/moments");
+          },
+        )
       ],
     );
   }
 }
 
-class ChatListPage extends StatelessWidget {
+//实现角标
+class Subscript extends StatelessWidget {
+  final double width;
+
+  final double height;
+
+  final Widget content;
+
+  final Widget subscript;
+
+  const Subscript(
+      {Key key, this.width, this.height, this.content, this.subscript})
+      : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(itemBuilder: (context, index) {
-      return Text("111${index}");
-    });
+    return Stack(
+      children: <Widget>[
+        Container(
+            child: this.content,
+            width: this.width,
+            height: this.height,
+            alignment: Alignment.center),
+        Container(
+            child: this.subscript,
+            width: this.width,
+            height: this.height,
+            alignment: Alignment.topRight)
+      ],
+    );
   }
 }
 

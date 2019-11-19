@@ -1,88 +1,18 @@
 import 'dart:io';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+
 import 'core.dart';
 
-///ObservableBridge
-class ObservableBridge extends StatefulWidget {
-  final Widget Function(BuildContext context) childBuilder;
-
-  final List<Observable> data;
-
-  const ObservableBridge({Key key, this.data, this.childBuilder})
-      : super(key: key);
-
-  @override
-  State<ObservableBridge> createState() {
-    return ObservableBridgeState();
-  }
-}
-
-class ObservableBridgeState extends StateMixinObserver<ObservableBridge> {
-  @override
-  Widget build(BuildContext context) {
-    return widget.childBuilder(context);
-  }
-
-  @override
-  List<Observable> collectObservables() {
-    final observables = <Observable>[];
-    observables.addAll(widget.data);
-    return observables;
-  }
-}
-
-///TextEx
-
-class TextEx extends StatefulWidget {
-  const TextEx({Key key, this.data}) : super(key: key);
-
-  final ObservableValue<String> data;
-
-  @override
-  State<TextEx> createState() {
-    return TextExState();
-  }
-}
-
-class TextExState extends StateMixinObserver<TextEx> {
-  @override
-  Widget build(BuildContext context) {
-    return Text(this.widget.data.value);
-  }
-
-  @override
-  List<Observable> collectObservables() => [this.widget.data];
-}
-
-///EditableTextEx
+///EditableTextEx  support two-way binding
 class EditableTextEx extends StatefulWidget {
-  const EditableTextEx(
-      {Key key,
-      this.data,
-      @required this.focusNode,
-      @required this.cursorColor,
-      @required this.backgroundCursorColor,
-      @required this.style,
-      this.maxLines,
-      this.minLines,
-      this.textAlign})
-      : super(key: key);
+  final EditableText child;
 
   final ObservableValue<String> data;
 
-  final FocusNode focusNode;
-
-  final Color cursorColor;
-
-  final Color backgroundCursorColor;
-
-  final TextStyle style;
-
-  final int maxLines;
-
-  final int minLines;
-
-  final TextAlign textAlign;
+  const EditableTextEx({Key key, this.child, this.data}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -91,68 +21,77 @@ class EditableTextEx extends StatefulWidget {
 }
 
 class EditableTextExState extends StateMixinObserver<EditableTextEx> {
-  final TextEditingController controller = TextEditingController();
+  EditableText wrapperEditable;
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    var editableText = this.widget.child;
+    var controller = editableText.controller;
+    if (controller == null) {
+      controller = TextEditingController();
+    }
     controller.text = this.widget.data.value;
-    return EditableText(
+    wrapperEditable = EditableText(
+      style: editableText.style,
+      backgroundCursorColor: editableText.backgroundCursorColor,
+      enableInteractiveSelection: editableText.enableInteractiveSelection,
+      expands: editableText.expands,
+      cursorWidth: editableText.cursorWidth,
+      cursorOffset: editableText.cursorOffset,
+      cursorColor: editableText.cursorColor,
+      cursorOpacityAnimates: editableText.cursorOpacityAnimates,
+      focusNode: editableText.focusNode,
+      inputFormatters: editableText.inputFormatters,
+      textInputAction: editableText.textInputAction,
+      textAlign: editableText.textAlign,
+      textCapitalization: editableText.textCapitalization,
+      textDirection: editableText.textDirection,
+      textScaleFactor: editableText.textScaleFactor,
+      controller: controller,
       onChanged: (text) {
         this.widget.data.value = text;
       },
-      controller: controller,
-      focusNode: this.widget.focusNode,
-      cursorColor: this.widget.cursorColor,
-      backgroundCursorColor: this.widget.backgroundCursorColor,
-      style: this.widget.style,
-      maxLines: this.widget.maxLines,
-      minLines: this.widget.minLines,
-      textAlign: this.widget.textAlign,
+      obscureText: editableText.obscureText,
+      onEditingComplete: editableText.onEditingComplete,
+      onSelectionChanged: editableText.onSelectionChanged,
+      onSelectionHandleTapped: editableText.onSelectionHandleTapped,
+      scrollController: editableText.scrollController,
+      scrollPadding: editableText.scrollPadding,
+      scrollPhysics: editableText.scrollPhysics,
+      showCursor: editableText.showCursor,
+      showSelectionHandles: editableText.showSelectionHandles,
+      strutStyle: editableText.strutStyle,
+      selectionColor: editableText.selectionColor,
+      selectionControls: editableText.selectionControls,
+      autofocus: editableText.autofocus,
+      autocorrect: editableText.autocorrect,
+      paintCursorAboveText: editableText.paintCursorAboveText,
+      dragStartBehavior: editableText.dragStartBehavior,
+      enableSuggestions: editableText.enableSuggestions,
+      rendererIgnoresPointer: editableText.rendererIgnoresPointer,
+      minLines: editableText.minLines,
+      maxLines: editableText.maxLines,
+      forceLine: editableText.forceLine,
     );
   }
 
   @override
+  Widget build(BuildContext context) {
+    wrapperEditable.controller.text = this.widget.data.value;
+    return wrapperEditable;
+  }
+
+  @override
   void setState(fn) {
-    if (controller.text == this.widget.data.value) {
+    if (this.wrapperEditable.controller.text == this.widget.data.value) {
       return;
     }
     super.setState(fn);
   }
 
   @override
-  void dispose() {
-    super.dispose();
-    controller.dispose();
-  }
-
-  @override
   List<Observable> collectObservables() => [this.widget.data];
-}
-
-///VisibilityEx
-class VisibilityEx extends StatefulWidget {
-  const VisibilityEx({Key key, @required this.child, this.visible})
-      : super(key: key);
-
-  final ObservableValue<bool> visible;
-
-  final Widget child;
-
-  @override
-  State<StatefulWidget> createState() {
-    return VisibilityExState();
-  }
-}
-
-class VisibilityExState extends StateMixinObserver<VisibilityEx> {
-  @override
-  Widget build(BuildContext context) {
-    return Visibility(
-        child: this.widget.child, visible: this.widget.visible.value);
-  }
-
-  @override
-  List<Observable> collectObservables() => [this.widget.visible];
 }
 
 ///ImageEx
@@ -201,256 +140,131 @@ class ImageExState extends StateMixinObserver<ImageEx> {
   }
 }
 
-///CheckBoxEx
+///CheckBoxEx support two-way binding
 class CheckboxEx extends StatefulWidget {
+  final Checkbox child;
+
   final ObservableValue<bool> data;
 
-  final Color activeColor;
-
-  final bool tristate;
-
-  final Color checkColor;
-
-  final MaterialTapTargetSize materialTapTargetSize;
-
-  const CheckboxEx(
-      {Key key,
-      @required this.data,
-      this.activeColor,
-      this.tristate,
-      this.checkColor,
-      this.materialTapTargetSize})
-      : super(key: key);
+  const CheckboxEx({Key key, this.data, this.child}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return CheckboxExState();
+    return _CheckboxExState();
   }
 }
 
-class CheckboxExState extends StateMixinObserver<CheckboxEx> {
+class _CheckboxExState extends StateMixinObserver<CheckboxEx> {
+  Checkbox wrapperCheckbox;
+
   @override
-  Widget build(BuildContext context) {
-    return Checkbox(
+  void initState() {
+    super.initState();
+    var cb = this.widget.child;
+    wrapperCheckbox = Checkbox(
+      tristate: cb.tristate,
+      materialTapTargetSize: cb.materialTapTargetSize,
       value: this.widget.data.value,
+      activeColor: cb.activeColor,
+      checkColor: cb.checkColor,
       onChanged: (v) {
         this.widget.data.value = v;
       },
-      activeColor: this.widget.activeColor,
-      tristate: this.widget.tristate,
-      materialTapTargetSize: this.widget.materialTapTargetSize,
-      checkColor: this.widget.checkColor,
     );
   }
-
-  @override
-  List<Observable> collectObservables() => [this.widget.data];
-}
-
-///FlatButtonEx
-class FlatButtonEx extends StatefulWidget {
-  final Widget child;
-
-  final VoidCallback onPressed;
-
-  final ObservableValue<bool> enable;
-
-  const FlatButtonEx({Key key, this.child, this.onPressed, this.enable})
-      : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() {
-    return FlatButtonExState();
-  }
-}
-
-class FlatButtonExState extends StateMixinObserver<FlatButtonEx> {
-  @override
-  Widget build(BuildContext context) {
-    return FlatButton(
-      child: this.widget.child,
-      onPressed: this.widget.enable.value ? this.widget.onPressed : null,
-    );
-  }
-
-  @override
-  List<Observable> collectObservables() => [this.widget.enable];
-}
-
-///OpacityEx
-class OpacityEx extends StatefulWidget {
-  final ObservableValue<double> opacity;
-
-  final Widget child;
-
-  final bool alwaysIncludeSemantics;
-
-  const OpacityEx(
-      {Key key,
-      @required this.opacity,
-      this.alwaysIncludeSemantics,
-      this.child})
-      : super(key: key);
-
-  @override
-  State<OpacityEx> createState() {
-    return OpacityExState();
-  }
-}
-
-class OpacityExState extends StateMixinObserver<OpacityEx> {
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: this.widget.opacity.value,
-      child: this.widget.child,
-      alwaysIncludeSemantics: this.widget.alwaysIncludeSemantics,
-    );
-  }
-
-  @override
-  List<Observable> collectObservables() => [this.widget.opacity];
-}
-
-///LinearProgressIndicator
-class LinearProgressIndicatorEx extends StatefulWidget {
-  final ObservableValue<double> value;
-
-  final Color backgroundColor;
-
-  const LinearProgressIndicatorEx({Key key, this.value, this.backgroundColor})
-      : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() {
-    return LinearProgressIndicatorExState();
-  }
-}
-
-class LinearProgressIndicatorExState
-    extends StateMixinObserver<LinearProgressIndicatorEx> {
-  @override
-  Widget build(BuildContext context) {
-    return LinearProgressIndicator(
-      value: this.widget.value.value,
-      backgroundColor: this.widget.backgroundColor,
-    );
-  }
-
-  @override
-  List<Observable> collectObservables() => [this.widget.value];
-}
-
-///FractionallySizedBoxEx
-class FractionallySizedBoxEx extends StatefulWidget {
-  final ObservableValue<double> widthFactor;
-
-  final ObservableValue<double> heightFactor;
-
-  final AlignmentGeometry alignment;
-
-  final Widget child;
-
-  const FractionallySizedBoxEx(
-      {Key key,
-      this.widthFactor,
-      this.heightFactor,
-      this.alignment,
-      this.child})
-      : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() {
-    return FractionallySizedBoxExState();
-  }
-}
-
-class FractionallySizedBoxExState
-    extends StateMixinObserver<FractionallySizedBoxEx> {
-  @override
-  Widget build(BuildContext context) {
-    return FractionallySizedBox(
-      widthFactor: this.widget.widthFactor.value,
-      heightFactor: this.widget.heightFactor.value,
-      child: this.widget.child,
-      alignment: this.widget.alignment,
-    );
-  }
-
-  @override
-  List<Observable> collectObservables() =>
-      [this.widget.widthFactor, this.widget.heightFactor];
-}
-
-///ContainerEx
-
-class ContainerEx extends StatefulWidget {
-  final Widget child;
-
-  final ObservableValue<EdgeInsetsGeometry> padding;
-
-  final ObservableValue<EdgeInsetsGeometry> margin;
-
-  const ContainerEx({Key key, this.padding, this.margin, this.child})
-      : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() {
-    return ContainerExState();
-  }
-}
-
-class ContainerExState extends StateMixinObserver<ContainerEx> {
-  @override
-  List<Observable> collectObservables() =>
-      [this.widget.padding, this.widget.margin];
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: this.widget.child,
-      padding: this.widget.padding.value,
-      margin: this.widget.margin.value,
-    );
+    return wrapperCheckbox;
+  }
+
+  @override
+  void setState(fn) {
+    if (this.wrapperCheckbox.value == this.widget.data.value) {
+      return;
+    }
+    super.setState(fn);
+  }
+
+  @override
+  List<Observable> collectObservables() {
+    return [this.widget.data];
   }
 }
 
 ///ListViewEx
+
 typedef ItemWidgetBuilder<T> = Widget Function(BuildContext context, T item);
 
-class ListViewEx<T> extends StatefulWidget {
-  const ListViewEx(
-      {this.items, @required this.itemBuilder, this.controller, this.primary});
+class _ListViewBuilder {
+  final WidgetBuilder builder;
 
+  _ListViewBuilder(this.builder);
+}
+
+class ListViewEx<T> extends StatefulWidget {
   final ObservableList<T> items;
 
-  final ItemWidgetBuilder<T> itemBuilder;
+  final _ListViewBuilder listViewBuilder;
 
-  final ScrollController controller;
+  const ListViewEx({Key key, this.items, this.listViewBuilder})
+      : super(key: key);
 
-  final bool primary;
+  ListViewEx.builder({
+    Key key,
+    this.items,
+    Axis scrollDirection = Axis.vertical,
+    bool reverse = false,
+    ScrollController controller,
+    bool primary,
+    ScrollPhysics physics,
+    bool shrinkWrap = false,
+    EdgeInsetsGeometry padding,
+    double itemExtent,
+    @required ItemWidgetBuilder itemBuilder,
+    bool addAutomaticKeepAlives = true,
+    bool addRepaintBoundaries = true,
+    bool addSemanticIndexes = true,
+    double cacheExtent,
+    int semanticChildCount,
+    DragStartBehavior dragStartBehavior = DragStartBehavior.start,
+  })  : listViewBuilder = _ListViewBuilder((context) {
+          return ListView.builder(
+            itemBuilder: (context, index) {
+              return itemBuilder(context, items[index]);
+            },
+            scrollDirection: scrollDirection,
+            reverse: reverse,
+            controller: controller,
+            primary: primary,
+            physics: physics,
+            shrinkWrap: shrinkWrap,
+            padding: padding,
+            itemCount: items.length,
+            addAutomaticKeepAlives: addAutomaticKeepAlives,
+            addRepaintBoundaries: addRepaintBoundaries,
+            addSemanticIndexes: addSemanticIndexes,
+            cacheExtent: cacheExtent,
+            semanticChildCount: semanticChildCount,
+            dragStartBehavior: dragStartBehavior,
+          );
+        }),
+        super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return ListViewExState();
+    return _ListViewExState();
   }
 }
 
-class ListViewExState extends StateMixinObserver<ListViewEx> {
-  @override
-  List<Observable> collectObservables() => [this.widget.items];
-
+class _ListViewExState extends StateMixinObserver<ListViewEx> {
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemBuilder: (context, index) {
-        return this.widget.itemBuilder(context, this.widget.items[index]);
-      },
-      itemCount: this.widget.items.length,
-      controller: this.widget.controller,
-      primary: this.widget.primary,
-    );
+    return this.widget.listViewBuilder.builder(context);
   }
+
+  @override
+  List<Observable> collectObservables() => [this.widget.items];
 }
 
 ///ExchangeEx  child1 visible when status is true

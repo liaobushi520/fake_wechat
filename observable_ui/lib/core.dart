@@ -16,8 +16,14 @@ mixin ObserverMixin<T extends StatefulWidget> on State<T> implements Observer {
 class ObservableList<T> with ListMixin<T>, Observable {
   final List<T> _value = [];
 
+  ObservableList({List<T> initValue}) {
+    if (initValue != null) {
+      _value.addAll(initValue);
+    }
+  }
+
   @override
-  get length => _value.length;
+  int get length => _value.length;
 
   @override
   T operator [](int index) {
@@ -110,5 +116,38 @@ abstract class StateMixinObserver<T extends StatefulWidget> extends State<T>
       observable.removeObserver(this);
     });
     _observables.clear();
+  }
+}
+
+///ObservableBridge
+class ObservableBridge extends StatefulWidget {
+  final Widget Function(BuildContext context) childBuilder;
+
+  final List<Observable> data;
+
+  const ObservableBridge({Key key, @required this.data, this.childBuilder})
+      : assert(
+          childBuilder != null,
+          ' childBuilder are null.',
+        ),
+        super(key: key);
+
+  @override
+  State<ObservableBridge> createState() {
+    return _ObservableBridgeState();
+  }
+}
+
+class _ObservableBridgeState extends StateMixinObserver<ObservableBridge> {
+  @override
+  Widget build(BuildContext context) {
+    return widget.childBuilder(context);
+  }
+
+  @override
+  List<Observable> collectObservables() {
+    final observables = <Observable>[];
+    observables.addAll(widget.data);
+    return observables;
   }
 }
