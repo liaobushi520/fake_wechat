@@ -157,7 +157,10 @@ class MomentsState extends State<MomentsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text("廖布斯",style: TextStyle(color: Colors.blueAccent),),
+                  Text(
+                    "廖布斯",
+                    style: TextStyle(color: Colors.blueAccent),
+                  ),
                   content,
                   Row(
                     children: <Widget>[
