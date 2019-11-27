@@ -5,13 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_app/photo_preview.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:observable_ui/core.dart';
-import 'package:observable_ui/widgets.dart';
-import 'package:provider/provider.dart';
+import 'package:observable_ui/core2.dart';
+import 'package:observable_ui/provider.dart';
+import 'package:observable_ui/widgets2.dart';
 
 import 'chat_model.dart';
 import 'entities.dart';
-import 'moments_page.dart';
 
 class ChatDetailPage extends StatefulWidget {
   ChatDetailPage({Key key, this.title}) : super(key: key);
@@ -30,7 +29,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final model = Provider.of<ChatModel>(context);
+    final model = ViewModelProvider.of<ChatModel>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -50,7 +49,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               children: <Widget>[
                 Expanded(child: DialoguePanel()),
                 ControlPanel(),
-                ObservableBridge(
+                ListenableBridge(
                   data: [model.panelVisible],
                   childBuilder: (context) {
                     return Visibility(
@@ -62,7 +61,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               ],
             )),
             Center(
-                child: ObservableBridge(
+                child: ListenableBridge(
               data: [model.recording],
               childBuilder: (context) {
                 return Visibility(
@@ -79,89 +78,96 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 class DialoguePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    var chatModel = ViewModelProvider.of<ChatModel>(context);
     return Container(
       color: Color(0xfff1f1f1),
       padding: EdgeInsets.only(left: 16, right: 16),
-      child: Consumer<ChatModel>(builder: (context, chatModel, child) {
-        return ListViewEx.builder(
-            items: chatModel.msgList,
-            primary: false,
-            controller: chatModel.dialogueScrollControl,
-            itemBuilder: (context, item) {
-              StatelessWidget itemWidget;
-              if (item is Message) {
-                switch (item.type) {
-                  case 0:
-                    itemWidget = TextMessage(item);
-                    break;
-                  case 1:
-                    itemWidget = ImageMessage(item);
-                    break;
-                  case 2:
-                    itemWidget = SoundMessage(item);
-                    break;
-                  default:
-                    itemWidget = Text("暂不支持此类型消息");
-                    break;
-                }
-              } else if (item is Marker) {
-                switch (item.type) {
-                  case 0:
-                    itemWidget = TimeMarker(item);
-                    break;
-                  default:
-                    itemWidget = Text("暂不支持此类型消息");
-                    break;
-                }
-              } else {
-                itemWidget = Text("暂不支持此类型消息");
+      child: ListViewEx.builder(
+          items: chatModel.msgList,
+          primary: false,
+          controller: chatModel.dialogueScrollControl,
+          itemBuilder: (context, item) {
+            StatelessWidget itemWidget;
+            if (item is Message) {
+              switch (item.type) {
+                case 0:
+                  itemWidget = TextMessage(item);
+                  break;
+                case 1:
+                  itemWidget = ImageMessage(item);
+                  break;
+                case 2:
+                  itemWidget = SoundMessage(item);
+                  break;
+                default:
+                  itemWidget = Text("暂不支持此类型消息");
+                  break;
               }
+            } else if (item is Marker) {
+              switch (item.type) {
+                case 0:
+                  itemWidget = TimeMarker(item);
+                  break;
+                default:
+                  itemWidget = Text("暂不支持此类型消息");
+                  break;
+              }
+            } else {
+              itemWidget = Text("暂不支持此类型消息");
+            }
 
-              return Dismissible(
-                key: ValueKey(item),
-                child: Padding(
-                    child: GestureDetector(
-                      child: itemWidget,
-                      onLongPressStart: (details) {
-                        print(details.globalPosition);
-                        print(details.localPosition);
-                        showMenu(
-                            context: context,
-                            position: RelativeRect.fromLTRB(
-                                -details.globalPosition.dx,
-                                details.globalPosition.dy,
-                                0,
-                                0),
-                            items: [
-                              PopupMenuItem(
-                                value: "删除",
-                                child: Text("删除"),
-                              ),
-                              PopupMenuItem(
-                                value: "复制",
-                                child: Text("复制"),
-                              )
-                            ]).then((v) {
-                          if ("删除" == v) {
-                            chatModel.msgList.remove(item);
-                          }
-                        });
-                      },
-                    ),
-                    padding: EdgeInsets.only(top: 10, bottom: 10)),
-                onDismissed: (direction) {
-                  chatModel.msgList.remove(item);
-                },
-              );
-            });
-      }),
+            return Dismissible(
+              key: ValueKey(item),
+              child: Padding(
+                  child: GestureDetector(
+                    child: itemWidget,
+                    onLongPressStart: (details) {
+                      print(details.globalPosition);
+                      print(details.localPosition);
+                      showMenu(
+                          context: context,
+                          position: RelativeRect.fromLTRB(
+                              -details.globalPosition.dx,
+                              details.globalPosition.dy,
+                              0,
+                              0),
+                          items: [
+                            PopupMenuItem(
+                              value: "删除",
+                              child: Text("删除"),
+                            ),
+                            PopupMenuItem(
+                              value: "复制",
+                              child: Text("复制"),
+                            )
+                          ]).then((v) {
+                        if ("删除" == v) {
+                          chatModel.msgList.remove(item);
+                        }
+                      });
+                    },
+                  ),
+                  padding: EdgeInsets.only(top: 10, bottom: 10)),
+              onDismissed: (direction) {
+                chatModel.msgList.remove(item);
+              },
+            );
+          }),
     );
   }
 }
 
-class SoundRecordingIndicator extends StatelessWidget {
+class SoundRecordingIndicator extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return _SoundRecordingIndicator();
+  }
+}
+
+class _SoundRecordingIndicator extends State<SoundRecordingIndicator> {
   @override
   Widget build(BuildContext context) {
+    final model = ViewModelProvider.of<ChatModel>(context);
     return SizedBox(
       width: 200,
       height: 200,
@@ -179,7 +185,7 @@ class SoundRecordingIndicator extends StatelessWidget {
                 width: 50,
                 height: 60,
                 child: CustomPaint(
-                  painter: VoiceIndicator(),
+                  painter: VoiceIndicator(model.voiceLevel),
                   size: Size(60, 80),
                 ),
               ),
@@ -191,16 +197,25 @@ class SoundRecordingIndicator extends StatelessWidget {
 }
 
 class VoiceIndicator extends CustomPainter {
-  int level = 8;
+  final ValueNotifier<int> repaint;
+
+  final Paint p = Paint();
+
+  VoiceIndicator(this.repaint) : super(repaint: repaint);
 
   @override
   void paint(Canvas canvas, Size size) {
-    var p = Paint();
+    var level = min(this.repaint.value, 7);
     p.color = Color(0xFFbdbdbd);
     var h = size.height / 15;
     var maxW = size.width;
     var minW = maxW / 8;
-    for (int i = 0; i <= 7; i++) {
+    for (int i = 0; i <= level; i++) {
+      canvas.drawRect(
+          Rect.fromLTRB(0, i * h * 2, (8 - i) * minW, i * h * 2 + h), p);
+    }
+    p.color = Color(0xFF000000);
+    for (int i = level + 1; i <= 7; i++) {
       canvas.drawRect(
           Rect.fromLTRB(0, i * h * 2, (8 - i) * minW, i * h * 2 + h), p);
     }
@@ -226,14 +241,14 @@ class VoiceIndicator extends CustomPainter {
 
   @override
   bool shouldRepaint(VoiceIndicator oldDelegate) {
-    return null;
+    return repaint.value != oldDelegate.repaint.value;
   }
 }
 
 class InputModeTransformation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final model = Provider.of<ChatModel>(context);
+    final model = ViewModelProvider.of<ChatModel>(context);
 
     return ExchangeEx(
         child1: Container(
@@ -267,7 +282,7 @@ class InputModeTransformation extends StatelessWidget {
               model.recorderSubscription =
                   model.flutterSound.onRecorderStateChanged.listen((e) {
                 model.duration = e.currentPosition.toInt();
-                print(e.currentPosition.toInt());
+                model.voiceLevel.value = Random().nextInt(7);
               });
             },
             onLongPressEnd: (details) async {
@@ -306,7 +321,7 @@ class InputModeTransformation extends StatelessWidget {
 class ControlPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final model = Provider.of<ChatModel>(context);
+    final model = ViewModelProvider.of<ChatModel>(context);
 
     return Container(
       padding: EdgeInsets.only(left: 16, right: 16),
@@ -343,7 +358,7 @@ class ControlPanel extends StatelessWidget {
                 print(model.panelVisible.value);
                 model.inputMode.value = true;
               }),
-          ObservableBridge(
+          ListenableBridge(
               data: [model.inputMode, model.inputText],
               childBuilder: (context) {
                 return Visibility(
@@ -435,7 +450,7 @@ class SoundMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radio = min(max(message.duration.toInt() / (60 * 1000), 0.3), 1);
-    final model = Provider.of<ChatModel>(context);
+    final model = ViewModelProvider.of<ChatModel>(context);
     return Row(
       children: <Widget>[
         Image.network(
@@ -457,7 +472,7 @@ class SoundMessage extends StatelessWidget {
                   style: TextStyle(fontSize: 16),
                 ),
                 onPressed: () {
-                  model.flutterSound.startPlayer(message.url);
+                  model.flutterSound.startPlayer(message.url).then((s) {});
                 },
               )),
         ))
@@ -525,7 +540,9 @@ class ToolkitPageState extends State {
   Future sendImageMessage(BuildContext context, ImageSource source) async {
     var image = await ImagePicker.pickImage(source: source);
     if (image != null) {
-      Provider.of<ChatModel>(context).msgList.add(Message(1, file: image));
+      ViewModelProvider.of<ChatModel>(context)
+          .msgList
+          .add(Message(1, file: image));
     }
   }
 
@@ -582,10 +599,7 @@ class ToolkitPageState extends State {
                 IconButton(
                     icon: Icon(Icons.account_balance_wallet),
                     onPressed: () {
-                      Navigator.of(context).push(PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) =>
-                            MomentsPage(),
-                      ));
+                      Navigator.of(context).pushNamed("/moments");
                     }),
                 Text("红包")
               ],

@@ -5,6 +5,7 @@ import 'package:flutter_app/chat_detail_page.dart';
 import 'package:flutter_app/memonts_model.dart';
 import 'package:flutter_app/moments_page.dart';
 import 'package:flutter_app/subscription_message_page.dart';
+import 'package:observable_ui/provider.dart';
 import 'package:provider/provider.dart';
 
 import 'HomeModel.dart';
@@ -33,17 +34,17 @@ class MyApp extends StatelessWidget {
           backgroundColor: Colors.transparent),
       routes: {
         '/': (BuildContext context) {
-          return ChangeNotifierProvider<HomeModel>(
+          return ViewModelProvider(
+            viewModel: HomeModel(),
             child: HomePage(),
-            builder: (context) => HomeModel(),
           );
         },
         "/chat_detail": (context) {
-          return ChangeNotifierProvider<ChatModel>(
+          return ViewModelProvider(
+            viewModel: ChatModel(),
             child: ChatDetailPage(
               title: "WeChat",
             ),
-            builder: (context) => ChatModel(),
           );
         },
         "/subscription_box": (context) {
@@ -53,11 +54,11 @@ class MyApp extends StatelessWidget {
           );
         },
         "/moments": (context) {
-          return ChangeNotifierProvider<MomentsModel>(
+          return ViewModelProvider(
+            viewModel: MomentsModel(),
             child: MomentsPage(),
-            builder: (context) => MomentsModel(),
           );
-        }
+        },
       },
     );
   }

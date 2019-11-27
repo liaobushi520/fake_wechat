@@ -6,6 +6,17 @@ abstract class Observer {
   void onChanged();
 }
 
+class CommonObserver implements Observer {
+  final VoidCallback callback;
+
+  CommonObserver(this.callback);
+
+  @override
+  void onChanged() {
+    this.callback();
+  }
+}
+
 mixin ObserverMixin<T extends StatefulWidget> on State<T> implements Observer {
   @override
   void onChanged() {

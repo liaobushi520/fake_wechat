@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_app/entities.dart';
-import 'package:observable_ui/core.dart';
+import 'package:observable_ui/core2.dart';
 
-class HomeModel extends ChangeNotifier {
-  ObservableValue<int> currentIndex = ObservableValue(0);
+class HomeModel {
+  ValueNotifier<int> currentIndex = ValueNotifier(0);
 
-  ObservableList<Entrance> chatItems = ObservableList(initValue: [
+  ListenableList<Entrance> chatItems = ListenableList(initValue: [
     ChatEntrance(
         friend: Friend(
             name: "梁朝伟",

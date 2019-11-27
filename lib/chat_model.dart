@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_sound/flutter_sound.dart';
-import 'package:observable_ui/core.dart';
+import 'package:observable_ui/core2.dart';
 
 import 'entities.dart';
 
-class ChatModel extends ChangeNotifier {
+class ChatModel {
   final FlutterSound flutterSound = new FlutterSound();
 
   final ScrollController dialogueScrollControl = ScrollController();
@@ -16,17 +16,19 @@ class ChatModel extends ChangeNotifier {
 
   String recordUri;
 
-  ObservableList<Item> msgList = ObservableList();
+  ListenableList<Item> msgList = ListenableList();
 
-  ObservableValue<bool> panelVisible = ObservableValue(false);
+  ValueNotifier<bool> panelVisible = ValueNotifier(false);
 
   ///是否正在录音
-  ObservableValue<bool> recording = ObservableValue(false);
+  ValueNotifier<bool> recording = ValueNotifier(false);
 
   //false :录音  true :文本输入
-  ObservableValue<bool> inputMode = ObservableValue(false);
+  ValueNotifier<bool> inputMode = ValueNotifier(false);
 
-  ObservableValue<String> inputText = ObservableValue("");
+  ValueNotifier<String> inputText = ValueNotifier("");
+
+  ValueNotifier<int> voiceLevel = ValueNotifier(0);
 
   num duration;
 }

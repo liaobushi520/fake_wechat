@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_app/rapid_positioning.dart';
 
 class TestPage extends StatelessWidget {
   final TextEditingController controller = TextEditingController();
@@ -12,17 +13,7 @@ class TestPage extends StatelessWidget {
       child: Container(
         height: 100,
         color: Colors.orange,
-        child: EditableText(
-          controller: controller,
-          maxLines: 5,
-          minLines: 1,
-          onChanged: (text) => {},
-          focusNode: FocusNode(),
-          textAlign: TextAlign.start,
-          backgroundCursorColor: Color(0xff457832),
-          cursorColor: Color(0xff246786),
-          style: TextStyle(color: Color(0xff000000), fontSize: 20),
-        ),
+        child: RapidPositioning(),
       ),
     ));
   }

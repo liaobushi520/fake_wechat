@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_app/entities.dart';
-import 'package:observable_ui/core.dart';
-import 'package:observable_ui/widgets.dart';
-import 'package:provider/provider.dart';
+import 'package:observable_ui/core2.dart';
+import 'package:observable_ui/provider.dart';
+import 'package:observable_ui/widgets2.dart';
 
 import 'HomeModel.dart';
 
@@ -12,7 +12,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final model = Provider.of<HomeModel>(context);
+    var model = ViewModelProvider.of<HomeModel>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("微信"),
@@ -26,7 +26,7 @@ class HomePage extends StatelessWidget {
           ChatListPage(),
         ],
       ),
-      bottomNavigationBar: ObservableBridge(
+      bottomNavigationBar: ListenableBridge(
         data: [model.currentIndex],
         childBuilder: (context) {
           return BottomNavigationBar(
@@ -64,7 +64,7 @@ class HomePage extends StatelessWidget {
 class ChatListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var model = Provider.of<HomeModel>(context);
+    var model = ViewModelProvider.of<HomeModel>(context);
     return ListViewEx.builder(
         items: model.chatItems,
         itemBuilder: (context, item) {
