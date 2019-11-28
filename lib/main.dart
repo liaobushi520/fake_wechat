@@ -48,9 +48,9 @@ class MyApp extends StatelessWidget {
           );
         },
         "/subscription_box": (context) {
-          return ChangeNotifierProvider<SubscriptionBoxModel>(
+          return ViewModelProvider<SubscriptionBoxModel>(
             child: SubscriptionBoxPage(),
-            builder: (context) => SubscriptionBoxModel(),
+            viewModel: SubscriptionBoxModel(),
           );
         },
         "/moments": (context) {

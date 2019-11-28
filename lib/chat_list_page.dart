@@ -19,6 +19,9 @@ class HomePage extends StatelessWidget {
       ),
       body: PageView(
         controller: _pageController,
+        onPageChanged: (index) {
+          model.currentIndex.value = index;
+        },
         children: <Widget>[
           ChatListPage(),
           ChatListPage(),
@@ -205,14 +208,5 @@ class Subscript extends StatelessWidget {
             alignment: Alignment.topRight)
       ],
     );
-  }
-}
-
-class CustomPaint2 extends CustomPaint {}
-
-class RenderCustomPaint2 extends RenderCustomPaint {
-  @override
-  void paint(PaintingContext context, Offset offset) {
-    super.paint(context, offset);
   }
 }

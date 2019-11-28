@@ -488,7 +488,6 @@ class CommentEditState extends State<CommentEditPage> {
   Widget build(BuildContext context) {
     var dialogChild = IntrinsicHeight(
       child: Container(
-        height: 100,
         color: Colors.transparent,
         alignment: Alignment.bottomCenter,
         child: Container(
