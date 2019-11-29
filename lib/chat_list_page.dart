@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_app/entities.dart';
+import 'package:flutter_app/rapid_positioning.dart';
 import 'package:observable_ui/core2.dart';
 import 'package:observable_ui/provider.dart';
 import 'package:observable_ui/widgets2.dart';
@@ -24,7 +25,7 @@ class HomePage extends StatelessWidget {
         },
         children: <Widget>[
           ChatListPage(),
-          ChatListPage(),
+          FriendListPage(),
           DiscoveryPage(),
           ChatListPage(),
         ],
@@ -60,6 +61,37 @@ class HomePage extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class FriendListPage extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return FriendListPageState();
+  }
+}
+
+class FriendListPageState extends State {
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: <Widget>[
+        Positioned(
+          child: Container(
+            child: RapidPositioning(
+              backgroundColor: Color(0xff781112),
+              onChanged: (content, index) {
+                print(content);
+              },
+            ),
+            margin: EdgeInsets.only(top: 16, bottom: 16),
+          ),
+          right: 0,
+          top: 0,
+          bottom: 0,
+        )
+      ],
     );
   }
 }
