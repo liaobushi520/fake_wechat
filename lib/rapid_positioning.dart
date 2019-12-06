@@ -205,6 +205,7 @@ class RapidPositioningState extends State<RapidPositioning> {
           markerSize: this.widget.markerSize,
           markerTextStyle: this.widget.markerTextStyle,
           data: this.widget.data,
+          width: this.widget.width,
           textStyle: this.widget.textStyle,
         ),
       ),
@@ -260,6 +261,7 @@ class RapidPositioningRenderWidget extends LeafRenderObjectWidget {
       .._textStyle = this.textStyle
       .._markerTextStyle = this.markerTextStyle
       .._backgroundColor = this.backgroundColor
+      .._width = this.width
       .._buildContext = context;
   }
 }
@@ -354,15 +356,15 @@ class RapidPositioningRenderObject extends RenderBox {
     context.canvas.drawRect(
         Rect.fromLTRB(0, 0, size.width, size.height), _backgroundPaint);
 
-    for (num i = 0; i < _data.length; i++) {
-      if (highlightPos >= 0) {
-        _circlePaint.color = _highlightColor;
-        context.canvas.drawCircle(
-            Offset(charWidth / 2, (highlightPos + 0.5) * charHeight),
-            circleSize / 2,
-            _circlePaint);
-      }
+    if (highlightPos >= 0) {
+      _circlePaint.color = _highlightColor;
+      context.canvas.drawCircle(
+          Offset(charWidth / 2, (highlightPos + 0.5) * charHeight),
+          circleSize / 2,
+          _circlePaint);
+    }
 
+    for (num i = 0; i < _data.length; i++) {
       var textPainter = TextPainter(
           text: TextSpan(text: DEFAULT_DATA[i], style: _textStyle),
           textDirection: TextDirection.ltr)

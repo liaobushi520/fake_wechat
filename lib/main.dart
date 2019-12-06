@@ -6,11 +6,10 @@ import 'package:flutter_app/memonts_model.dart';
 import 'package:flutter_app/moments_page.dart';
 import 'package:flutter_app/subscription_message_page.dart';
 import 'package:observable_ui/provider.dart';
-import 'package:provider/provider.dart';
 
 import 'HomeModel.dart';
-import 'chat_list_page.dart';
 import 'chat_model.dart';
+import 'home_page.dart';
 
 void main() => runApp(MyApp());
 

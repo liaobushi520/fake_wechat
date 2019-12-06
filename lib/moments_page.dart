@@ -28,7 +28,9 @@ class MomentsState extends State<MomentsPage> {
           children: <Widget>[
             CustomScrollView(slivers: [
               SliverAppBar(
-                pinned: false,
+                pinned: true,
+                floating: true,
+                snap: true,
                 actions: <Widget>[
                   IconButton(
                     icon: Icon(Icons.camera),

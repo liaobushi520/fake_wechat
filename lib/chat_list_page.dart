@@ -1,110 +1,281 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_app/entities.dart';
-import 'package:flutter_app/rapid_positioning.dart';
-import 'package:observable_ui/core2.dart';
 import 'package:observable_ui/provider.dart';
-import 'package:observable_ui/widgets2.dart';
 
 import 'HomeModel.dart';
+import 'widgets.dart';
 
-class HomePage extends StatelessWidget {
-  final PageController _pageController = PageController();
-
+////需要解决的问题：当SliverList 向下滚动 ，慢慢显示
+class RevealHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var model = ViewModelProvider.of<HomeModel>(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("微信"),
-      ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          model.currentIndex.value = index;
-        },
-        children: <Widget>[
-          ChatListPage(),
-          FriendListPage(),
-          DiscoveryPage(),
-          ChatListPage(),
-        ],
-      ),
-      bottomNavigationBar: ListenableBridge(
-        data: [model.currentIndex],
-        childBuilder: (context) {
-          return BottomNavigationBar(
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                title: Text('聊天'),
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.business),
-                title: Text('联系人'),
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.school),
-                title: Text('发现'),
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.school),
-                title: Text('我'),
-              ),
-            ],
-            currentIndex: model.currentIndex.value,
-            selectedItemColor: Colors.amber[800],
-            onTap: (value) {
-              model.currentIndex.value = value;
-              _pageController.jumpToPage(value);
-            },
-          );
-        },
-      ),
+    return SliverPersistentHeader(
+      delegate: SliverRevealPersistentHeaderDelegate(),
     );
   }
 }
 
-class FriendListPage extends StatefulWidget {
+class SliverRevealPersistentHeaderDelegate
+    extends SliverPersistentHeaderDelegate {
   @override
-  State<StatefulWidget> createState() {
-    return FriendListPageState();
-  }
-}
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    print(shrinkOffset);
 
-class FriendListPageState extends State {
-  @override
-  Widget build(BuildContext context) {
     return Stack(
       children: <Widget>[
         Positioned(
-          child: Container(
-            child: RapidPositioning(
-              backgroundColor: Color(0xff781112),
-              onChanged: (content, index) {
-                print(content);
-              },
-            ),
-            margin: EdgeInsets.only(top: 16, bottom: 16),
-          ),
-          right: 0,
+          left: shrinkOffset,
+          right: shrinkOffset,
           top: 0,
           bottom: 0,
+          child: Opacity(
+            opacity: 1.0 - shrinkOffset / 200,
+            child: Container(
+              child: _buildMinProgramPage(),
+              color: Colors.orange,
+            ),
+          ),
         )
       ],
     );
   }
+
+  Widget _buildMinProgramPage() {
+    return Column(
+      children: <Widget>[
+        Text("小程序"),
+        _buildGridWithLabel("最近使用", minPrograms: ["", "", ""]),
+        _buildGridWithLabel("最近使用", minPrograms: ["", "", ""])
+      ],
+    );
+  }
+
+  Widget _buildGridWithLabel(String label, {List minPrograms}) {
+    int rowCount = (minPrograms.length / 3).round();
+    var rows = <Widget>[Text(label)];
+    for (int i = 0; i <= rowCount; i++) {
+      var widgets = <Widget>[];
+      for (int j = 3 * i; j < min(minPrograms.length, 3 * (i + 1)); j++) {
+        widgets.add(Expanded(
+            child: Padding(
+                padding: EdgeInsets.all(4),
+                child: CircleAvatar(
+                  child: Image.network(
+                      "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg"),
+                ))));
+      }
+      rows.add(Row(
+        children: widgets,
+      ));
+    }
+
+    return Container(
+        child: Column(
+      children: rows,
+    ));
+  }
+
+  @override
+  double get maxExtent => 200;
+
+  @override
+  double get minExtent => 0;
+
+  @override
+  bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) {
+    return true;
+  }
+}
+
+//class RevealHeader extends StatelessWidget {
+//  @override
+//  Widget build(BuildContext context) {
+//    return SliverToRevealBoxAdapter(
+//      child: Container(
+//        child: Center(child: Text("Reveal Header")),
+//        color: Colors.blueAccent,
+//        height: 300,
+//      ),
+//    );
+//  }
+//}
+//
+//class SliverToRevealBoxAdapter extends SingleChildRenderObjectWidget {
+//  const SliverToRevealBoxAdapter({
+//    Key key,
+//    Widget child,
+//  }) : super(key: key, child: child);
+//
+//  @override
+//  RenderObject createRenderObject(BuildContext context) {
+//    return RenderSliverToRevealBoxAdapter();
+//  }
+//}
+//
+//class RenderSliverToRevealBoxAdapter extends RenderSliverSingleBoxAdapter {
+//  @override
+//  void performLayout() {
+//    //  print(constraints);
+//    child.layout(constraints.asBoxConstraints(), parentUsesSize: true);
+//
+//    //  print(constraints.scrollOffset);
+//
+//    double layoutExtent = (child.size.height - constraints.scrollOffset)
+//        .clamp(0.0, child.size.height);
+//
+//    print("height ${child.size.height}");
+//    geometry = SliverGeometry(
+//        scrollExtent: child.size.height,
+//        paintExtent: layoutExtent,
+//        maxPaintExtent: child.size.height,
+//        layoutExtent: layoutExtent
+//        //paintOrigin: -400
+//        //paintOrigin: -child.size.height + constraints.scrollOffset
+//        );
+//
+//    setChildParentData(child, constraints, geometry);
+//  }
+//}
+
+////需要解决的问题：当SliverList 向上滚动时，不滚动 ，向下滚动时跟随SliverList滚动
+
+//class PersistentHeader extends StatelessWidget {
+//  @override
+//  Widget build(BuildContext context) {
+//    return SliverToBoxAdapter2(
+//      child: Container(
+//        child: Row(
+//          children: <Widget>[
+//            Text("微信(130)"),
+//            Spacer(),
+//            IconButton(
+//              icon: Icon(Icons.search),
+//              onPressed: () {},
+//            )
+//          ],
+//        ),
+//        color: Colors.red,
+//      ),
+//    );
+//  }
+//}
+//
+//class SliverToBoxAdapter2 extends SingleChildRenderObjectWidget {
+//  const SliverToBoxAdapter2({
+//    Key key,
+//    Widget child,
+//  }) : super(key: key, child: child);
+//
+//  @override
+//  RenderObject createRenderObject(BuildContext context) {
+//    return RenderSliverToBoxAdapter2();
+//  }
+//}
+//
+//class RenderSliverToBoxAdapter2 extends RenderSliverSingleBoxAdapter {
+//  @override
+//  void performLayout() {
+//    child.layout(constraints.asBoxConstraints(), parentUsesSize: true);
+//
+//    double layoutExtent = (child.size.height - constraints.scrollOffset)
+//        .clamp(0.0, child.size.height);
+//    print(constraints);
+//
+//    geometry = SliverGeometry(
+//        scrollExtent: 0.0,
+//        paintExtent: child.size.height,
+//        maxScrollObstructionExtent: child.size.height,
+//        hasVisualOverflow: true,
+//        paintOrigin: constraints.scrollOffset,
+//        layoutExtent: layoutExtent,
+//        maxPaintExtent: child.size.height);
+//
+//    setChildParentData(child, constraints, geometry);
+//  }
+//}
+
+class PinnedHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: SliverPinnedPersistentHeaderDelegate(),
+    );
+  }
+}
+
+class SliverPinnedPersistentHeaderDelegate
+    extends SliverPersistentHeaderDelegate {
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      child: Row(
+        children: <Widget>[
+          Text("微信(130)"),
+          Spacer(),
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {},
+          )
+        ],
+      ),
+      color: Colors.red,
+    );
+  }
+
+  @override
+  double get maxExtent => 30;
+
+  @override
+  double get minExtent => 30;
+
+  @override
+  bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) {
+    return true;
+  }
 }
 
 class ChatListPage extends StatelessWidget {
+  final ScrollController scrollController;
+
+  const ChatListPage({Key key, this.scrollController}) : super(key: key);
+
+//  @override
+//  Widget build(BuildContext context) {
+//    var model = ViewModelProvider.of<HomeModel>(context);
+//    return ListViewEx.builder(
+//        controller: scrollController,
+//        items: model.chatItems,
+//        itemBuilder: (context, item) {
+//          return _buildChatItem(context, item);
+//        });
+//  }
+
   @override
   Widget build(BuildContext context) {
     var model = ViewModelProvider.of<HomeModel>(context);
-    return ListViewEx.builder(
-        items: model.chatItems,
-        itemBuilder: (context, item) {
-          return _buildChatItem(context, item);
-        });
+
+    return SizedBox(
+      child: CustomScrollView(
+        controller: ScrollController(initialScrollOffset: 300),
+        // reverse: true,
+        slivers: <Widget>[
+          RevealHeader(),
+          PinnedHeader(),
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              return _buildChatItem(context, model.chatItems[index]);
+            }, childCount: model.chatItems.length),
+          ),
+        ],
+      ),
+      height: 200,
+    );
   }
 
   Widget _buildChatItem(BuildContext context, item) {
@@ -205,39 +376,6 @@ class DiscoveryPage extends StatelessWidget {
             Navigator.of(context).pushNamed("/moments");
           },
         )
-      ],
-    );
-  }
-}
-
-//实现角标
-class Subscript extends StatelessWidget {
-  final double width;
-
-  final double height;
-
-  final Widget content;
-
-  final Widget subscript;
-
-  const Subscript(
-      {Key key, this.width, this.height, this.content, this.subscript})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        Container(
-            child: this.content,
-            width: this.width,
-            height: this.height,
-            alignment: Alignment.center),
-        Container(
-            child: this.subscript,
-            width: this.width,
-            height: this.height,
-            alignment: Alignment.topRight)
       ],
     );
   }

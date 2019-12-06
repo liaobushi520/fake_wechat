@@ -58,6 +58,32 @@ class MomentsModel {
               "http://baijiahao.baidu.com/s?id=1651222227934364431&wfr=spider&for=pc"),
     ),
     Moment(
+      text: "看看这个新闻",
+      friend: DEFAULT_FRIENDS[1],
+      type: 3,
+      timestamp: 1000123,
+      likes: [],
+      webPageLink: WebPageLink(
+          title: "网易绝情踢员工",
+          cover:
+              "http://pics1.baidu.com/feed/91529822720e0cf39dbaefe79e693c1abe09aa16.jpeg?token=7ef31617682291d1ad08c5b64621db06&s=BD9A7F9540224AAEBA0828ED03003033",
+          url:
+              "http://baijiahao.baidu.com/s?id=1651222227934364431&wfr=spider&for=pc"),
+    ),
+    Moment(
+      text: "看看这个新闻",
+      friend: DEFAULT_FRIENDS[1],
+      type: 3,
+      timestamp: 1000123,
+      likes: [],
+      webPageLink: WebPageLink(
+          title: "网易绝情踢员工",
+          cover:
+              "http://pics1.baidu.com/feed/91529822720e0cf39dbaefe79e693c1abe09aa16.jpeg?token=7ef31617682291d1ad08c5b64621db06&s=BD9A7F9540224AAEBA0828ED03003033",
+          url:
+              "http://baijiahao.baidu.com/s?id=1651222227934364431&wfr=spider&for=pc"),
+    ),
+    Moment(
         text: "我今天很开心",
         friend: DEFAULT_FRIENDS[0],
         type: 2,
