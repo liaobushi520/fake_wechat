@@ -3,12 +3,89 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_app/entities.dart';
+import 'package:flutter_app/utils.dart';
 import 'package:observable_ui/provider.dart';
 
 import 'HomeModel.dart';
 import 'widgets.dart';
 
+class TopMaskLayer extends CustomPainter {
+  final double shrinkOffset;
+
+  Paint p = Paint();
+
+  TopMaskLayer(this.shrinkOffset);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    //此时三个小点显示，左右两个小点向内聚合
+    double lowLine = 200;
+
+    //此时三个点聚合为一个点，该点逐渐变小
+    double highLine = 400;
+
+    double maxGap = 20;
+
+    double maxSize = 5;
+
+    double alphaMaxLine = 400;
+
+    int alpha = (255 / (alphaMaxLine) * shrinkOffset).toInt().clamp(0, 255);
+
+    canvas.save();
+
+    canvas.clipRect(Rect.fromLTRB(0, 0, size.width, size.height));
+
+    canvas.drawColor(Color.fromARGB(alpha, 255, 255, 255), BlendMode.srcATop);
+    canvas.restore();
+
+    p.color = Color.fromARGB(alpha, 21, 21, 21);
+
+    if (shrinkOffset > lowLine && shrinkOffset < highLine) {
+      double gap = maxGap / (lowLine - highLine) * shrinkOffset +
+          (maxGap * highLine) / (highLine - lowLine);
+
+      canvas.drawCircle(Offset(size.width / 2 - gap, size.height / 2), 4, p);
+
+      canvas.drawCircle(Offset(size.width / 2, size.height / 2), maxSize, p);
+
+      canvas.drawCircle(Offset(size.width / 2 + gap, size.height / 2), 4, p);
+    } else if (shrinkOffset >= 400) {
+      canvas.drawCircle(Offset(size.width / 2, size.height / 2),
+          17 - 3 / 100 * (shrinkOffset), p);
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
+  }
+}
+
+class BottomMaskLayer extends CustomPainter {
+  final double shrinkOffset;
+
+  Paint p = Paint();
+
+  BottomMaskLayer(this.shrinkOffset);
+
+  static const int MAX_ALPHA = 244;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    int alpha =
+        (-MAX_ALPHA / (300) * shrinkOffset + MAX_ALPHA).toInt().clamp(0, 255);
+    canvas.drawColor(Color.fromARGB(alpha, 42, 40, 60), BlendMode.srcATop);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
+  }
+}
+
 ////需要解决的问题：当SliverList 向下滚动 ，慢慢显示
+
 class RevealHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -23,64 +100,26 @@ class SliverRevealPersistentHeaderDelegate
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    print(shrinkOffset);
-
-    return Stack(
-      children: <Widget>[
-        Positioned(
-          left: shrinkOffset,
-          right: shrinkOffset,
-          top: 0,
-          bottom: 0,
-          child: Opacity(
-            opacity: 1.0 - shrinkOffset / 200,
-            child: Container(
-              child: _buildMinProgramPage(),
-              color: Colors.orange,
-            ),
-          ),
-        )
-      ],
+    double scaleMaxLine = 400;
+    double scaleMinLine = 0;
+    double scale = (0.5 / (-scaleMaxLine + scaleMinLine) * shrinkOffset +
+            (-scaleMaxLine + 0.5 * scaleMinLine) /
+                (-scaleMaxLine + scaleMinLine))
+        .clamp(0.0, 1.0);
+    return CustomPaint(
+      child: Transform.scale(
+        scale: scale,
+        child: Container(
+          child: MinProgramHeader(),
+        ),
+      ),
+      painter: BottomMaskLayer(shrinkOffset),
+      foregroundPainter: TopMaskLayer(shrinkOffset),
     );
-  }
-
-  Widget _buildMinProgramPage() {
-    return Column(
-      children: <Widget>[
-        Text("小程序"),
-        _buildGridWithLabel("最近使用", minPrograms: ["", "", ""]),
-        _buildGridWithLabel("最近使用", minPrograms: ["", "", ""])
-      ],
-    );
-  }
-
-  Widget _buildGridWithLabel(String label, {List minPrograms}) {
-    int rowCount = (minPrograms.length / 3).round();
-    var rows = <Widget>[Text(label)];
-    for (int i = 0; i <= rowCount; i++) {
-      var widgets = <Widget>[];
-      for (int j = 3 * i; j < min(minPrograms.length, 3 * (i + 1)); j++) {
-        widgets.add(Expanded(
-            child: Padding(
-                padding: EdgeInsets.all(4),
-                child: CircleAvatar(
-                  child: Image.network(
-                      "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg"),
-                ))));
-      }
-      rows.add(Row(
-        children: widgets,
-      ));
-    }
-
-    return Container(
-        child: Column(
-      children: rows,
-    ));
   }
 
   @override
-  double get maxExtent => 200;
+  double get maxExtent => 600;
 
   @override
   double get minExtent => 0;
@@ -90,113 +129,6 @@ class SliverRevealPersistentHeaderDelegate
     return true;
   }
 }
-
-//class RevealHeader extends StatelessWidget {
-//  @override
-//  Widget build(BuildContext context) {
-//    return SliverToRevealBoxAdapter(
-//      child: Container(
-//        child: Center(child: Text("Reveal Header")),
-//        color: Colors.blueAccent,
-//        height: 300,
-//      ),
-//    );
-//  }
-//}
-//
-//class SliverToRevealBoxAdapter extends SingleChildRenderObjectWidget {
-//  const SliverToRevealBoxAdapter({
-//    Key key,
-//    Widget child,
-//  }) : super(key: key, child: child);
-//
-//  @override
-//  RenderObject createRenderObject(BuildContext context) {
-//    return RenderSliverToRevealBoxAdapter();
-//  }
-//}
-//
-//class RenderSliverToRevealBoxAdapter extends RenderSliverSingleBoxAdapter {
-//  @override
-//  void performLayout() {
-//    //  print(constraints);
-//    child.layout(constraints.asBoxConstraints(), parentUsesSize: true);
-//
-//    //  print(constraints.scrollOffset);
-//
-//    double layoutExtent = (child.size.height - constraints.scrollOffset)
-//        .clamp(0.0, child.size.height);
-//
-//    print("height ${child.size.height}");
-//    geometry = SliverGeometry(
-//        scrollExtent: child.size.height,
-//        paintExtent: layoutExtent,
-//        maxPaintExtent: child.size.height,
-//        layoutExtent: layoutExtent
-//        //paintOrigin: -400
-//        //paintOrigin: -child.size.height + constraints.scrollOffset
-//        );
-//
-//    setChildParentData(child, constraints, geometry);
-//  }
-//}
-
-////需要解决的问题：当SliverList 向上滚动时，不滚动 ，向下滚动时跟随SliverList滚动
-
-//class PersistentHeader extends StatelessWidget {
-//  @override
-//  Widget build(BuildContext context) {
-//    return SliverToBoxAdapter2(
-//      child: Container(
-//        child: Row(
-//          children: <Widget>[
-//            Text("微信(130)"),
-//            Spacer(),
-//            IconButton(
-//              icon: Icon(Icons.search),
-//              onPressed: () {},
-//            )
-//          ],
-//        ),
-//        color: Colors.red,
-//      ),
-//    );
-//  }
-//}
-//
-//class SliverToBoxAdapter2 extends SingleChildRenderObjectWidget {
-//  const SliverToBoxAdapter2({
-//    Key key,
-//    Widget child,
-//  }) : super(key: key, child: child);
-//
-//  @override
-//  RenderObject createRenderObject(BuildContext context) {
-//    return RenderSliverToBoxAdapter2();
-//  }
-//}
-//
-//class RenderSliverToBoxAdapter2 extends RenderSliverSingleBoxAdapter {
-//  @override
-//  void performLayout() {
-//    child.layout(constraints.asBoxConstraints(), parentUsesSize: true);
-//
-//    double layoutExtent = (child.size.height - constraints.scrollOffset)
-//        .clamp(0.0, child.size.height);
-//    print(constraints);
-//
-//    geometry = SliverGeometry(
-//        scrollExtent: 0.0,
-//        paintExtent: child.size.height,
-//        maxScrollObstructionExtent: child.size.height,
-//        hasVisualOverflow: true,
-//        paintOrigin: constraints.scrollOffset,
-//        layoutExtent: layoutExtent,
-//        maxPaintExtent: child.size.height);
-//
-//    setChildParentData(child, constraints, geometry);
-//  }
-//}
 
 class PinnedHeader extends StatelessWidget {
   @override
@@ -214,9 +146,16 @@ class SliverPinnedPersistentHeaderDelegate
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
+      padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(10), topRight: Radius.circular(10))),
       child: Row(
         children: <Widget>[
-          Text("微信(130)"),
+          Text(
+            "微信(130)",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
           Spacer(),
           IconButton(
             icon: Icon(Icons.search),
@@ -224,15 +163,14 @@ class SliverPinnedPersistentHeaderDelegate
           )
         ],
       ),
-      color: Colors.red,
     );
   }
 
   @override
-  double get maxExtent => 30;
+  double get maxExtent => 60;
 
   @override
-  double get minExtent => 30;
+  double get minExtent => 60;
 
   @override
   bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) {
@@ -240,30 +178,199 @@ class SliverPinnedPersistentHeaderDelegate
   }
 }
 
-class ChatListPage extends StatelessWidget {
-  final ScrollController scrollController;
+class MinProgramHeader extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return MinProgramHeaderState();
+  }
+}
 
-  const ChatListPage({Key key, this.scrollController}) : super(key: key);
+class OverScrollEndNotification extends Notification {}
 
-//  @override
-//  Widget build(BuildContext context) {
-//    var model = ViewModelProvider.of<HomeModel>(context);
-//    return ListViewEx.builder(
-//        controller: scrollController,
-//        items: model.chatItems,
-//        itemBuilder: (context, item) {
-//          return _buildChatItem(context, item);
-//        });
-//  }
+class MinProgramHeaderState extends State<MinProgramHeader> {
+  ScrollController scrollController = ScrollController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Container(
+          child: Text(
+            "小程序",
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
+          alignment: Alignment.centerLeft,
+          margin: EdgeInsets.only(left: 6),
+        ),
+        Expanded(
+          child: Listener(
+            onPointerUp: (e) {
+              if (scrollController.position.pixels >
+                  (scrollController.position.maxScrollExtent * 7 / 4)) {
+                OverScrollEndNotification().dispatch(context);
+              }
+            },
+            child: CustomScrollView(
+              controller: scrollController,
+              physics: BouncingScrollPhysics(),
+              slivers: <Widget>[
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: <Widget>[
+                      Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(2)),
+                            color: Color(0x66ffffff)),
+                        child: Row(
+                          children: <Widget>[
+                            Icon(
+                              Icons.search,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              "搜索小程序",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0xaaffffff),
+                              ),
+                            )
+                          ],
+                        ),
+                        margin: EdgeInsets.only(
+                            left: 10, right: 10, top: 30, bottom: 30),
+                        padding: EdgeInsets.all(4),
+                      ),
+                      _buildGridWithLabel("最近使用", minPrograms: MIN_PROGRAMS),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      _buildGridWithLabel("最近使用", minPrograms: MIN_PROGRAMS)
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _buildGridWithLabel(String label,
+      {List<MinProgram> minPrograms, countForRow = 4}) {
+    int rowCount = (minPrograms.length / countForRow).round();
+    var rows = <Widget>[
+      //添加label
+      Align(
+        child: Text(
+          label,
+          style: TextStyle(color: Color(0xffffbdbdbd), fontSize: 12),
+        ),
+        alignment: Alignment.centerLeft,
+      )
+    ];
+
+    for (int i = 0; i < rowCount; i++) {
+      var widgets = <Widget>[];
+      for (int j = countForRow * i;
+          j < min(minPrograms.length, countForRow * (i + 1));
+          j++) {
+        var item = minPrograms[j];
+
+        widgets.add(Expanded(
+          child: Align(
+            alignment: Alignment.center,
+            child: Column(
+              children: <Widget>[
+                Container(
+                    width: 50,
+                    height: 50,
+                    child: CircleAvatar(
+                      backgroundImage: NetworkImage(item.icon),
+                    )),
+                SizedBox(
+                  height: 4,
+                ),
+                Text(
+                  item.name,
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                )
+              ],
+            ),
+          ),
+        ));
+      }
+
+      if (i == rowCount - 1) {
+        for (int k = minPrograms.length; k < (rowCount) * countForRow; k++) {
+          widgets.add(Spacer());
+        }
+      }
+
+      rows.add(Container(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: widgets,
+        ),
+        padding: EdgeInsets.only(top: 4, bottom: 4),
+      ));
+    }
+
+    return Container(
+        margin: EdgeInsets.only(left: 16, right: 16),
+        child: Column(
+          children: rows,
+        ));
+  }
+}
+
+class ChatListPage extends StatefulWidget {
+  ChatListPage({Key key}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return ChatListPageState();
+  }
+}
+
+class ChatListPageState extends State<ChatListPage> {
+  ScrollController _scrollController =
+      ScrollController(initialScrollOffset: 600);
 
   @override
   Widget build(BuildContext context) {
     var model = ViewModelProvider.of<HomeModel>(context);
+    return NotificationListener(
+      onNotification: (Notification notification) {
+        if (notification is ScrollEndNotification &&
+            notification.depth == 0 &&
+            notification.metrics.pixels <= 600) {
+          Future.delayed(Duration(milliseconds: 10), () {
+            if (notification.metrics.pixels > 300) {
+              _scrollController.animateTo(600,
+                  duration: Duration(
+                      milliseconds: (notification.metrics.pixels - 300)
+                          .clamp(200, 600)
+                          .toInt()),
+                  curve: Curves.easeOutQuad);
+            } else {
+              _scrollController.animateTo(0,
+                  duration: Duration(
+                      milliseconds: (300 - notification.metrics.pixels)
+                          .clamp(200, 600)
+                          .toInt()),
+                  curve: Curves.easeOutQuad);
+            }
+          });
+        } else if (notification is OverScrollEndNotification) {
+          _scrollController.animateTo(600,
+              duration: Duration(milliseconds: 500), curve: Curves.easeOutQuad);
+        }
 
-    return SizedBox(
+        return true;
+      },
       child: CustomScrollView(
-        controller: ScrollController(initialScrollOffset: 300),
-        // reverse: true,
+        controller: _scrollController,
         slivers: <Widget>[
           RevealHeader(),
           PinnedHeader(),
@@ -274,7 +381,6 @@ class ChatListPage extends StatelessWidget {
           ),
         ],
       ),
-      height: 200,
     );
   }
 
@@ -290,9 +396,7 @@ class ChatListPage extends StatelessWidget {
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.all(Radius.circular(6)),
-                      color: Colors.orange,
                       image: DecorationImage(
                           image: NetworkImage(
                               "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg"))),
@@ -349,6 +453,12 @@ class ChatListPage extends StatelessWidget {
         Navigator.of(context).pushNamed("/chat_detail");
       },
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _scrollController.dispose();
   }
 }
 

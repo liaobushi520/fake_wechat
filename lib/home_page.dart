@@ -17,8 +17,6 @@ class HomePage extends StatefulWidget {
 class HomeState extends State<HomePage> {
   final PageController _pageController = PageController();
 
-  final ScrollController _trackingScrollController = TrackingScrollController();
-
   @override
   Widget build(BuildContext context) {
     var model = ViewModelProvider.of<HomeModel>(context);
@@ -27,18 +25,13 @@ class HomeState extends State<HomePage> {
       data: [model.currentIndex],
       childBuilder: (context) {
         return Scaffold(
-//          appBar: AppBar(
-//            title: Text("微信"),
-//          ),
           body: PageView(
             controller: _pageController,
             onPageChanged: (index) {
               model.currentIndex.value = index;
             },
             children: <Widget>[
-              ChatListPage(
-                scrollController: _trackingScrollController,
-              ),
+              ChatListPage(),
               FriendListPage(),
               DiscoveryPage(),
               ChatListPage(),

@@ -124,3 +124,11 @@ class ChatEntrance extends Entrance {
   const ChatEntrance({this.friend, unreadCount, recentMessage})
       : super(unreadCount, recentMessage);
 }
+
+class MinProgram {
+  final String name;
+
+  final String icon;
+
+  const MinProgram(this.name, this.icon);
+}
