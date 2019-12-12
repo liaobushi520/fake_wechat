@@ -5,6 +5,7 @@ import 'package:observable_ui/provider.dart';
 
 import 'HomeModel.dart';
 import 'chat_list_page.dart';
+import 'discovery_page.dart';
 import 'friend_list_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -25,17 +26,19 @@ class HomeState extends State<HomePage> {
       data: [model.currentIndex],
       childBuilder: (context) {
         return Scaffold(
-          body: PageView(
-            controller: _pageController,
-            onPageChanged: (index) {
-              model.currentIndex.value = index;
-            },
-            children: <Widget>[
-              ChatListPage(),
-              FriendListPage(),
-              DiscoveryPage(),
-              ChatListPage(),
-            ],
+          body: SafeArea(
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                model.currentIndex.value = index;
+              },
+              children: <Widget>[
+                ChatListPage(),
+                FriendListPage(),
+                DiscoveryPage(),
+                ChatListPage(),
+              ],
+            ),
           ),
           bottomNavigationBar: BottomNavigationBar(
             items: const <BottomNavigationBarItem>[

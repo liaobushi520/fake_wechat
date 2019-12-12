@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_app/entities.dart';
-import 'package:flutter_sound/flutter_sound.dart';
 import 'package:observable_ui/core2.dart';
 
 const USER = Friend(
@@ -20,8 +19,6 @@ const DEFAULT_FRIENDS = [
 ];
 
 class MomentsModel {
-  final FlutterSound flutterSound = new FlutterSound();
-
   ListenableList<Moment> moments = ListenableList(initValue: [
     Moment(
         text: "我喜欢的一首歌",
@@ -34,7 +31,7 @@ class MomentsModel {
             name: "回忆沙漠",
             artist: "杨宗纬",
             url:
-                "https://s320.xiami.net/975/87975/661503772/1771694697_1441449678.mp3?ccode=xiami_web_web&expire=86400&duration=334&psid=54adfaf833cb61f98eccabf00d377c23&ups_client_netip=180.168.34.146&ups_ts=1574732576&ups_userid=86677830&utid=gRndEezL1FUCAcuc24qbR1GW&vid=1771694697&fn=1771694697_1441449678.mp3&vkey=B7fe51e8485a12166185ead7980c95b5d"),
+                "https://s128.xiami.net/319/7319/33091/2079859_1504591944341.mp3?ccode=xiami_web_web&expire=86400&duration=240&psid=859f2aa551eda21b3a1e43b32a06a53f&ups_client_netip=180.168.34.146&ups_ts=1576035158&ups_userid=0&utid=gRndEezL1FUCAcuc24qbR1GW&vid=2079859&fn=2079859_1504591944341.mp3&vkey=B60cdfb59be1bdb247a908b08888aafd7"),
         likes: [],
         comments: []),
     Moment(

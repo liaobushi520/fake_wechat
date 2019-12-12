@@ -8,8 +8,6 @@ import 'package:observable_ui/core2.dart';
 import 'entities.dart';
 
 class ChatModel {
-  final FlutterSound flutterSound = new FlutterSound();
-
   final ScrollController dialogueScrollControl = ScrollController();
 
   StreamSubscription<RecordStatus> recorderSubscription;

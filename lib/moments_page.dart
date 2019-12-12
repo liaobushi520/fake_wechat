@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_app/music_player.dart';
 import 'package:flutter_app/utils.dart';
 import 'package:observable_ui/provider.dart';
 
+import 'app_model.dart';
 import 'entities.dart';
 import 'memonts_model.dart';
 
@@ -542,67 +545,125 @@ class AudioItem extends StatefulWidget {
 }
 
 class AudioItemState extends State<AudioItem> {
-  bool play = false;
-
   @override
   Widget build(BuildContext context) {
-    var model = ViewModelProvider.of<MomentsModel>(context);
-    return Container(
-      color: Color(0xffeeeeee),
-      padding: EdgeInsets.all(3),
-      child: Row(
-        children: <Widget>[
-          Stack(
-            alignment: Alignment.center,
-            children: <Widget>[
-              Image.network(
-                this.widget.moment.audioLink.cover,
-                width: 42,
-                height: 42,
-              ),
-              Positioned(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      play = !play;
-                      if (play) {
-                        print("开始播放");
-                        model.flutterSound
-                            .startPlayer(this.widget.moment.audioLink.url);
-                      } else {
-                        print("停止播放");
-                        model.flutterSound.stopPlayer();
-                      }
-                    });
-                  },
-                  child: play ? Icon(Icons.play_arrow) : Icon(Icons.pause),
-                ),
-              )
-            ],
-          ),
-          SizedBox(
-            width: 6,
-          ),
-          SizedBox(
-            height: 42,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final appModel = ViewModelProvider.of<AppModel>(context);
+
+    return GestureDetector(
+      child: Container(
+        color: Color(0xffeeeeee),
+        padding: EdgeInsets.all(3),
+        child: Row(
+          children: <Widget>[
+            Stack(
+              alignment: Alignment.center,
               children: <Widget>[
-                Text(
-                  this.widget.moment.audioLink.name,
-                  style: TextStyle(color: Color(0xff3f51b5), fontSize: 14),
+                Image.network(
+                  this.widget.moment.audioLink.cover,
+                  width: 42,
+                  height: 42,
                 ),
-                Spacer(),
-                Text(
-                  this.widget.moment.audioLink.artist,
-                  style: TextStyle(fontSize: 14),
+                Positioned(
+                  child: GestureDetector(
+                    onTap: () {
+                      appModel.playOrStop(this.widget.moment.audioLink);
+                    },
+                    child: PlayOrPauseIcon(
+                      audioLink: this.widget.moment.audioLink,
+                      playStream: appModel.playStream,
+                    ),
+                  ),
                 )
               ],
             ),
-          )
-        ],
+            SizedBox(
+              width: 6,
+            ),
+            SizedBox(
+              height: 42,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    this.widget.moment.audioLink.name,
+                    style: TextStyle(color: Color(0xff3f51b5), fontSize: 14),
+                  ),
+                  Spacer(),
+                  Text(
+                    this.widget.moment.audioLink.artist,
+                    style: TextStyle(fontSize: 14),
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
       ),
+      onTap: () {
+        Navigator.of(context).pushNamed("/music_player",
+            arguments: this.widget.moment.audioLink);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MusicPlayerPage(
+              song: this.widget.moment.audioLink,
+            ),
+          ),
+        );
+      },
     );
+  }
+}
+
+class PlayOrPauseIcon extends StatefulWidget {
+  final AudioLink audioLink;
+
+  final Stream playStream;
+
+  const PlayOrPauseIcon({Key key, this.audioLink, this.playStream})
+      : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return PlayOrPauseIconState();
+  }
+}
+
+class PlayOrPauseIconState extends State<PlayOrPauseIcon> {
+  PlayEvent _lastPlayEvent;
+
+  StreamSubscription _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = widget.playStream.listen((e) {
+      if (_lastPlayEvent == null ||
+          (e.audio != widget.audioLink &&
+              _lastPlayEvent.audio == widget.audioLink) ||
+          (widget.audioLink == e.audio && _lastPlayEvent.status != e.status)) {
+        setState(() {});
+      }
+      _lastPlayEvent = e;
+    });
+  }
+
+  bool _isPlay() {
+    return _lastPlayEvent != null &&
+        _lastPlayEvent.audio == widget.audioLink &&
+        _lastPlayEvent.status == 1;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _isPlay() ? Icon(Icons.pause) : Icon(Icons.play_arrow);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _subscription?.cancel();
   }
 }
 

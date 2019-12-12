@@ -31,3 +31,31 @@ const colors = [Colors.orange, Colors.red, Colors.blue, Colors.white];
 bool isNullOrEmpty<T>(List<T> list) {
   return list == null || list.isEmpty;
 }
+
+//11:22:08
+String formatHHmmSS(double time) {
+  if (time < 0) {
+    return "--:--:--";
+  }
+
+  int hour = time ~/ 3600;
+  String s;
+  if (hour < 10) {
+    s = "0$hour:";
+  } else {
+    s = "$hour:";
+  }
+  int minute = (time - (hour * 3600)) ~/ 60;
+  if (minute < 10) {
+    s += "0$minute:";
+  } else {
+    s += "$minute:";
+  }
+  var second = (time - (hour * 3600 + minute * 60) % 60).toInt();
+  if (second < 10) {
+    s += "0$second";
+  } else {
+    s += "$second";
+  }
+  return s;
+}

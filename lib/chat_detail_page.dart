@@ -9,6 +9,7 @@ import 'package:observable_ui/core2.dart';
 import 'package:observable_ui/provider.dart';
 import 'package:observable_ui/widgets2.dart';
 
+import 'app_model.dart';
 import 'chat_model.dart';
 import 'entities.dart';
 
@@ -250,6 +251,8 @@ class InputModeTransformation extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = ViewModelProvider.of<ChatModel>(context);
 
+    final appModel = ViewModelProvider.of<AppModel>(context);
+
     return ExchangeEx(
         child1: Container(
             padding: EdgeInsets.all(4),
@@ -275,18 +278,18 @@ class InputModeTransformation extends StatelessWidget {
             )),
         child2: GestureDetector(
             onLongPressStart: (details) async {
-              model.recordUri = await model.flutterSound.startRecorder(null);
+              model.recordUri = await appModel.flutterSound.startRecorder(null);
 
               model.recording.value = !model.recording.value;
               print('startRecorder: ${model.recordUri}');
               model.recorderSubscription =
-                  model.flutterSound.onRecorderStateChanged.listen((e) {
+                  appModel.flutterSound.onRecorderStateChanged.listen((e) {
                 model.duration = e.currentPosition.toInt();
                 model.voiceLevel.value = Random().nextInt(7);
               });
             },
             onLongPressEnd: (details) async {
-              String result = await model.flutterSound.stopRecorder();
+              String result = await appModel.flutterSound.stopRecorder();
               print('stopRecorder: $result');
               if (model.recorderSubscription != null) {
                 model.recorderSubscription.cancel();
@@ -450,7 +453,7 @@ class SoundMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radio = min(max(message.duration.toInt() / (60 * 1000), 0.3), 1);
-    final model = ViewModelProvider.of<ChatModel>(context);
+    final appModel = ViewModelProvider.of<AppModel>(context);
     return Row(
       children: <Widget>[
         Image.network(
@@ -472,7 +475,7 @@ class SoundMessage extends StatelessWidget {
                   style: TextStyle(fontSize: 16),
                 ),
                 onPressed: () {
-                  model.flutterSound.startPlayer(message.url).then((s) {});
+                  appModel.flutterSound.startPlayer(message.url).then((s) {});
                 },
               )),
         ))

@@ -200,7 +200,7 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
             style: TextStyle(color: Colors.white, fontSize: 18),
           ),
           alignment: Alignment.centerLeft,
-          margin: EdgeInsets.only(left: 6),
+          margin: EdgeInsets.only(left: 6, top: 10),
         ),
         Expanded(
           child: Listener(
@@ -459,34 +459,5 @@ class ChatListPageState extends State<ChatListPage> {
   void dispose() {
     super.dispose();
     _scrollController.dispose();
-  }
-}
-
-class DiscoveryPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        GestureDetector(
-          child: Container(
-            child: Row(
-              children: <Widget>[
-                Icon(Icons.camera),
-                SizedBox(
-                  width: 8,
-                ),
-                Text("朋友圈"),
-                Spacer(),
-                Icon(Icons.chevron_right)
-              ],
-            ),
-            padding: EdgeInsets.all(8),
-          ),
-          onTap: () {
-            Navigator.of(context).pushNamed("/moments");
-          },
-        )
-      ],
-    );
   }
 }
