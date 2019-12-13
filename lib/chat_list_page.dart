@@ -200,7 +200,7 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
             style: TextStyle(color: Colors.white, fontSize: 18),
           ),
           alignment: Alignment.centerLeft,
-          margin: EdgeInsets.only(left: 6, top: 10),
+          padding: EdgeInsets.only(left: 10, top: 10, bottom: 10),
         ),
         Expanded(
           child: Listener(
@@ -215,37 +215,41 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
               physics: BouncingScrollPhysics(),
               slivers: <Widget>[
                 SliverToBoxAdapter(
-                  child: Column(
-                    children: <Widget>[
-                      Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(2)),
-                            color: Color(0x66ffffff)),
-                        child: Row(
-                          children: <Widget>[
-                            Icon(
-                              Icons.search,
-                              color: Colors.white,
-                            ),
-                            Text(
-                              "搜索小程序",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Color(0xaaffffff),
+                  child: Container(
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(2)),
+                              color: Color(0x66ffffff)),
+                          child: Row(
+                            children: <Widget>[
+                              Icon(
+                                Icons.search,
+                                color: Color(0x33000000),
                               ),
-                            )
-                          ],
+                              Text(
+                                "搜索小程序",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Color(0xaaffffff),
+                                ),
+                              )
+                            ],
+                          ),
+                          margin: EdgeInsets.only(top: 30, bottom: 30),
+                          padding: EdgeInsets.only(
+                              left: 6, right: 6, top: 8, bottom: 8),
                         ),
-                        margin: EdgeInsets.only(
-                            left: 10, right: 10, top: 30, bottom: 30),
-                        padding: EdgeInsets.all(4),
-                      ),
-                      _buildGridWithLabel("最近使用", minPrograms: MIN_PROGRAMS),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      _buildGridWithLabel("最近使用", minPrograms: MIN_PROGRAMS)
-                    ],
+                        _buildGridWithLabel("最近使用", minPrograms: MIN_PROGRAMS),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        _buildGridWithLabel("最近使用", minPrograms: MIN_PROGRAMS)
+                      ],
+                    ),
+                    margin: EdgeInsets.only(left: 16, right: 16),
                   ),
                 )
               ],
@@ -260,7 +264,6 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
       {List<MinProgram> minPrograms, countForRow = 4}) {
     int rowCount = (minPrograms.length / countForRow).round();
     var rows = <Widget>[
-      //添加label
       Align(
         child: Text(
           label,
@@ -316,11 +319,9 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
       ));
     }
 
-    return Container(
-        margin: EdgeInsets.only(left: 16, right: 16),
-        child: Column(
-          children: rows,
-        ));
+    return Column(
+      children: rows,
+    );
   }
 }
 
