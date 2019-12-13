@@ -69,20 +69,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_package:
-    dependency: "direct main"
-    description:
-      path: flutter_package
-      relative: true
-    source: path
-    version: "0.0.1"
   flutter_sound:
     dependency: "direct main"
     description:
       name: flutter_sound
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.4.2"
+    version: "1.6.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter

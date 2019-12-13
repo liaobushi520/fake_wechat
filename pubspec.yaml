@@ -26,10 +26,7 @@ dependencies:
     ^3.0.0
 
   flutter_sound:
-    1.4.2
-
-  flutter_package:
-    path: ../flutter_app/flutter_package
+    1.6.0
 
   observable_ui:
     path: ../flutter_app/observable_ui
