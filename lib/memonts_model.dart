@@ -31,7 +31,7 @@ class MomentsModel {
             name: "回忆沙漠",
             artist: "杨宗纬",
             url:
-                "https://s128.xiami.net/319/7319/33091/2079859_1504591944341.mp3?ccode=xiami_web_web&expire=86400&duration=240&psid=859f2aa551eda21b3a1e43b32a06a53f&ups_client_netip=180.168.34.146&ups_ts=1576035158&ups_userid=0&utid=gRndEezL1FUCAcuc24qbR1GW&vid=2079859&fn=2079859_1504591944341.mp3&vkey=B60cdfb59be1bdb247a908b08888aafd7"),
+                "https://s128.xiami.net/319/7319/33091/2079859_1504591944341.mp3?ccode=xiami_web_web&expire=86400&duration=240&psid=1f7d861ad34121847e1baff291f794b5&ups_client_netip=180.168.34.146&ups_ts=1576208553&ups_userid=0&utid=gRndEezL1FUCAcuc24qbR1GW&vid=2079859&fn=2079859_1504591944341.mp3&vkey=B9d39482218a406823a91a2d0d4d04694"),
         likes: [],
         comments: []),
     Moment(

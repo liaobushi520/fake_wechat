@@ -8,6 +8,7 @@ import 'package:flutter_app/utils.dart';
 import 'package:observable_ui/provider.dart';
 
 import 'app_model.dart';
+import 'audio_player.dart';
 import 'entities.dart';
 import 'memonts_model.dart';
 
@@ -566,11 +567,13 @@ class AudioItemState extends State<AudioItem> {
                 Positioned(
                   child: GestureDetector(
                     onTap: () {
-                      appModel.playOrStop(this.widget.moment.audioLink);
+                      appModel.audioPlayer
+                          .playOrStop(this.widget.moment.audioLink);
+                      print("over");
                     },
                     child: PlayOrPauseIcon(
                       audioLink: this.widget.moment.audioLink,
-                      playStream: appModel.playStream,
+                      playStream: appModel.audioPlayer.playStream,
                     ),
                   ),
                 )
@@ -600,9 +603,6 @@ class AudioItemState extends State<AudioItem> {
         ),
       ),
       onTap: () {
-        Navigator.of(context).pushNamed("/music_player",
-            arguments: this.widget.moment.audioLink);
-
         Navigator.push(
           context,
           MaterialPageRoute(

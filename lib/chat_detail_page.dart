@@ -278,18 +278,18 @@ class InputModeTransformation extends StatelessWidget {
             )),
         child2: GestureDetector(
             onLongPressStart: (details) async {
-              model.recordUri = await appModel.flutterSound.startRecorder(null);
+              model.recordUri = await appModel.recorder.startRecorder(null);
 
               model.recording.value = !model.recording.value;
               print('startRecorder: ${model.recordUri}');
               model.recorderSubscription =
-                  appModel.flutterSound.onRecorderStateChanged.listen((e) {
+                  appModel.recorder.onRecorderStateChanged.listen((e) {
                 model.duration = e.currentPosition.toInt();
                 model.voiceLevel.value = Random().nextInt(7);
               });
             },
             onLongPressEnd: (details) async {
-              String result = await appModel.flutterSound.stopRecorder();
+              String result = await appModel.recorder.stopRecorder();
               print('stopRecorder: $result');
               if (model.recorderSubscription != null) {
                 model.recorderSubscription.cancel();
@@ -475,7 +475,7 @@ class SoundMessage extends StatelessWidget {
                   style: TextStyle(fontSize: 16),
                 ),
                 onPressed: () {
-                  appModel.flutterSound.startPlayer(message.url).then((s) {});
+                  appModel.recorder.startPlayer(message.url).then((s) {});
                 },
               )),
         ))

@@ -11,7 +11,6 @@ import 'HomeModel.dart';
 import 'app_model.dart';
 import 'chat_model.dart';
 import 'home_page.dart';
-import 'music_player.dart';
 
 void main() => runApp(MyApp());
 
@@ -59,12 +58,6 @@ class MyApp extends StatelessWidget {
             return ViewModelProvider(
               viewModel: MomentsModel(),
               child: MomentsPage(),
-            );
-          },
-          "/music_player": (context) {
-            return ViewModelProvider(
-              viewModel: MusicPlayerModel(),
-              child: MusicPlayerPage(),
             );
           },
         },

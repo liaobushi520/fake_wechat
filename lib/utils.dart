@@ -51,7 +51,7 @@ String formatHHmmSS(double time) {
   } else {
     s += "$minute:";
   }
-  var second = (time - (hour * 3600 + minute * 60) % 60).toInt();
+  var second = ((time - hour * 3600 - minute * 60) % 60).toInt();
   if (second < 10) {
     s += "0$second";
   } else {

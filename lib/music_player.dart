@@ -7,13 +7,42 @@ import 'package:flutter_app/entities.dart';
 import 'package:observable_ui/provider.dart';
 
 import 'app_model.dart';
+import 'audio_player.dart';
+import 'widgets.dart';
 
-class MusicPlayerModel {}
+const _kControlPanelHeight = 200.0;
+const _kLrcBlockHeight = 30.0;
+const _kLrcPanelHeight = 400.0;
 
-class MusicPlayerPage extends StatefulWidget {
+class MusicPlayerPage extends StatelessWidget {
   final AudioLink song;
 
   const MusicPlayerPage({Key key, this.song}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    var appModel = ViewModelProvider.of<AppModel>(context);
+
+    return Scaffold(
+      body: _MusicPlayerPage(
+        song: song,
+        screenHeight: MediaQuery.of(context).size.height,
+        audioPlayer: appModel.audioPlayer,
+      ),
+    );
+  }
+}
+
+class _MusicPlayerPage extends StatefulWidget {
+  final AudioLink song;
+
+  final double screenHeight;
+
+  final AudioPlayer audioPlayer;
+
+  const _MusicPlayerPage(
+      {Key key, this.song, this.screenHeight, this.audioPlayer})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -21,53 +50,120 @@ class MusicPlayerPage extends StatefulWidget {
   }
 }
 
-class MusicPlayerPageState extends State<MusicPlayerPage> {
+class MusicPlayerPageState extends State<_MusicPlayerPage>
+    with SingleTickerProviderStateMixin {
+  bool _expand = false;
+
+  AnimationController _controller;
+
+  Animation<RelativeRect> _animation;
+
+  Animation<RelativeRect> _lrcAnimation;
+
   @override
-  Widget build(BuildContext context) {
-    var appModel = ViewModelProvider.of<AppModel>(context);
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        duration: const Duration(milliseconds: 500), vsync: this);
+    var rectTween = RelativeRectTween(
+        begin: RelativeRect.fromLTRB(0, 0, 0, _kLrcBlockHeight),
+        end: RelativeRect.fromLTRB(0, -_kLrcPanelHeight, 0, _kLrcPanelHeight));
+    var lrcRectTween = RelativeRectTween(
+        begin: RelativeRect.fromLTRB(
+            0,
+            this.widget.screenHeight -
+                _kControlPanelHeight -
+                _kLrcPanelHeight / 2 -
+                2 * _kLrcBlockHeight,
+            0,
+            -_kLrcPanelHeight / 2 + 2 * _kLrcBlockHeight),
+        end: RelativeRect.fromLTRB(
+            0,
+            widget.screenHeight - _kControlPanelHeight - _kLrcPanelHeight,
+            0,
+            0));
+    _animation = rectTween.animate(_controller);
 
-    if (appModel.currentSong != widget.song) {
-      appModel.playOrPause(widget.song);
+    _lrcAnimation = lrcRectTween.animate(_controller);
+
+    if (widget.song != widget.audioPlayer.currentSong) {
+      widget.audioPlayer.playOrPause(widget.song);
     }
+  }
 
-    return Scaffold(
-      body: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: 5.0,
-          sigmaY: 5.0,
-        ),
-        child: Container(
-          child: Column(
-            children: <Widget>[
-              Expanded(
-                child: Stack(
-                  children: <Widget>[
-                    Positioned(
+  _handleExpand() {
+    if (_controller.isAnimating) {
+      return;
+    }
+    if (!_expand) {
+      _controller.forward();
+    } else {
+      _controller.reverse();
+    }
+    _expand = !_expand;
+  }
+
+  Widget _build(BuildContext context, AudioLink song) {
+    var appModel = ViewModelProvider.of<AppModel>(context);
+    return Container(
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: Stack(
+                children: <Widget>[
+                  PositionedTransition(
+                    child: GestureDetector(
                       child: LrcPanel(
                         lrcBlocks: FAKE_LRC,
-                        audioLink: appModel.currentSong,
-                        playStream: appModel.playStream,
+                        audioLink: song,
+                        playStream: appModel.audioPlayer.playStream,
                       ),
-                      height: 200,
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
+                      onTap: () {
+                        if (_expand) {
+                          return;
+                        }
+                        _handleExpand();
+                      },
                     ),
-                    CoverPanel(
-                      song: appModel.currentSong,
+                    rect: _lrcAnimation,
+                  ),
+                  PositionedTransition(
+                    child: VerticalGestureDetector(
+                      child: CoverPanel(
+                        song: song,
+                      ),
+                      onEvent: (e) {
+                        if (e == VerticalEvent.UP && !_expand ||
+                            e == VerticalEvent.DOWN && _expand) {
+                          _handleExpand();
+                        }
+                      },
                     ),
-                  ],
-                ),
+                    rect: _animation,
+                  ),
+                ],
               ),
-              PlayControlPanel(
-                audioLink: appModel.currentSong,
-                playStream: appModel.playStream,
-              )
-            ],
-          ),
+            ),
+            SizedBox(
+                height: _kControlPanelHeight,
+                child: PlayControlPanel(
+                  audioLink: song,
+                  playStream: appModel.audioPlayer.playStream,
+                ))
+          ],
         ),
-      ),
-    );
+        color: Color(0xff3f51b5));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _build(context, widget.song);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
   }
 }
 
@@ -80,14 +176,31 @@ class CoverPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: <Widget>[
-        Image.network(song.cover),
+        SizedBox.expand(
+          child: Image.network(
+            song.cover,
+            fit: BoxFit.cover,
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                Color(0xff3f51b5),
+                Color(0xaa3f51b5),
+                Color(0x663f51b5),
+                Color(0x003f51b5),
+              ])),
+        ),
         Positioned(
           child: Text(
             song.name,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          bottom: 0,
+          bottom: 10,
           left: 0,
           right: 0,
         ),
@@ -155,76 +268,69 @@ class PlayControlPanel extends ReactPlayWidget {
 }
 
 class PlayControlPanelState extends ReactPlayWidgetState<PlayControlPanel> {
-  PlayEvent _lastPlayEvent;
-
-  StreamSubscription _subscription;
-
   @override
   Widget build(BuildContext context) {
     var appModel = ViewModelProvider.of<AppModel>(context);
 
-    String duration = "--:--:--";
-
-    String currentPosition = "--:--:--";
-
-    double currentPositionD = 0;
-
-    double durationD = 100;
-
-    if (_lastPlayEvent != null) {
-      durationD = _lastPlayEvent.duration / 1000;
-      currentPositionD = _lastPlayEvent.currentPosition / 1000;
-      duration = _lastPlayEvent.durationText;
-      currentPosition = _lastPlayEvent.currentPositionText;
+    if (_lastPlayEvent != null && _lastPlayEvent.status == -1) {
+      appModel.audioPlayer.playOrStop(widget.audioLink, true);
     }
 
-    return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(currentPosition),
-              Slider(
-                min: 0,
-                max: durationD,
-                value: currentPositionD,
-                onChanged: (v) {
-                  appModel.seekTo(v.toInt());
-                },
-              ),
-              Text(duration)
-            ],
-          ),
-          IconButton(
-            icon: _isPlay()
-                ? Icon(
-                    Icons.pause,
-                    size: 40,
-                  )
-                : Icon(
-                    Icons.play_arrow,
-                    size: 40,
-                  ),
-            onPressed: () {
-              appModel.playOrPause();
-            },
-          )
-        ],
-      ),
-      padding: EdgeInsets.only(bottom: 30, top: 60),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Spacer(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(_lastPlayEvent != null
+                ? _lastPlayEvent.currentPositionText
+                : "--:--:--"),
+            Slider(
+              min: 0,
+              max: _lastPlayEvent != null ? _lastPlayEvent.duration : 0,
+              value:
+                  _lastPlayEvent != null ? _lastPlayEvent.currentPosition : 0,
+              onChanged: (v) {
+                appModel.audioPlayer.seekTo(v.toInt());
+              },
+            ),
+            Text(_lastPlayEvent != null
+                ? _lastPlayEvent.durationText
+                : "--:--:--")
+          ],
+        ),
+        IconButton(
+          icon: _isPlay()
+              ? Icon(
+                  Icons.pause,
+                  size: 40,
+                )
+              : Icon(
+                  Icons.play_arrow,
+                  size: 40,
+                ),
+          onPressed: () {
+            appModel.audioPlayer.playOrPause();
+          },
+        ),
+        SizedBox(
+          height: 30,
+        )
+      ],
     );
   }
 
   @override
   bool shouldRebuild(PlayEvent event, PlayEvent lastEvent) {
-    return lastEvent == null ||
+    var needBuild = lastEvent == null ||
         (event.audio != widget.audioLink &&
             lastEvent.audio == widget.audioLink) ||
         (widget.audioLink == event.audio &&
             (lastEvent.status != event.status ||
                 lastEvent.currentPosition != event.currentPosition));
+
+    return needBuild;
   }
 }
 
@@ -241,56 +347,114 @@ class LrcPanel extends ReactPlayWidget {
   }
 }
 
-///存在一个问题 ，高亮行要显示在中间
 class LrcPanelState extends ReactPlayWidgetState<LrcPanel> {
   LrcBlock _highlightBlock;
 
-  @override
-  Widget _build(BuildContext context) {
-    var blocks = widget.lrcBlocks.map((block) {
-      if (block == _highlightBlock) {
-        return TextSpan(
-            text: block.text + "\n", style: TextStyle(color: Colors.orange));
-      }
-
-      return TextSpan(text: block.text + "\n");
-    });
-
-    return CustomScrollView(
-      anchor: 0.5,
-      slivers: <Widget>[
-        SliverToBoxAdapter(
-          child: RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-                style: TextStyle(
-                  color: Colors.black,
-                ),
-                children: blocks.toList()),
-          ),
-        )
-      ],
-    );
-  }
+//  @override
+//  Widget build(BuildContext context) {
+//    var scrollOffset = 500.0;
+//    if (_highlightBlock != null) {
+//      scrollOffset = widget.lrcBlocks.indexOf(_highlightBlock) * 30.0;
+//    }
+//
+//    var blocks = widget.lrcBlocks.map((block) {
+//      if (block == _highlightBlock) {
+//        return TextSpan(
+//            text: block.text + "\n",
+//            style: TextStyle(color: Colors.orange, fontSize: 16));
+//      }
+//
+//      return TextSpan(text: block.text + "\n", style: TextStyle(fontSize: 16));
+//    });
+//
+//    return CustomScrollView(
+//      anchor: 0.5,
+//      controller: ScrollController(initialScrollOffset: scrollOffset),
+//      slivers: <Widget>[
+//        SliverToBoxAdapter(
+//          child: RichText(
+//            textAlign: TextAlign.center,
+//            text: TextSpan(
+//                style: TextStyle(
+//                  color: Colors.black,
+//                ),
+//                children: blocks.toList()),
+//          ),
+//        )
+//      ],
+//    );
+//  }
+  ScrollController scrollController =
+      ScrollController(initialScrollOffset: _kLrcPanelHeight / 2);
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      anchor: 0.5,
-      slivers: <Widget>[
-        SliverFixedExtentList(
-          itemExtent: 50,
-          delegate: SliverChildBuilderDelegate((context, index) {
-            var block = widget.lrcBlocks[index];
-            if (block == _highlightBlock) {
-              return Text(block.text + "\n",
-                  style: TextStyle(color: Colors.orange));
-            }
-            return Text(block.text + "\n");
-          }, childCount: widget.lrcBlocks.length),
-        )
-      ],
+    return ListView.builder(
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return SizedBox(
+            height: _kLrcPanelHeight / 2,
+          );
+        }
+
+        if (index == widget.lrcBlocks.length + 1) {
+          return SizedBox(
+            height: _kLrcPanelHeight / 2,
+          );
+        }
+
+        var block = widget.lrcBlocks[index - 1];
+        if (block == _highlightBlock) {
+          return SizedBox(
+            child: Text(
+              block.text + "\n",
+              style: TextStyle(color: Colors.orange, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            height: _kLrcBlockHeight,
+          );
+        }
+
+        return SizedBox(
+          child: Text(
+            block.text + "\n",
+            style: TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          height: _kLrcBlockHeight,
+        );
+      },
+      itemCount: widget.lrcBlocks.length + 2,
+      controller: scrollController,
     );
+
+//    return CustomScrollView(
+//      anchor: 0.5,
+//      controller: scrollController,
+//      slivers: <Widget>[
+//        SliverPadding(
+//          sliver: SliverFixedExtentList(
+//            itemExtent: 30,
+//            delegate: SliverChildBuilderDelegate((context, index) {
+//              var block = widget.lrcBlocks[index];
+//              if (block == _highlightBlock) {
+//                return Text(
+//                  block.text + "\n",
+//                  style: TextStyle(color: Colors.orange, fontSize: 16),
+//                  textAlign: TextAlign.center,
+//                );
+//              }
+//              return Text(
+//                block.text + "\n",
+//                style: TextStyle(fontSize: 16),
+//                textAlign: TextAlign.center,
+//              );
+//            }, childCount: widget.lrcBlocks.length),
+//          ),
+//          padding: EdgeInsets.only(bottom: 100),
+//        )
+//      ],
+//    );
   }
 
   @override
@@ -305,6 +469,17 @@ class LrcPanelState extends ReactPlayWidgetState<LrcPanel> {
     }
     var needRebuild = block != _highlightBlock;
     _highlightBlock = block;
+
+    if (needRebuild) {
+      var scrollOffset = 0.0;
+      if (_highlightBlock != null) {
+        scrollOffset =
+            widget.lrcBlocks.indexOf(_highlightBlock) * _kLrcBlockHeight;
+      }
+      scrollController.animateTo(scrollOffset,
+          duration: Duration(milliseconds: 100), curve: Curves.ease);
+    }
+
     return needRebuild;
   }
 }
