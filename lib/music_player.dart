@@ -83,7 +83,6 @@ class MusicPlayerPageState extends State<_MusicPlayerPage>
             0,
             0));
     _animation = rectTween.animate(_controller);
-
     _lrcAnimation = lrcRectTween.animate(_controller);
 
     if (widget.song != widget.audioPlayer.currentSong) {

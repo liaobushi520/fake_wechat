@@ -28,6 +28,9 @@ dependencies:
   flutter_sound:
     1.6.0
 
+  video_player:
+     ^0.10.5
+
   observable_ui:
     path: ../flutter_app/observable_ui
 

@@ -13,6 +13,7 @@
     <application
         android:name="io.flutter.app.FlutterApplication"
         android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"
         android:label="flutter_app">
         <activity
             android:name=".MainActivity"
@@ -20,6 +21,7 @@
             android:hardwareAccelerated="true"
             android:launchMode="singleTop"
             android:theme="@style/LaunchTheme"
+
             android:windowSoftInputMode="adjustResize">
             <!-- This keeps the window background of the activity showing
                  until Flutter renders its first frame. It can be removed if

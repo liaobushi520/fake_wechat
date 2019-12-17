@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
+
 class Item {}
 
 class Message implements Item {
@@ -130,5 +132,19 @@ class MinProgram {
 
   final String icon;
 
-  const MinProgram(this.name, this.icon);
+  final void Function(BuildContext context, MinProgram minProgram) onEnter;
+
+  const MinProgram(this.name, this.icon, this.onEnter);
+}
+
+class VideoFeed {
+  final String url;
+
+  final String userName;
+
+  final String voiceSourceText;
+
+  final String text;
+
+  VideoFeed({this.url, this.userName, this.voiceSourceText, this.text});
 }

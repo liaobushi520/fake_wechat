@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_app/SubscriptionBoxModel.dart';
 import 'package:flutter_app/chat_detail_page.dart';
 import 'package:flutter_app/memonts_model.dart';
 import 'package:flutter_app/moments_page.dart';
+import 'package:flutter_app/subscription_box_model.dart';
 import 'package:flutter_app/subscription_message_page.dart';
 import 'package:observable_ui/provider.dart';
 

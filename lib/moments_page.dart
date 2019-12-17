@@ -569,7 +569,6 @@ class AudioItemState extends State<AudioItem> {
                     onTap: () {
                       appModel.audioPlayer
                           .playOrStop(this.widget.moment.audioLink);
-                      print("over");
                     },
                     child: PlayOrPauseIcon(
                       audioLink: this.widget.moment.audioLink,

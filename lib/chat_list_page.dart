@@ -280,28 +280,35 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
           j++) {
         var item = minPrograms[j];
 
-        widgets.add(Expanded(
-          child: Align(
-            alignment: Alignment.center,
-            child: Column(
-              children: <Widget>[
-                Container(
-                    width: 50,
-                    height: 50,
-                    child: CircleAvatar(
-                      backgroundImage: NetworkImage(item.icon),
-                    )),
-                SizedBox(
-                  height: 4,
+        widgets.add(
+          Expanded(
+            child: GestureDetector(
+              child: Align(
+                alignment: Alignment.center,
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                        width: 50,
+                        height: 50,
+                        child: CircleAvatar(
+                          backgroundImage: NetworkImage(item.icon),
+                        )),
+                    SizedBox(
+                      height: 4,
+                    ),
+                    Text(
+                      item.name,
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    )
+                  ],
                 ),
-                Text(
-                  item.name,
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                )
-              ],
+              ),
+              onTap: () {
+                item.onEnter(context, item);
+              },
             ),
           ),
-        ));
+        );
       }
 
       if (i == rowCount - 1) {
