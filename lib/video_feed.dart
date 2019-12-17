@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_app/utils.dart';
 import 'package:flutter_app/widgets.dart';
 import 'package:observable_ui/core2.dart';
 import 'package:observable_ui/provider.dart';
@@ -16,13 +19,13 @@ class VideoFeedModel {
             'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
         userName: "lzj",
         text: "好好玩",
-        voiceSourceText: "XXXXXX"),
+        voiceSourceText: "@廖布斯创作的原声-廖布斯"),
     VideoFeed(
         url:
             'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
         userName: "lh",
         text: "好好玩吗",
-        voiceSourceText: "XXXXXX")
+        voiceSourceText: "@周星驰创作的原声-周星驰")
   ]);
 }
 
@@ -62,25 +65,50 @@ class VideoFeeds extends StatefulWidget {
   }
 }
 
+///抖音的效果是over scroll之后 PageView悬停 ，太难了 ，暂时搞不定
+
 class VideoFeedsState extends State<VideoFeeds> {
+  bool indicatorVisible = false;
+
   @override
   Widget build(BuildContext context) {
     var model = ViewModelProvider.of<VideoFeedModel>(context);
 
-    return PageView.builder(
-      onPageChanged: (index) {
-        if (index < model.videoFeeds.length) {
-          model.currentVideoFeed.value = model.videoFeeds[index];
-        }
-      },
-      scrollDirection: Axis.vertical,
-      itemCount: model.videoFeeds.length + 1,
-      itemBuilder: (context, index) {
-        if (index == model.videoFeeds.length) {
-          return LinearProgressIndicator();
-        } else {
-          return VideoFeedScreen(videoFeed: model.videoFeeds[index]);
-        }
+    return NotificationListener(
+      child: Column(
+        children: <Widget>[
+          Expanded(
+            child: PageView.builder(
+              onPageChanged: (index) {
+                model.currentVideoFeed.value = model.videoFeeds[index];
+              },
+              scrollDirection: Axis.vertical,
+              itemCount: model.videoFeeds.length,
+              itemBuilder: (context, index) {
+                return VideoFeedScreen(videoFeed: model.videoFeeds[index]);
+              },
+            ),
+          ),
+          Visibility(
+            child: CircularProgressIndicator(),
+            visible: indicatorVisible,
+          )
+        ],
+      ),
+      onNotification: (ScrollNotification notification) {
+//        print(notification);
+//        if (notification.depth == 0 && notification is ScrollEndNotification) {
+//          setState(() {
+//            indicatorVisible = true;
+//            Future.delayed(Duration(seconds: 5), () {
+//              setState(() {
+//                indicatorVisible = false;
+//              });
+//            });
+//          });
+//        }
+
+        return true;
       },
     );
   }
@@ -182,16 +210,22 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
                   children: <Widget>[
                     Text(
                       widget.videoFeed.userName,
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                    SizedBox(
+                      height: 8,
                     ),
                     Text(
                       widget.videoFeed.text,
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                    SizedBox(
+                      height: 8,
                     ),
                     MarqueeText(
                       text: widget.videoFeed.voiceSourceText,
-                      style: TextStyle(color: Colors.white),
-                      width: 90,
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                      width: 160,
                       height: 20,
                     )
                   ],
@@ -210,14 +244,26 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
                         style: TextStyle(color: Colors.white),
                       )
                     ],
-                  )
+                  ),
+                  SizedBox(
+                    height: 60,
+                  ),
+                  Jukebox()
                 ],
               )
             ],
           ),
-          bottom: 10,
+          bottom: _kProgressRegulatorIntrinsicHeight,
           left: 10,
           right: 10,
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: ProgressRegulator(
+            duration: 100,
+          ),
         )
       ],
     );
@@ -247,6 +293,129 @@ class PersonProfileScreenState extends State<PersonProfileScreen> {
 
     return Center(
       child: Text("个人主页" + model.currentVideoFeed.value.userName),
+    );
+  }
+}
+
+class Jukebox extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return JukeboxState();
+  }
+}
+
+class JukeboxState extends State<Jukebox> with SingleTickerProviderStateMixin {
+  AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 10),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller?.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      child: Container(
+        child: Stack(
+          children: <Widget>[buildCircleImage(40, NetworkImage(AVATAR[0]))],
+        ),
+      ),
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.rotate(
+          angle: _controller.value * 2.0 * pi,
+          child: child,
+        );
+      },
+    );
+  }
+}
+
+const _kProgressRegulatorIntrinsicHeight = 10.0;
+
+class ProgressRegulator extends StatefulWidget {
+  final double duration;
+
+  const ProgressRegulator({Key key, this.duration}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return ProgressRegulatorState();
+  }
+}
+
+class ProgressRegulatorState extends State<ProgressRegulator> {
+  double _currentProgress = 0;
+
+  bool _adjusting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.bottomCenter,
+      child: Column(
+        children: <Widget>[
+          Visibility(
+            child: CustomPaint(
+              child: Container(
+                color: Colors.black,
+                width: double.infinity,
+                padding: EdgeInsets.only(top: 30, bottom: 30),
+                alignment: Alignment.center,
+                child: RichText(
+                  text: TextSpan(children: [
+                    TextSpan(
+                        text: "04:10",
+                        style: TextStyle(color: Colors.white, fontSize: 22)),
+                    TextSpan(
+                        text: " /08:10",
+                        style:
+                            TextStyle(color: Color(0xffbdbdbd), fontSize: 22))
+                  ]),
+                ),
+              ),
+            ),
+            visible: _adjusting,
+          ),
+          SliderTheme(
+            child: SizedBox(
+              child: Slider(
+                min: 0,
+                max: 100,
+                value: _currentProgress,
+                onChangeEnd: (value) {
+                  setState(() {
+                    _adjusting = false;
+                  });
+                },
+                onChanged: (value) {
+                  setState(() {
+                    _currentProgress = value;
+                    _adjusting = true;
+                  });
+                },
+              ),
+              height: _kProgressRegulatorIntrinsicHeight,
+            ),
+            data: SliderTheme.of(context).copyWith(
+              showValueIndicator: ShowValueIndicator.always,
+              trackHeight: _adjusting ? 3 : 1,
+              thumbShape:
+                  RoundSliderThumbShape(enabledThumbRadius: _adjusting ? 4 : 0),
+            ),
+          )
+        ],
+      ),
     );
   }
 }

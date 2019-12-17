@@ -100,9 +100,9 @@ class MarqueeTextRenderObject extends RenderBox {
         text: TextSpan(text: lastText, style: style),
         textDirection: TextDirection.ltr)
       ..layout();
-    print(
-        "count:${count} lastPainter.width:${lastPainter.width}  textPainter.width:${textPainter.width}   size.width:${size.width} $_dx");
+
     context.canvas.save();
+
     context.canvas.clipRect(Rect.fromLTRB(
         offset.dx, offset.dy, offset.dx + size.width, offset.dy + size.height));
     var newOffset = Offset(offset.dx + _dx, offset.dy);
@@ -179,4 +179,28 @@ class VerticalGestureDetectorState extends State<VerticalGestureDetector> {
   void _handlePointerUp(PointerUpEvent event) {
     startPointEvent = null;
   }
+}
+
+///圆形图片
+
+Widget buildCircleImage(double size, ImageProvider provider) {
+  return SizedBox(
+    width: size,
+    height: size,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          image: DecorationImage(image: provider, fit: BoxFit.cover)),
+    ),
+  );
+}
+
+Widget buildCircleImage2(double size, ImageProvider provider) {
+  return ClipOval(
+      child: Image(
+    image: provider,
+    width: size,
+    height: size,
+    fit: BoxFit.cover,
+  ));
 }
