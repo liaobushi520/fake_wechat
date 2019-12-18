@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-class DiscoveryPage extends StatelessWidget {
+class DiscoveryPage extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return DiscoveryPageState();
+  }
+}
+
+class DiscoveryPageState extends State<DiscoveryPage>
+    with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Column(
       children: <Widget>[
         GestureDetector(
@@ -28,4 +37,7 @@ class DiscoveryPage extends StatelessWidget {
       ],
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

@@ -7,9 +7,9 @@ import 'package:flutter_app/subscription_box_model.dart';
 import 'package:flutter_app/subscription_message_page.dart';
 import 'package:observable_ui/provider.dart';
 
-import 'HomeModel.dart';
 import 'app_model.dart';
 import 'chat_model.dart';
+import 'home_model.dart';
 import 'home_page.dart';
 
 void main() => runApp(MyApp());

@@ -6,7 +6,7 @@ import 'package:flutter_app/entities.dart';
 import 'package:flutter_app/utils.dart';
 import 'package:observable_ui/provider.dart';
 
-import 'HomeModel.dart';
+import 'home_model.dart';
 import 'widgets.dart';
 
 class TopMaskLayer extends CustomPainter {
@@ -187,6 +187,8 @@ class MinProgramHeader extends StatefulWidget {
 
 class OverScrollEndNotification extends Notification {}
 
+const _kOverScrollCriticalRadio = 3 / 2;
+
 class MinProgramHeaderState extends State<MinProgramHeader> {
   ScrollController scrollController = ScrollController();
 
@@ -206,7 +208,8 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
           child: Listener(
             onPointerUp: (e) {
               if (scrollController.position.pixels >
-                  (scrollController.position.maxScrollExtent * 7 / 4)) {
+                  (scrollController.position.maxScrollExtent *
+                      _kOverScrollCriticalRadio)) {
                 OverScrollEndNotification().dispatch(context);
               }
             },
@@ -341,12 +344,14 @@ class ChatListPage extends StatefulWidget {
   }
 }
 
-class ChatListPageState extends State<ChatListPage> {
+class ChatListPageState extends State<ChatListPage>
+    with AutomaticKeepAliveClientMixin {
   ScrollController _scrollController =
       ScrollController(initialScrollOffset: 600);
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     var model = ViewModelProvider.of<HomeModel>(context);
     return NotificationListener(
       onNotification: (Notification notification) {
@@ -468,4 +473,7 @@ class ChatListPageState extends State<ChatListPage> {
     super.dispose();
     _scrollController.dispose();
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

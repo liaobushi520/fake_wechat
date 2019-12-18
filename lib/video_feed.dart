@@ -51,19 +51,19 @@ class VideoFeedPageState extends State<VideoFeedPage> {
         body: Container(
           color: Colors.black,
           child: NotificationListener(
-            child: SafeArea(
-              child: Stack(
-                children: <Widget>[
-                  PageView(
-                    controller: _pageController,
-                    scrollDirection: Axis.horizontal,
-                    children: <Widget>[
-                      VideoFeeds(),
-                      VideoFeeds(),
-                      PersonProfileScreen()
-                    ],
-                  ),
-                  Positioned(
+            child: Stack(
+              children: <Widget>[
+                PageView(
+                  controller: _pageController,
+                  scrollDirection: Axis.horizontal,
+                  children: <Widget>[
+                    VideoFeeds(),
+                    VideoFeeds(),
+                    PersonProfileScreen()
+                  ],
+                ),
+                Positioned(
+                  child: SafeArea(
                     child: Center(
                       child: TabBar(
                         radio: _tabBarIndicatorRadio,
@@ -74,12 +74,12 @@ class VideoFeedPageState extends State<VideoFeedPage> {
                         },
                       ),
                     ),
-                    left: _tabBarLeft,
-                    right: -_tabBarLeft,
-                    top: 10,
                   ),
-                ],
-              ),
+                  left: _tabBarLeft,
+                  right: -_tabBarLeft,
+                  top: 10,
+                ),
+              ],
             ),
             onNotification: (ScrollNotification notification) {
               if (notification is ScrollUpdateNotification &&
@@ -195,26 +195,29 @@ class VideoFeeds extends StatefulWidget {
   }
 }
 
-///抖音的效果是over scroll之后 PageView悬停 ，太难了 ，暂时搞不定
+///抖音的效果是over scroll之后 PageView悬停
 class VideoFeedsState extends State<VideoFeeds> {
   bool indicatorVisible = false;
+
+  PageController _pageController = PageController();
 
   @override
   Widget build(BuildContext context) {
     var model = ViewModelProvider.of<VideoFeedModel>(context);
-
     return NotificationListener(
       child: Column(
         children: <Widget>[
           Expanded(
             child: PageView.builder(
+              controller: _pageController,
               onPageChanged: (index) {
                 model.currentVideoFeed.value = model.videoFeeds[index];
               },
               scrollDirection: Axis.vertical,
               itemCount: model.videoFeeds.length,
               itemBuilder: (context, index) {
-                return VideoFeedScreen(videoFeed: model.videoFeeds[index]);
+                return VideoFeedScreen(
+                    videoFeedModel: model, videoFeed: model.videoFeeds[index]);
               },
             ),
           ),
@@ -246,13 +249,18 @@ class VideoFeedsState extends State<VideoFeeds> {
 class VideoFeedScreen extends StatefulWidget {
   final VideoFeed videoFeed;
 
-  const VideoFeedScreen({Key key, this.videoFeed}) : super(key: key);
+  final VideoFeedModel videoFeedModel;
+
+  const VideoFeedScreen({Key key, this.videoFeed, this.videoFeedModel})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
     return VideoFeedScreenState();
   }
 }
+
+///涉及的细节是网络视频，一边播放一边缓存
 
 class VideoFeedScreenState extends State<VideoFeedScreen>
     with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
@@ -265,12 +273,21 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
   @override
   void initState() {
     super.initState();
+
     _controller = VideoPlayerController.network(widget.videoFeed.url)
       ..initialize().then((_) {
-        setState(() {
-          _controller.play();
-        });
-      });
+        ///如果是当前页，就立即播放
+        if (widget.videoFeedModel.currentVideoFeed.value == widget.videoFeed) {
+          setState(() {
+            _controller.play();
+          });
+        } else {
+          setState(() {
+            _controller.pause();
+          });
+        }
+      })
+      ..setLooping(true);
 
     _scaleController = AnimationController(
         duration: const Duration(milliseconds: 500), vsync: this);
@@ -390,7 +407,7 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
           left: 0,
           right: 0,
           child: ProgressRegulator(
-            duration: 100,
+            videoPlayerController: _controller,
           ),
         )
       ],
@@ -449,8 +466,8 @@ class JukeboxState extends State<Jukebox> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
-    super.dispose();
     _controller?.dispose();
+    super.dispose();
   }
 
   @override
@@ -475,9 +492,10 @@ class JukeboxState extends State<Jukebox> with SingleTickerProviderStateMixin {
 const _kProgressRegulatorIntrinsicHeight = 10.0;
 
 class ProgressRegulator extends StatefulWidget {
-  final double duration;
+  final VideoPlayerController videoPlayerController;
 
-  const ProgressRegulator({Key key, this.duration}) : super(key: key);
+  const ProgressRegulator({Key key, this.videoPlayerController})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -485,68 +503,154 @@ class ProgressRegulator extends StatefulWidget {
   }
 }
 
-class ProgressRegulatorState extends State<ProgressRegulator> {
-  double _currentProgress = 0;
-
+class ProgressRegulatorState extends State<ProgressRegulator>
+    with SingleTickerProviderStateMixin {
   bool _adjusting = false;
 
+  double _adjustingValue = 0.0;
+
+  void Function() _listener;
+
+  AnimationController _controller;
+
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    _listener = () {
+      print(widget.videoPlayerController.value);
+      setState(() {});
+    };
+    widget.videoPlayerController.addListener(_listener);
+
+    _controller = AnimationController(
+        duration: const Duration(milliseconds: 600),
+        vsync: this,
+        upperBound: 4,
+        lowerBound: 1)
+      ..repeat();
+  }
+
+  Widget _buildIndeterminateProgress() {
     return Container(
-      alignment: Alignment.bottomCenter,
-      child: Column(
+      height: _kProgressRegulatorIntrinsicHeight,
+      child: Stack(
+        alignment: Alignment.center,
         children: <Widget>[
-          Visibility(
-            child: CustomPaint(
-              child: Container(
-                color: Colors.black,
-                width: double.infinity,
-                padding: EdgeInsets.only(top: 30, bottom: 30),
-                alignment: Alignment.center,
-                child: RichText(
-                  text: TextSpan(children: [
-                    TextSpan(
-                        text: "04:10",
-                        style: TextStyle(color: Colors.white, fontSize: 22)),
-                    TextSpan(
-                        text: " /08:10",
-                        style:
-                            TextStyle(color: Color(0xffbdbdbd), fontSize: 22))
-                  ]),
-                ),
-              ),
-            ),
-            visible: _adjusting,
+          Container(
+            alignment: Alignment.center,
+            height: 1,
+            color: Color(0x66bdbdbd),
           ),
-          SliderTheme(
-            child: SizedBox(
-              child: Slider(
-                min: 0,
-                max: 100,
-                value: _currentProgress,
-                onChangeEnd: (value) {
-                  setState(() {
-                    _adjusting = false;
-                  });
-                },
-                onChanged: (value) {
-                  setState(() {
-                    _currentProgress = value;
-                    _adjusting = true;
-                  });
-                },
-              ),
-              height: _kProgressRegulatorIntrinsicHeight,
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform(
+                alignment: Alignment.center,
+                transformHitTests: true,
+                child: child,
+                transform: Matrix4.diagonal3Values(_controller.value, 1.0, 1.0),
+              );
+            },
+            child: Container(
+              alignment: Alignment.center,
+              height: 1,
+              width: 100,
+              color: Color(0xffbdbdbd),
             ),
-            data: SliderTheme.of(context).copyWith(
-              showValueIndicator: ShowValueIndicator.always,
-              trackHeight: _adjusting ? 3 : 1,
-              thumbShape:
-                  RoundSliderThumbShape(enabledThumbRadius: _adjusting ? 4 : 0),
-            ),
-          )
+          ),
         ],
       ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    VideoPlayerValue playerValue = widget.videoPlayerController.value;
+    //视频还未加载完全,显示动画
+    if (playerValue.duration == null) {
+      return _buildIndeterminateProgress();
+    }
+
+    return Column(
+      children: <Widget>[
+        Visibility(
+          child: CustomPaint(
+            child: Container(
+              color: Colors.black,
+              width: double.infinity,
+              padding: EdgeInsets.only(top: 30, bottom: 30),
+              alignment: Alignment.center,
+              child: RichText(
+                text: TextSpan(children: [
+                  TextSpan(
+                      text: "${formatHHmmSS(_adjustingValue)}",
+                      style: TextStyle(color: Colors.white, fontSize: 22)),
+                  TextSpan(
+                      text:
+                          " /${formatHHmmSS(playerValue.duration.inSeconds.toDouble())}",
+                      style: TextStyle(color: Color(0xffbdbdbd), fontSize: 22))
+                ]),
+              ),
+            ),
+          ),
+          visible: _adjusting,
+        ),
+        SliderTheme(
+          child: SizedBox(
+            child: Slider(
+              min: 0,
+              max: playerValue.duration.inSeconds.toDouble(),
+              value: _adjusting
+                  ? _adjustingValue
+                  : playerValue.position.inSeconds.toDouble(),
+              onChangeEnd: (value) {
+                setState(() {
+                  _adjusting = false;
+                  widget.videoPlayerController
+                      .seekTo(Duration(seconds: value.toInt()));
+                });
+              },
+              onChanged: (value) {
+                setState(() {
+                  _adjusting = true;
+                  _adjustingValue = value;
+                });
+              },
+            ),
+            height: _kProgressRegulatorIntrinsicHeight,
+          ),
+          data: SliderTheme.of(context).copyWith(
+            showValueIndicator: ShowValueIndicator.always,
+            thumbColor: Colors.white,
+            activeTrackColor: Colors.white,
+            inactiveTrackColor:
+                _adjusting ? Color(0x66bdbdbd) : Colors.transparent,
+            trackHeight: _adjusting ? 3 : 1,
+            thumbShape:
+                RoundSliderThumbShape(enabledThumbRadius: _adjusting ? 4 : 0),
+          ),
+        )
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+    widget.videoPlayerController.removeListener(_listener);
+  }
+}
+
+class IndeterminateProgress extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // TODO: implement paint
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    // TODO: implement shouldRepaint
+    throw UnimplementedError();
   }
 }

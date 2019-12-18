@@ -146,5 +146,13 @@ class VideoFeed {
 
   final String text;
 
-  VideoFeed({this.url, this.userName, this.voiceSourceText, this.text});
+  final String voiceSourceCover;
+
+  VideoFeed({
+    this.url,
+    this.userName,
+    this.voiceSourceText,
+    this.text,
+    this.voiceSourceCover,
+  });
 }

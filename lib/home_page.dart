@@ -3,10 +3,10 @@ import 'package:flutter/widgets.dart';
 import 'package:observable_ui/core.dart';
 import 'package:observable_ui/provider.dart';
 
-import 'HomeModel.dart';
 import 'chat_list_page.dart';
 import 'discovery_page.dart';
 import 'friend_list_page.dart';
+import 'home_model.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -36,7 +36,6 @@ class HomeState extends State<HomePage> {
                 ChatListPage(),
                 FriendListPage(),
                 DiscoveryPage(),
-                ChatListPage(),
               ],
             ),
           ),
@@ -54,13 +53,9 @@ class HomeState extends State<HomePage> {
                 icon: Icon(Icons.school),
                 title: Text('发现'),
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.school),
-                title: Text('我'),
-              ),
             ],
             currentIndex: model.currentIndex.value,
-            selectedItemColor: Colors.amber[800],
+            selectedItemColor: Color.fromARGB(255, 88, 191, 107),
             onTap: (value) {
               model.currentIndex.value = value;
               _pageController.jumpToPage(value);
