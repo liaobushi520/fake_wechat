@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_app/utils.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 
-import 'entities.dart';
+import '../../entities.dart';
 
 class Response {
   final bool success;

@@ -8,7 +8,7 @@ import 'package:observable_ui/core2.dart';
 import 'package:observable_ui/provider.dart';
 import 'package:video_player/video_player.dart';
 
-import 'entities.dart';
+import '../../entities.dart';
 
 class VideoFeedModel {
   ValueNotifier<VideoFeed> currentVideoFeed = ValueNotifier(null);

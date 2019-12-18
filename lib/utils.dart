@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/entities.dart';
-import 'package:flutter_app/video_feed.dart';
+import 'package:flutter_app/page/tiktok/video_feed.dart';
 
 const AVATAR = const <String>[
   "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg",

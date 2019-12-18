@@ -3,14 +3,14 @@ import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/music_player.dart';
+import 'package:flutter_app/page/qqmusic/music_player_page.dart';
 import 'package:flutter_app/utils.dart';
 import 'package:observable_ui/provider.dart';
 
-import 'app_model.dart';
-import 'audio_player.dart';
-import 'entities.dart';
-import 'memonts_model.dart';
+import '../../app_model.dart';
+import '../qqmusic/audio_player.dart';
+import '../../entities.dart';
+import '../../memonts_model.dart';
 
 enum CommentAction { like, comment }
 

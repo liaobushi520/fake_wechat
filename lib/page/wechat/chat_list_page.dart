@@ -6,8 +6,8 @@ import 'package:flutter_app/entities.dart';
 import 'package:flutter_app/utils.dart';
 import 'package:observable_ui/provider.dart';
 
-import 'home_model.dart';
-import 'widgets.dart';
+import '../../home_model.dart';
+import '../../widgets.dart';
 
 class TopMaskLayer extends CustomPainter {
   final double shrinkOffset;

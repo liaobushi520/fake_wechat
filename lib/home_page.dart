@@ -3,9 +3,9 @@ import 'package:flutter/widgets.dart';
 import 'package:observable_ui/core.dart';
 import 'package:observable_ui/provider.dart';
 
-import 'chat_list_page.dart';
-import 'discovery_page.dart';
-import 'friend_list_page.dart';
+import 'page/wechat/chat_list_page.dart';
+import 'page/wechat/discovery_page.dart';
+import 'page/wechat/friend_list_page.dart';
 import 'home_model.dart';
 
 class HomePage extends StatefulWidget {
