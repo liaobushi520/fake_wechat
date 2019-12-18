@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/entities.dart';
-import 'package:flutter_app/page/tiktok/video_feed.dart';
 
 const AVATAR = const <String>[
   "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg",
@@ -8,36 +6,6 @@ const AVATAR = const <String>[
   "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1575338736&di=59553e505a6fd221c24ae06c4629506e&imgtype=jpg&er=1&src=http%3A%2F%2Fimg.ifeng.com%2Fres%2F200811%2F1126_500745.jpg",
   "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1576472833976&di=bfc3b95448eb89321f4e25ea0fbf2054&imgtype=0&src=http%3A%2F%2Fhbimg.huabanimg.com%2Ff2b2ad85a548a22049f10f90cf32dd8cd9f79b0c90c0-gbkg5j_fw658",
   "http://img0.imgtn.bdimg.com/it/u=1944742345,2511093610&fm=214&gp=0.jpg"
-];
-
-final MIN_PROGRAMS = [
-  MinProgram("抖音",
-      "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1576472833976&di=bfc3b95448eb89321f4e25ea0fbf2054&imgtype=0&src=http%3A%2F%2Fhbimg.huabanimg.com%2Ff2b2ad85a548a22049f10f90cf32dd8cd9f79b0c90c0-gbkg5j_fw658",
-      (context, item) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => VideoFeedPage(),
-      ),
-    );
-  }),
-  MinProgram("QQ音乐", "http://pic.962.net/up/2016-4/2016418917511892.png",
-      (context, item) {}),
-  MinProgram("豆瓣", "http://pic2.orsoon.com/2016/0914/20160914112533658.png",
-      (context, item) {}),
-  MinProgram("搞笑趣图", AVATAR[0], (context, item) {}),
-  MinProgram("搞笑趣图", AVATAR[0], (context, item) {}),
-  MinProgram("搞笑趣图", AVATAR[0], (context, item) {}),
-  MinProgram("搞笑趣图", AVATAR[0], (context, item) {}),
-  MinProgram("搞笑趣图", AVATAR[0], (context, item) {}),
-  MinProgram("搞笑趣图", AVATAR[0], (context, item) {}),
-  MinProgram("搞笑趣图", AVATAR[0], (context, item) {}),
-  MinProgram("搞笑趣图", AVATAR[0], (context, item) {}),
-  MinProgram("搞笑趣图", AVATAR[0], (context, item) {}),
-  MinProgram("搞笑趣图", AVATAR[0], (context, item) {}),
-  MinProgram("环球时报", AVATAR[1], (context, item) {}),
-  MinProgram("环球时报", AVATAR[0], (context, item) {}),
-  MinProgram("搞笑趣图", AVATAR[0], (context, item) {})
 ];
 
 const colors = [Colors.orange, Colors.red, Colors.blue, Colors.white];

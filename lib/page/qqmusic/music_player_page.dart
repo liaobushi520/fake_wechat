@@ -7,8 +7,8 @@ import 'package:flutter_app/entities.dart';
 import 'package:observable_ui/provider.dart';
 
 import '../../app_model.dart';
-import 'audio_player.dart';
 import '../../widgets.dart';
+import 'audio_player.dart';
 
 const _kControlPanelHeight = 200.0;
 const _kLrcBlockHeight = 30.0;

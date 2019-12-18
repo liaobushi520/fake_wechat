@@ -2,6 +2,116 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_app/rapid_positioning.dart';
 
+import '../../data_source.dart';
+import '../../entities.dart';
+
+List items = [
+  "B",
+  FRIENDS[11],
+  "C",
+  FRIENDS[1],
+  FRIENDS[5],
+  "L",
+  FRIENDS[0],
+  FRIENDS[2],
+  FRIENDS[12],
+  "J",
+  FRIENDS[7],
+  "X",
+  FRIENDS[6],
+  FRIENDS[10],
+  "Y",
+  FRIENDS[4],
+  "Z",
+  FRIENDS[3],
+  FRIENDS[8],
+  FRIENDS[9],
+  FRIENDS.length
+];
+
+class _Item<T> {
+  final T data;
+
+  final void Function(BuildContext buildContext, T data) build;
+
+  _Item(this.data, this.build);
+}
+
+Widget _buildTotalFriendCount(BuildContext buildContext, int data) {
+  return Container(
+    alignment: Alignment.center,
+    height: 40,
+    padding: EdgeInsets.only(top: 10, bottom: 10),
+    child: Text(
+      "$data位联系人",
+      style: TextStyle(fontSize: 16, color: Color(0xffbdbdbd)),
+    ),
+  );
+}
+
+const _kLetterIndicatorHeight = 30;
+
+const _kFriendItemHeight = 56;
+
+Widget _buildLetterIndicator(BuildContext buildContext, String data) {
+  return Container(
+    height: 30,
+    child:
+        Text("$data", style: TextStyle(fontSize: 10, color: Color(0xff000000))),
+    color: Color(0x88bdbdbd),
+    padding: EdgeInsets.only(top: 10, bottom: 10, left: 14),
+  );
+}
+
+Widget _buildFriendItem(BuildContext buildContext, Friend data) {
+  return Container(
+    padding: EdgeInsets.only(left: 14, top: 4, bottom: 4),
+    child: Row(
+      children: <Widget>[
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.all(Radius.circular(6)),
+              image: DecorationImage(
+                  image: NetworkImage(data.avatar), fit: BoxFit.cover)),
+        ),
+        SizedBox(
+          width: 10,
+        ),
+        Expanded(
+          child: SizedBox(
+            height: 48,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Expanded(
+                  child: Align(
+                    child: Text(
+                      data.name,
+                      style: TextStyle(fontSize: 15),
+                    ),
+                    alignment: Alignment.centerLeft,
+                  ),
+                ),
+                SizedBox(
+                  width: double.infinity,
+                  height: 1,
+                  child: Container(
+                    color: Color(0x55bdbdbd),
+                  ),
+                )
+              ],
+            ),
+          ),
+        )
+      ],
+    ),
+  );
+}
+
 class FriendListPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -11,69 +121,46 @@ class FriendListPage extends StatefulWidget {
 
 class FriendListPageState extends State<FriendListPage>
     with AutomaticKeepAliveClientMixin {
+  ScrollController _controller = ScrollController();
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
     return Stack(
       children: <Widget>[
         ListView.builder(
-            itemBuilder: (c, index) {
-              return Container(
-                padding: EdgeInsets.only(left: 14, top: 4, bottom: 4),
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.rectangle,
-                          borderRadius: BorderRadius.all(Radius.circular(6)),
-                          image: DecorationImage(
-                              image: NetworkImage(
-                                  "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg"))),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Expanded(
-                              child: Align(
-                                child: Text(
-                                  "梁朝伟",
-                                  style: TextStyle(fontSize: 15),
-                                ),
-                                alignment: Alignment.centerLeft,
-                              ),
-                            ),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 1,
-                              child: Container(
-                                color: Color(0x55bdbdbd),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              );
+            controller: _controller,
+            itemBuilder: (context, index) {
+              var item = items[index];
+              if (item is String) {
+                return _buildLetterIndicator(context, item);
+              } else if (item is Friend) {
+                return _buildFriendItem(context, item);
+              }
+              return _buildTotalFriendCount(context, item);
             },
-            itemCount: 100),
+            itemCount: items.length),
         Positioned(
           child: Container(
             child: RapidPositioning(
               textStyle: TextStyle(color: Colors.black, fontSize: 11),
               highlightColor: Color.fromARGB(255, 88, 191, 107),
               onChanged: (content, index) {
-                print(content);
+                double offset = 0.0;
+                for (Object item in items) {
+                  if (item is Friend) {
+                    offset += _kFriendItemHeight;
+                  } else if (item is String) {
+                    if (item == content) {
+                      _controller.jumpTo(
+                        offset,
+                      );
+                      return;
+                    } else {
+                      offset += _kLetterIndicatorHeight;
+                    }
+                  }
+                }
               },
             ),
             margin: EdgeInsets.only(top: 16, bottom: 16),

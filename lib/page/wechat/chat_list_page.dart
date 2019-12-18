@@ -3,9 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_app/entities.dart';
-import 'package:flutter_app/utils.dart';
 import 'package:observable_ui/provider.dart';
 
+import '../../data_source.dart';
 import '../../home_model.dart';
 import '../../widgets.dart';
 

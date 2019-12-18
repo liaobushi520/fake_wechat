@@ -3,8 +3,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_app/chat_detail_page.dart';
 import 'package:flutter_app/memonts_model.dart';
 import 'package:flutter_app/page/wechat/moments_page.dart';
-import 'package:flutter_app/subscription_box_model.dart';
 import 'package:flutter_app/page/wechat/subscription_message_page.dart';
+import 'package:flutter_app/subscription_box_model.dart';
 import 'package:observable_ui/provider.dart';
 
 import 'app_model.dart';
