@@ -37,6 +37,12 @@ class VideoFeedPage extends StatefulWidget {
 }
 
 class VideoFeedPageState extends State<VideoFeedPage> {
+  double _tabBarLeft = 0;
+
+  double _tabBarIndicatorRadio = 0;
+
+  PageController _pageController = PageController();
+
   @override
   Widget build(BuildContext context) {
     return ViewModelProvider(
@@ -44,16 +50,140 @@ class VideoFeedPageState extends State<VideoFeedPage> {
       child: Scaffold(
         body: Container(
           color: Colors.black,
-          child: PageView(
-            scrollDirection: Axis.horizontal,
-            children: <Widget>[
-              VideoFeeds(),
-              VideoFeeds(),
-              PersonProfileScreen()
-            ],
+          child: NotificationListener(
+            child: SafeArea(
+              child: Stack(
+                children: <Widget>[
+                  PageView(
+                    controller: _pageController,
+                    scrollDirection: Axis.horizontal,
+                    children: <Widget>[
+                      VideoFeeds(),
+                      VideoFeeds(),
+                      PersonProfileScreen()
+                    ],
+                  ),
+                  Positioned(
+                    child: Center(
+                      child: TabBar(
+                        radio: _tabBarIndicatorRadio,
+                        onSelected: (pos) {
+                          _pageController.animateToPage(pos,
+                              duration: Duration(milliseconds: 500),
+                              curve: Curves.ease);
+                        },
+                      ),
+                    ),
+                    left: _tabBarLeft,
+                    right: -_tabBarLeft,
+                    top: 10,
+                  ),
+                ],
+              ),
+            ),
+            onNotification: (ScrollNotification notification) {
+              if (notification is ScrollUpdateNotification &&
+                  notification.metrics is PageMetrics) {
+                if (notification.metrics.pixels >=
+                    notification.metrics.viewportDimension) {
+                  var delta = (notification.metrics.pixels -
+                      notification.metrics.viewportDimension);
+                  setState(() {
+                    _tabBarLeft = -delta;
+                  });
+                } else {
+                  var radio = (notification.metrics.pixels /
+                          notification.metrics.viewportDimension)
+                      .clamp(0, 1);
+                  setState(() {
+                    _tabBarIndicatorRadio = radio;
+                  });
+                }
+              }
+              return true;
+            },
           ),
         ),
       ),
+    );
+  }
+}
+
+class TabBar extends StatefulWidget {
+  final double radio;
+
+  final void Function(int pos) onSelected;
+
+  const TabBar({Key key, this.radio, this.onSelected}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return TabBarState();
+  }
+}
+
+class TabBarState extends State<TabBar> {
+  static const TAB_WIDTH = 70.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            GestureDetector(
+              child: Container(
+                child: Text(
+                  "关注",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                width: TAB_WIDTH,
+              ),
+              onTap: () {
+                widget.onSelected(0);
+              },
+            ),
+            GestureDetector(
+              child: Container(
+                child: Text(
+                  "推荐",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                width: TAB_WIDTH,
+              ),
+              onTap: () {
+                widget.onSelected(1);
+              },
+            )
+          ],
+        ),
+        SizedBox(
+          height: 6,
+        ),
+        SizedBox(
+          width: TAB_WIDTH * 2,
+          height: 2,
+          child: Align(
+            alignment: Alignment(2 * widget.radio - 1, 0),
+            child: Container(
+              width: TAB_WIDTH,
+              padding: EdgeInsets.only(left: 20, right: 20),
+              child: Container(
+                decoration: BoxDecoration(color: Colors.white),
+              ),
+            ),
+          ),
+        )
+      ],
     );
   }
 }
@@ -66,7 +196,6 @@ class VideoFeeds extends StatefulWidget {
 }
 
 ///抖音的效果是over scroll之后 PageView悬停 ，太难了 ，暂时搞不定
-
 class VideoFeedsState extends State<VideoFeeds> {
   bool indicatorVisible = false;
 
@@ -138,7 +267,6 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
     super.initState();
     _controller = VideoPlayerController.network(widget.videoFeed.url)
       ..initialize().then((_) {
-        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
         setState(() {
           _controller.play();
         });
@@ -290,6 +418,9 @@ class PersonProfileScreenState extends State<PersonProfileScreen> {
   @override
   Widget build(BuildContext context) {
     var model = ViewModelProvider.of<VideoFeedModel>(context);
+    if (model.currentVideoFeed.value == null) {
+      return Text("个人主页");
+    }
 
     return Center(
       child: Text("个人主页" + model.currentVideoFeed.value.userName),
