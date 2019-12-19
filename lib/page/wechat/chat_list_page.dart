@@ -85,7 +85,6 @@ class BottomMaskLayer extends CustomPainter {
 }
 
 ////需要解决的问题：当SliverList 向下滚动 ，慢慢显示
-
 class RevealHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -249,7 +248,7 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
                         SizedBox(
                           height: 10,
                         ),
-                        _buildGridWithLabel("最近使用", minPrograms: MIN_PROGRAMS)
+                        _buildGridWithLabel("我的小程序", minPrograms: MIN_PROGRAMS)
                       ],
                     ),
                     margin: EdgeInsets.only(left: 16, right: 16),

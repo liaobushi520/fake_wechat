@@ -123,12 +123,25 @@ class FriendListPageState extends State<FriendListPage>
     with AutomaticKeepAliveClientMixin {
   ScrollController _controller = ScrollController();
 
+  GlobalKey listViewKey = GlobalKey();
+
+  double _contactTotalHeight = 0.0;
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    for (Object item in items) {
+      if (item is Friend) {
+        _contactTotalHeight += _kFriendItemHeight;
+      } else if (item is String) {
+        _contactTotalHeight += _kLetterIndicatorHeight;
+      }
+    }
+
     return Stack(
       children: <Widget>[
         ListView.builder(
+            key: listViewKey,
             controller: _controller,
             itemBuilder: (context, index) {
               var item = items[index];
@@ -147,14 +160,22 @@ class FriendListPageState extends State<FriendListPage>
               highlightColor: Color.fromARGB(255, 88, 191, 107),
               onChanged: (content, index) {
                 double offset = 0.0;
+                double listViewHeight = listViewKey.currentContext.size.height;
                 for (Object item in items) {
                   if (item is Friend) {
                     offset += _kFriendItemHeight;
                   } else if (item is String) {
                     if (item == content) {
-                      _controller.jumpTo(
-                        offset,
-                      );
+                      if (_contactTotalHeight <= listViewHeight) {
+                        _controller.jumpTo(0);
+                      } else {
+                        if (_contactTotalHeight - offset < listViewHeight) {
+                          _controller
+                              .jumpTo((_contactTotalHeight - listViewHeight));
+                        } else {
+                          _controller.jumpTo(offset);
+                        }
+                      }
                       return;
                     } else {
                       offset += _kLetterIndicatorHeight;

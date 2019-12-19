@@ -8,6 +8,7 @@ import 'package:observable_ui/core2.dart';
 import 'package:observable_ui/provider.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../amazing_page_view.dart';
 import '../../entities.dart';
 
 class VideoFeedModel {
@@ -82,7 +83,8 @@ class VideoFeedPageState extends State<VideoFeedPage> {
               ],
             ),
             onNotification: (ScrollNotification notification) {
-              if (notification is ScrollUpdateNotification &&
+              if (notification.depth == 0 &&
+                  notification is ScrollUpdateNotification &&
                   notification.metrics is PageMetrics) {
                 if (notification.metrics.pixels >=
                     notification.metrics.viewportDimension) {
@@ -195,54 +197,92 @@ class VideoFeeds extends StatefulWidget {
   }
 }
 
+
+class TikTokIndicator extends CustomPainter{
+  @override
+  void paint(Canvas canvas, Size size) {
+
+
+
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
+  }
+
+
+}
+
 ///抖音的效果是over scroll之后 PageView悬停
 class VideoFeedsState extends State<VideoFeeds> {
-  bool indicatorVisible = false;
-
   PageController _pageController = PageController();
 
   @override
   Widget build(BuildContext context) {
     var model = ViewModelProvider.of<VideoFeedModel>(context);
-    return NotificationListener(
-      child: Column(
-        children: <Widget>[
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) {
-                model.currentVideoFeed.value = model.videoFeeds[index];
-              },
-              scrollDirection: Axis.vertical,
-              itemCount: model.videoFeeds.length,
-              itemBuilder: (context, index) {
-                return VideoFeedScreen(
-                    videoFeedModel: model, videoFeed: model.videoFeeds[index]);
-              },
-            ),
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: AmazingPageView.builder(
+            controller: _pageController,
+            onPageChanged: (index) {
+              model.currentVideoFeed.value = model.videoFeeds[index];
+            },
+            scrollDirection: Axis.vertical,
+            itemCount: model.videoFeeds.length,
+            onLoadMore: () {
+              return Future.delayed(Duration(seconds: 10), () {
+                setState(() {
+                  var addedItems = [
+                    VideoFeed(
+                        url:
+                            'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
+                        userName: "lcw",
+                        text: "app好玩",
+                        voiceSourceText: "@廖布斯创作的原声-廖布斯"),
+                    VideoFeed(
+                        url:
+                            'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
+                        userName: "lh",
+                        text: "下大雨",
+                        voiceSourceText: "@周星驰创作的原声-周星驰")
+                  ];
+                  model.videoFeeds.addAll(addedItems);
+                });
+              });
+            },
+            itemBuilder: (context, index) {
+              return VideoFeedScreen(
+                  videoFeedModel: model, videoFeed: model.videoFeeds[index]);
+            },
           ),
-          Visibility(
-            child: CircularProgressIndicator(),
-            visible: indicatorVisible,
-          )
-        ],
-      ),
-      onNotification: (ScrollNotification notification) {
-//        print(notification);
-//        if (notification.depth == 0 && notification is ScrollEndNotification) {
-//          setState(() {
-//            indicatorVisible = true;
-//            Future.delayed(Duration(seconds: 5), () {
-//              setState(() {
-//                indicatorVisible = false;
-//              });
-//            });
-//          });
-//        }
-
-        return true;
-      },
+        ),
+      ],
     );
+  }
+
+  Future<void> loadMore(VideoFeedModel model) async {
+    return Future.delayed(Duration(seconds: 10), () {
+      print("执行");
+      setState(() {
+        var addedItems = [
+          VideoFeed(
+              url:
+                  'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
+              userName: "lcw",
+              text: "app好玩",
+              voiceSourceText: "@廖布斯创作的原声-廖布斯"),
+          VideoFeed(
+              url:
+                  'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
+              userName: "lh",
+              text: "下大雨",
+              voiceSourceText: "@周星驰创作的原声-周星驰")
+        ];
+        model.videoFeeds.addAll(addedItems);
+      });
+    });
   }
 }
 
@@ -261,7 +301,6 @@ class VideoFeedScreen extends StatefulWidget {
 }
 
 ///涉及的细节是网络视频，一边播放一边缓存
-
 class VideoFeedScreenState extends State<VideoFeedScreen>
     with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
   VideoPlayerController _controller;
@@ -517,7 +556,6 @@ class ProgressRegulatorState extends State<ProgressRegulator>
   void initState() {
     super.initState();
     _listener = () {
-      print(widget.videoPlayerController.value);
       setState(() {});
     };
     widget.videoPlayerController.addListener(_listener);
@@ -639,18 +677,5 @@ class ProgressRegulatorState extends State<ProgressRegulator>
     _controller?.dispose();
     super.dispose();
     widget.videoPlayerController.removeListener(_listener);
-  }
-}
-
-class IndeterminateProgress extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    // TODO: implement paint
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    // TODO: implement shouldRepaint
-    throw UnimplementedError();
   }
 }

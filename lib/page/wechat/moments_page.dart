@@ -35,7 +35,6 @@ class MomentsState extends State<MomentsPage> {
                 pinned: true,
                 floating: true,
                 snap: true,
-                stretch: true,
                 actions: <Widget>[
                   IconButton(
                     icon: Icon(Icons.camera),

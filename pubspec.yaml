@@ -31,6 +31,9 @@ dependencies:
   video_player:
      ^0.10.5
 
+  palette_generator:
+    ^0.2.0
+
   observable_ui:
     path: ../flutter_app/observable_ui
 
