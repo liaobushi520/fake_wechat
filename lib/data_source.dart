@@ -12,7 +12,9 @@ const List<Friend> FRIENDS = [
   Friend(
       name: "长泽雅美",
       avatar:
-          "https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=3607243162,3473478855&fm=26&gp=0.jpg"),
+          "https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=3607243162,3473478855&fm=26&gp=0.jpg",
+      momentsCover:
+          "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg"),
   Friend(
       name: "刘德华",
       avatar:
@@ -78,4 +80,18 @@ final MIN_PROGRAMS = [
       "今日头条",
       "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1576669446398&di=1cb9308cd9645a4f434bba43d66056ea&imgtype=0&src=http%3A%2F%2Fimg1.sooshong.com%2Fpics%2F201606%2F4%2F201664223036205.jpg",
       (context, item) {}),
+];
+final VIDEO_FEEDS = [
+  VideoFeed(
+      url:
+          'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
+      userName: "lzj",
+      text: "好好玩",
+      voiceSourceText: "@廖布斯创作的原声-廖布斯"),
+  VideoFeed(
+      url:
+          'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
+      userName: "lh",
+      text: "好好玩吗",
+      voiceSourceText: "@周星驰创作的原声-周星驰")
 ];

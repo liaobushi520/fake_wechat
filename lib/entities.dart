@@ -27,11 +27,18 @@ class Marker implements Item {
 }
 
 class Friend {
-  const Friend({this.name, this.avatar});
+  const Friend({
+    this.name,
+    this.avatar,
+    this.momentsCover,
+  });
 
   final String name;
 
   final String avatar;
+
+  ///朋友圈封面
+  final String momentsCover;
 }
 
 class Comment {

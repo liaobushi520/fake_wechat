@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_app/page/tiktok/user_profile.dart';
 import 'package:flutter_app/utils.dart';
 import 'package:flutter_app/widgets.dart';
 import 'package:observable_ui/core2.dart';
@@ -9,25 +10,13 @@ import 'package:observable_ui/provider.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../amazing_page_view.dart';
+import '../../data_source.dart';
 import '../../entities.dart';
 
 class VideoFeedModel {
   ValueNotifier<VideoFeed> currentVideoFeed = ValueNotifier(null);
 
-  ListenableList<VideoFeed> videoFeeds = ListenableList(initValue: [
-    VideoFeed(
-        url:
-            'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
-        userName: "lzj",
-        text: "好好玩",
-        voiceSourceText: "@廖布斯创作的原声-廖布斯"),
-    VideoFeed(
-        url:
-            'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
-        userName: "lh",
-        text: "好好玩吗",
-        voiceSourceText: "@周星驰创作的原声-周星驰")
-  ]);
+  ListenableList<VideoFeed> videoFeeds = ListenableList(initValue: VIDEO_FEEDS);
 }
 
 class VideoFeedPage extends StatefulWidget {
@@ -58,9 +47,9 @@ class VideoFeedPageState extends State<VideoFeedPage> {
                   controller: _pageController,
                   scrollDirection: Axis.horizontal,
                   children: <Widget>[
-                    VideoFeeds(),
-                    VideoFeeds(),
-                    PersonProfileScreen()
+                    VideoFeedsScreen(),
+                    VideoFeedsScreen(),
+                    UserProfileScreen()
                   ],
                 ),
                 Positioned(
@@ -190,15 +179,15 @@ class TabBarState extends State<TabBar> {
   }
 }
 
-class VideoFeeds extends StatefulWidget {
+class VideoFeedsScreen extends StatefulWidget {
   @override
-  VideoFeedsState createState() {
-    return VideoFeedsState();
+  VideoFeedsScreenState createState() {
+    return VideoFeedsScreenState();
   }
 }
 
 ///抖音的效果是over scroll之后 PageView悬停
-class VideoFeedsState extends State<VideoFeeds> {
+class VideoFeedsScreenState extends State<VideoFeedsScreen> {
   PageController _pageController = PageController();
 
   @override
@@ -216,7 +205,7 @@ class VideoFeedsState extends State<VideoFeeds> {
             itemCount: model.videoFeeds.length,
             loadMoreFooter: TikTokIndicator(),
             onLoadMore: () {
-              return Future.delayed(Duration(seconds: 100), () {
+              return Future.delayed(Duration(seconds: 10), () {
                 setState(() {
                   var addedItems = [
                     VideoFeed(
@@ -244,29 +233,6 @@ class VideoFeedsState extends State<VideoFeeds> {
         ),
       ],
     );
-  }
-
-  Future<void> loadMore(VideoFeedModel model) async {
-    return Future.delayed(Duration(seconds: 10), () {
-      print("执行");
-      setState(() {
-        var addedItems = [
-          VideoFeed(
-              url:
-                  'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
-              userName: "lcw",
-              text: "app好玩",
-              voiceSourceText: "@廖布斯创作的原声-廖布斯"),
-          VideoFeed(
-              url:
-                  'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
-              userName: "lh",
-              text: "下大雨",
-              voiceSourceText: "@周星驰创作的原声-周星驰")
-        ];
-        model.videoFeeds.addAll(addedItems);
-      });
-    });
   }
 }
 
@@ -448,27 +414,6 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
 
   @override
   bool get wantKeepAlive => true;
-}
-
-class PersonProfileScreen extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() {
-    return PersonProfileScreenState();
-  }
-}
-
-class PersonProfileScreenState extends State<PersonProfileScreen> {
-  @override
-  Widget build(BuildContext context) {
-    var model = ViewModelProvider.of<VideoFeedModel>(context);
-    if (model.currentVideoFeed.value == null) {
-      return Text("个人主页");
-    }
-
-    return Center(
-      child: Text("个人主页" + model.currentVideoFeed.value.userName),
-    );
-  }
 }
 
 class Jukebox extends StatefulWidget {

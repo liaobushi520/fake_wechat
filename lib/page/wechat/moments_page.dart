@@ -30,11 +30,12 @@ class MomentsState extends State<MomentsPage> {
       body: WillPopScope(
         child: Stack(
           children: <Widget>[
-            CustomScrollView(slivers: [
+            CustomScrollView(physics: const BouncingScrollPhysics(), slivers: [
               SliverAppBar(
                 pinned: true,
                 floating: true,
                 snap: true,
+                stretch: true,
                 actions: <Widget>[
                   IconButton(
                     icon: Icon(Icons.camera),
@@ -95,11 +96,11 @@ class MomentsState extends State<MomentsPage> {
                   background: Container(
                     color: Color(0x9988ee00),
                     child: Image.network(
-                        "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg"),
+                      "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  title: Container(
-                    child: Text("朋友圈"),
-                  ),
+                  title: Text("朋友圈"),
                 ),
               ),
               SliverList(
