@@ -83,7 +83,144 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
   }
 }
 
-class TopInfoSection extends StatelessWidget {
+class TopInfoSection extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return TopInfoSectionState();
+  }
+}
+
+class FollowAnimation extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return FollowAnimationState();
+  }
+}
+
+class FollowAnimationState extends State with SingleTickerProviderStateMixin {
+  bool _follow = false;
+
+  AnimationController _controller;
+
+  Animation leftAnimation, rightAnimation;
+
+  static const TOTAL_WIDTH = 200.0;
+
+  static const MESSAGE_BTN_WIDTH = 60.0;
+
+  static const GAP = 4.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        duration: const Duration(milliseconds: 500), vsync: this);
+
+    var rectTween = RelativeRectTween(
+        begin: RelativeRect.fromLTRB(0, 0, 0, 0),
+        end: RelativeRect.fromLTRB(0, 0, MESSAGE_BTN_WIDTH + GAP, 0));
+    var rectTween1 = RelativeRectTween(
+        begin: RelativeRect.fromLTRB(TOTAL_WIDTH, 0, -MESSAGE_BTN_WIDTH, 0),
+        end: RelativeRect.fromLTRB(TOTAL_WIDTH - MESSAGE_BTN_WIDTH, 0, 0, 0));
+
+    leftAnimation = rectTween.animate(_controller);
+    rightAnimation = rectTween1.animate(_controller);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: TOTAL_WIDTH,
+      height: 40,
+      child: Stack(
+        children: <Widget>[
+          PositionedTransition(
+            rect: leftAnimation,
+            child: RaisedButton(
+              color: _follow ? Colors.black : Color.fromARGB(255, 234, 67, 89),
+              child: _follow
+                  ? Text("取消关注", style: TextStyle(color: Colors.white))
+                  : Text(
+                      "+关注",
+                      style: TextStyle(color: Colors.white),
+                    ),
+              onPressed: () {
+                setState(() {
+                  if (_follow) {
+                    _controller.reverse();
+                  } else {
+                    _controller.forward();
+                  }
+                  _follow = !_follow;
+                });
+              },
+            ),
+          ),
+          PositionedTransition(
+            rect: rightAnimation,
+            child: RaisedButton(
+              child: Icon(
+                Icons.message,
+                color: Colors.white,
+              ),
+              color: Color.fromARGB(255, 37, 39, 47),
+              onPressed: () {},
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+}
+
+class TopInfoSectionState extends State with SingleTickerProviderStateMixin {
+  bool _expand = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        AnimatedContainer(
+          decoration: BoxDecoration(
+              border: Border.all(width: 4),
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                  image: NetworkImage(
+                      "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg"),
+                  fit: BoxFit.cover)),
+          width: _expand ? 80 : 40,
+          height: _expand ? 80 : 40,
+          duration: Duration(milliseconds: 500),
+        ),
+        FollowAnimation(),
+        FlatButton(
+          child: Text(
+            ">",
+            style: TextStyle(color: Colors.white),
+          ),
+          onPressed: () {
+            setState(() {
+              _expand = !_expand;
+            });
+          },
+        )
+      ],
+    );
+  }
+}
+
+class MiddleInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Align(
@@ -119,67 +256,101 @@ class TopInfoSection extends StatelessWidget {
 class BottomInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Text("每天更新明星实时动态哦"),
-        Row(
+    return Align(
+      child: Padding(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Container(
-              padding: EdgeInsets.only(left: 2, right: 2, top: 1, bottom: 1),
-              child: Row(
-                children: <Widget>[
-                  Icon(
-                    Icons.pregnant_woman,
-                    color: Color.fromARGB(255, 234, 67, 89),
-                    size: 13,
-                  ),
-                  Text("21岁",
-                      style:
-                          TextStyle(color: Color.fromARGB(255, 123, 124, 129))),
-                ],
-              ),
-              decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 37, 39, 47),
-                  borderRadius: BorderRadius.circular(2)),
+            Text(
+              "每天更新明星实时动态哦",
+              style: TextStyle(color: Colors.white),
             ),
             SizedBox(
-              width: 4,
+              height: 8,
             ),
-            Container(
-              padding: EdgeInsets.only(left: 2, right: 2, top: 1, bottom: 1),
-              child: Text(
-                "北京电影学院",
-                style: TextStyle(color: Color.fromARGB(255, 123, 124, 129)),
-              ),
-              decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 37, 39, 47),
-                  borderRadius: BorderRadius.circular(2)),
+            Row(
+              children: <Widget>[
+                Container(
+                  padding:
+                      EdgeInsets.only(left: 2, right: 2, top: 1, bottom: 1),
+                  child: Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.pregnant_woman,
+                        color: Color.fromARGB(255, 234, 67, 89),
+                        size: 13,
+                      ),
+                      Text("21岁",
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 123, 124, 129))),
+                    ],
+                  ),
+                  decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 37, 39, 47),
+                      borderRadius: BorderRadius.circular(2)),
+                ),
+                SizedBox(
+                  width: 4,
+                ),
+                Container(
+                  padding:
+                      EdgeInsets.only(left: 2, right: 2, top: 1, bottom: 1),
+                  child: Text(
+                    "北京电影学院",
+                    style: TextStyle(color: Color.fromARGB(255, 123, 124, 129)),
+                  ),
+                  decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 37, 39, 47),
+                      borderRadius: BorderRadius.circular(2)),
+                )
+              ],
+            ),
+            SizedBox(
+              height: 12,
+            ),
+            Row(
+              children: <Widget>[
+                RichText(
+                  text: TextSpan(children: [
+                    TextSpan(
+                        text: "2.3W",
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: "获赞", style: TextStyle(color: Color(0xffbdbdbd)))
+                  ]),
+                ),
+                SizedBox(
+                  width: 4,
+                ),
+                RichText(
+                  text: TextSpan(children: [
+                    TextSpan(
+                        text: "2.3W",
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
+                    TextSpan(text: "关注")
+                  ]),
+                ),
+                SizedBox(
+                  width: 4,
+                ),
+                RichText(
+                  text: TextSpan(children: [
+                    TextSpan(
+                        text: "2.3W",
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
+                    TextSpan(text: "粉丝")
+                  ]),
+                )
+              ],
             )
           ],
         ),
-        Row(
-          children: <Widget>[
-            RichText(
-              text: TextSpan(children: [
-                TextSpan(text: "2.3W", style: TextStyle(color: Colors.white)),
-                TextSpan(text: "获赞", style: TextStyle(color: Color(0xffbdbdbd)))
-              ]),
-            ),
-            RichText(
-              text: TextSpan(children: [
-                TextSpan(text: "2.3W", style: TextStyle(color: Colors.white)),
-                TextSpan(text: "关注")
-              ]),
-            ),
-            RichText(
-              text: TextSpan(children: [
-                TextSpan(text: "2.3W", style: TextStyle(color: Colors.white)),
-                TextSpan(text: "粉丝")
-              ]),
-            )
-          ],
-        )
-      ],
+        padding: EdgeInsets.only(left: 10),
+      ),
+      alignment: Alignment.centerLeft,
     );
   }
 }
