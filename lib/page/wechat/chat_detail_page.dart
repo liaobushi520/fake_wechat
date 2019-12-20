@@ -9,9 +9,9 @@ import 'package:observable_ui/core2.dart';
 import 'package:observable_ui/provider.dart';
 import 'package:observable_ui/widgets2.dart';
 
-import 'app_model.dart';
-import 'chat_model.dart';
-import 'entities.dart';
+import '../../app_model.dart';
+import '../../chat_model.dart';
+import '../../entities.dart';
 
 class ChatDetailPage extends StatefulWidget {
   ChatDetailPage({Key key, this.title}) : super(key: key);

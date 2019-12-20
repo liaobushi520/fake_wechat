@@ -197,23 +197,6 @@ class VideoFeeds extends StatefulWidget {
   }
 }
 
-
-class TikTokIndicator extends CustomPainter{
-  @override
-  void paint(Canvas canvas, Size size) {
-
-
-
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return true;
-  }
-
-
-}
-
 ///抖音的效果是over scroll之后 PageView悬停
 class VideoFeedsState extends State<VideoFeeds> {
   PageController _pageController = PageController();
@@ -231,8 +214,9 @@ class VideoFeedsState extends State<VideoFeeds> {
             },
             scrollDirection: Axis.vertical,
             itemCount: model.videoFeeds.length,
+            loadMoreFooter: TikTokIndicator(),
             onLoadMore: () {
-              return Future.delayed(Duration(seconds: 10), () {
+              return Future.delayed(Duration(seconds: 100), () {
                 setState(() {
                   var addedItems = [
                     VideoFeed(
@@ -340,116 +324,119 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Stack(
-      children: <Widget>[
-        GestureDetector(
-          child: Stack(
-            children: <Widget>[
-              Center(
-                child: _controller.value.initialized
-                    ? AspectRatio(
-                        aspectRatio: _controller.value.aspectRatio,
-                        child: VideoPlayer(_controller),
-                      )
-                    : Container(),
-              ),
-              Center(
-                child: ScaleTransition(
-                    scale: scaleAnimation,
-                    child: _controller.value.isPlaying
-                        ? SizedBox(
-                            width: 80,
-                            height: 80,
-                          )
-                        : SizedBox(
-                            width: 80,
-                            height: 80,
-                            child: Icon(
-                              Icons.play_arrow,
-                              size: 80,
-                            ),
-                          )),
-              ),
-            ],
-          ),
-          onTap: () {
-            setState(() {
-              if (_controller.value.isPlaying) {
-                _controller.pause();
-                _scaleController.forward(from: 2.0);
-              } else {
-                _controller.play();
-                //   _scaleController.;
-              }
-            });
-          },
-        ),
-        Positioned(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      widget.videoFeed.userName,
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    Text(
-                      widget.videoFeed.text,
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    MarqueeText(
-                      text: widget.videoFeed.voiceSourceText,
-                      style: TextStyle(color: Colors.white, fontSize: 14),
-                      width: 160,
-                      height: 20,
-                    )
-                  ],
+    return Container(
+      child: Stack(
+        children: <Widget>[
+          GestureDetector(
+            child: Stack(
+              children: <Widget>[
+                Center(
+                  child: _controller.value.initialized
+                      ? AspectRatio(
+                          aspectRatio: _controller.value.aspectRatio,
+                          child: VideoPlayer(_controller),
+                        )
+                      : Container(),
                 ),
-              ),
-              Column(
-                children: <Widget>[
-                  Column(
+                Center(
+                  child: ScaleTransition(
+                      scale: scaleAnimation,
+                      child: _controller.value.isPlaying
+                          ? SizedBox(
+                              width: 80,
+                              height: 80,
+                            )
+                          : SizedBox(
+                              width: 80,
+                              height: 80,
+                              child: Icon(
+                                Icons.play_arrow,
+                                size: 80,
+                              ),
+                            )),
+                ),
+              ],
+            ),
+            onTap: () {
+              setState(() {
+                if (_controller.value.isPlaying) {
+                  _controller.pause();
+                  _scaleController.forward(from: 2.0);
+                } else {
+                  _controller.play();
+                  //   _scaleController.;
+                }
+              });
+            },
+          ),
+          Positioned(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Icon(
-                        Icons.message,
-                        color: Colors.white,
+                      Text(
+                        widget.videoFeed.userName,
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                      SizedBox(
+                        height: 8,
                       ),
                       Text(
-                        "分享",
-                        style: TextStyle(color: Colors.white),
+                        widget.videoFeed.text,
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                      SizedBox(
+                        height: 8,
+                      ),
+                      MarqueeText(
+                        text: widget.videoFeed.voiceSourceText,
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                        width: 160,
+                        height: 20,
                       )
                     ],
                   ),
-                  SizedBox(
-                    height: 60,
-                  ),
-                  Jukebox()
-                ],
-              )
-            ],
+                ),
+                Column(
+                  children: <Widget>[
+                    Column(
+                      children: <Widget>[
+                        Icon(
+                          Icons.message,
+                          color: Colors.white,
+                        ),
+                        Text(
+                          "分享",
+                          style: TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
+                    SizedBox(
+                      height: 60,
+                    ),
+                    Jukebox()
+                  ],
+                )
+              ],
+            ),
+            bottom: _kProgressRegulatorIntrinsicHeight,
+            left: 10,
+            right: 10,
           ),
-          bottom: _kProgressRegulatorIntrinsicHeight,
-          left: 10,
-          right: 10,
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: ProgressRegulator(
-            videoPlayerController: _controller,
-          ),
-        )
-      ],
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: ProgressRegulator(
+              videoPlayerController: _controller,
+            ),
+          )
+        ],
+      ),
+      color: Colors.black,
     );
   }
 
@@ -542,24 +529,20 @@ class ProgressRegulator extends StatefulWidget {
   }
 }
 
-class ProgressRegulatorState extends State<ProgressRegulator>
+class IndeterminateProgress extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return IndeterminateProgressState();
+  }
+}
+
+class IndeterminateProgressState extends State<IndeterminateProgress>
     with SingleTickerProviderStateMixin {
-  bool _adjusting = false;
-
-  double _adjustingValue = 0.0;
-
-  void Function() _listener;
-
   AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _listener = () {
-      setState(() {});
-    };
-    widget.videoPlayerController.addListener(_listener);
-
     _controller = AnimationController(
         duration: const Duration(milliseconds: 600),
         vsync: this,
@@ -568,7 +551,8 @@ class ProgressRegulatorState extends State<ProgressRegulator>
       ..repeat();
   }
 
-  Widget _buildIndeterminateProgress() {
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: _kProgressRegulatorIntrinsicHeight,
       child: Stack(
@@ -602,11 +586,34 @@ class ProgressRegulatorState extends State<ProgressRegulator>
   }
 
   @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+}
+
+class ProgressRegulatorState extends State<ProgressRegulator> {
+  bool _adjusting = false;
+
+  double _adjustingValue = 0.0;
+
+  void Function() _listener;
+
+  @override
+  void initState() {
+    super.initState();
+    _listener = () {
+      setState(() {});
+    };
+    widget.videoPlayerController.addListener(_listener);
+  }
+
+  @override
   Widget build(BuildContext context) {
     VideoPlayerValue playerValue = widget.videoPlayerController.value;
     //视频还未加载完全,显示动画
     if (playerValue.duration == null) {
-      return _buildIndeterminateProgress();
+      return IndeterminateProgress();
     }
 
     return Column(
@@ -674,8 +681,110 @@ class ProgressRegulatorState extends State<ProgressRegulator>
 
   @override
   void dispose() {
-    _controller?.dispose();
     super.dispose();
     widget.videoPlayerController.removeListener(_listener);
+  }
+}
+
+///抖音正在加载中动画效果
+class TikTokIndicator extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return TikTokIndicatorState();
+  }
+}
+
+class TikTokIndicatorState extends State<TikTokIndicator>
+    with SingleTickerProviderStateMixin {
+  AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        duration: const Duration(milliseconds: 800),
+        vsync: this,
+        upperBound: 1,
+        lowerBound: 0)
+      ..repeat();
+    _controller.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 200,
+      alignment: Alignment.bottomCenter,
+      child: CustomPaint(
+        painter: TikTokIndicatorPainter(_controller.value),
+        size: Size(100, 100),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+}
+
+class TikTokIndicatorPainter extends CustomPainter {
+  final double progress;
+
+  double maxRadius = 8;
+
+  double minRadius = 6;
+
+  TikTokIndicatorPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint paint = Paint();
+    print(size);
+    double yCenter = size.height / 2;
+    double xCenter = size.width / 2;
+    // double circle1XCenter = 2 * maxRadius * progress + xCenter - maxRadius;
+    double circle1XCenter = -8 * maxRadius * progress * progress +
+        8 * maxRadius * progress +
+        xCenter -
+        maxRadius;
+
+    double circle1Radius = (maxRadius - minRadius) * 4 * progress * progress -
+        4 * (maxRadius - minRadius) * progress +
+        maxRadius;
+
+    double circle2XCenter = 8 * maxRadius * progress * progress -
+        8 * maxRadius * progress +
+        maxRadius +
+        xCenter;
+
+    double circle2XRadius = (-maxRadius + minRadius) * 4 * progress * progress +
+        (maxRadius - minRadius) * 4 * progress +
+        minRadius;
+    if (progress <= 0.5) {
+      canvas.saveLayer(Rect.fromLTRB(0, 0, size.width, size.height), paint);
+      paint.color = Colors.red;
+      canvas.drawCircle(Offset(circle1XCenter, yCenter), circle1Radius, paint);
+      paint.blendMode = BlendMode.xor;
+      paint.color = Colors.blue;
+      canvas.drawCircle(Offset(circle2XCenter, yCenter), circle2XRadius, paint);
+      canvas.restore();
+    } else {
+      canvas.saveLayer(Rect.fromLTRB(0, 0, size.width, size.height), paint);
+      paint.color = Colors.blue;
+      canvas.drawCircle(Offset(circle2XCenter, yCenter), circle2XRadius, paint);
+      paint.color = Colors.red;
+      paint.blendMode = BlendMode.xor;
+      canvas.drawCircle(Offset(circle1XCenter, yCenter), circle1Radius, paint);
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
   }
 }
