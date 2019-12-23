@@ -12,8 +12,8 @@ class UserProfileScreen extends StatefulWidget {
 
 class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
   final List<Tab> myTabs = <Tab>[
-    Tab(text: 'LEFT'),
-    Tab(text: 'RIGHT'),
+    Tab(text: '作品1012'),
+    Tab(text: '喜欢2091'),
   ];
 
   TabController _tabController;
@@ -104,7 +104,7 @@ class FollowAnimationState extends State with SingleTickerProviderStateMixin {
 
   Animation leftAnimation, rightAnimation;
 
-  static const TOTAL_WIDTH = 200.0;
+  static const TOTAL_WIDTH = 180.0;
 
   static const MESSAGE_BTN_WIDTH = 60.0;
 
@@ -137,7 +137,7 @@ class FollowAnimationState extends State with SingleTickerProviderStateMixin {
           PositionedTransition(
             rect: leftAnimation,
             child: RaisedButton(
-              color: _follow ? Colors.black : Color.fromARGB(255, 234, 67, 89),
+              color: _follow ? BUTTON_BACKGROUND_COLOR : BUTTON_ACCENT_COLOR,
               child: _follow
                   ? Text("取消关注", style: TextStyle(color: Colors.white))
                   : Text(
@@ -163,7 +163,7 @@ class FollowAnimationState extends State with SingleTickerProviderStateMixin {
                 Icons.message,
                 color: Colors.white,
               ),
-              color: Color.fromARGB(255, 37, 39, 47),
+              color: BUTTON_BACKGROUND_COLOR,
               onPressed: () {},
             ),
           )
@@ -179,76 +179,140 @@ class FollowAnimationState extends State with SingleTickerProviderStateMixin {
   }
 }
 
+const BUTTON_BACKGROUND_COLOR = Color.fromARGB(255, 58, 58, 67);
+
+const BUTTON_ACCENT_COLOR = Color.fromARGB(255, 234, 67, 89);
+
 class TopInfoSectionState extends State with SingleTickerProviderStateMixin {
   bool _expand = false;
+
+  static const MAX_AVATAR_SIZE = 100.0;
+
+  static const MIN_AVATAR_SIZE = 40.0;
+
+  AnimationController _controller;
+
+  Animation topAnimation, bottomAnimation, rotationAnimation;
+
+  static const MAX_HEIGHT = 255.0;
+
+  static const MIN_HEIGHT = 60.0;
+
+  static const ANIMATION_DURATION = Duration(milliseconds: 500);
 
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(
+        vsync: this,
+        duration: ANIMATION_DURATION,
+        lowerBound: 0.0,
+        upperBound: .5);
+
+    var topTween = RelativeRectTween(
+        begin: RelativeRect.fromLTRB(0, 0, 0, 0),
+        end: RelativeRect.fromLTRB(0, -MIN_HEIGHT, 0, MAX_HEIGHT));
+    var bottomTween = RelativeRectTween(
+        begin: RelativeRect.fromLTRB(0, MIN_HEIGHT, 0, -MAX_HEIGHT),
+        end: RelativeRect.fromLTRB(0, 0, 0, 0));
+
+    var rotationTween = Tween(begin: 0.0, end: 0.5);
+
+    rotationAnimation = rotationTween.animate(_controller);
+    topAnimation = topTween.animate(_controller);
+    bottomAnimation = bottomTween.animate(_controller);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        AnimatedContainer(
-          decoration: BoxDecoration(
-              border: Border.all(width: 4),
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                  image: NetworkImage(
-                      "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg"),
-                  fit: BoxFit.cover)),
-          width: _expand ? 80 : 40,
-          height: _expand ? 80 : 40,
-          duration: Duration(milliseconds: 500),
-        ),
-        FollowAnimation(),
-        FlatButton(
-          child: Text(
-            ">",
-            style: TextStyle(color: Colors.white),
+    return Padding(
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              AnimatedContainer(
+                decoration: BoxDecoration(
+                    border: Border.all(width: 1),
+                    shape: BoxShape.circle,
+                    image: DecorationImage(
+                        image: NetworkImage(
+                            "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg"),
+                        fit: BoxFit.cover)),
+                width: !_expand ? MAX_AVATAR_SIZE : MIN_AVATAR_SIZE,
+                height: !_expand ? MAX_AVATAR_SIZE : MIN_AVATAR_SIZE,
+                duration: ANIMATION_DURATION,
+              ),
+              Spacer(),
+              FollowAnimation(),
+              RawMaterialButton(
+                child: RotationTransition(
+                  turns: _controller,
+                  child: Icon(
+                    Icons.change_history,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+                fillColor:
+                    !_expand ? BUTTON_BACKGROUND_COLOR : BUTTON_ACCENT_COLOR,
+                constraints: BoxConstraints.tightFor(width: 40, height: 40),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(2))),
+                onPressed: () {
+                  setState(() {
+                    if (_expand) {
+                      _controller.reverse();
+                    } else {
+                      _controller.forward();
+                    }
+                    _expand = !_expand;
+                  });
+                },
+              ),
+            ],
           ),
-          onPressed: () {
-            setState(() {
-              _expand = !_expand;
-            });
-          },
-        )
-      ],
-    );
-  }
-}
-
-class MiddleInfoSection extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              "明星拍摄东方热巴",
-              textAlign: TextAlign.left,
-              style: TextStyle(
-                  fontSize: 28,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold),
+          AnimatedContainer(
+            duration: ANIMATION_DURATION,
+            height: _expand ? MAX_HEIGHT : MIN_HEIGHT,
+            child: Stack(
+              children: <Widget>[
+                PositionedTransition(
+                  rect: topAnimation,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          "明星拍摄东方热巴",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              fontSize: 24,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(
+                          height: 8,
+                        ),
+                        Text(
+                          "抖音号：1900011",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                PositionedTransition(
+                  child: RecommendAccounts(),
+                  rect: bottomAnimation,
+                )
+              ],
             ),
-            SizedBox(
-              height: 8,
-            ),
-            Text(
-              "抖音号：1900011",
-              textAlign: TextAlign.left,
-              style: TextStyle(fontSize: 12, color: Colors.white),
-            )
-          ],
-        ),
-        padding: EdgeInsets.only(left: 10),
+          )
+        ],
       ),
+      padding: EdgeInsets.only(left: 10, right: 10),
     );
   }
 }
@@ -261,6 +325,9 @@ class BottomInfoSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            Divider(
+              color: Color.fromARGB(255, 66, 66, 66),
+            ),
             Text(
               "每天更新明星实时动态哦",
               style: TextStyle(color: Colors.white),
@@ -348,7 +415,7 @@ class BottomInfoSection extends StatelessWidget {
             )
           ],
         ),
-        padding: EdgeInsets.only(left: 10),
+        padding: EdgeInsets.only(left: 10, right: 10),
       ),
       alignment: Alignment.centerLeft,
     );
