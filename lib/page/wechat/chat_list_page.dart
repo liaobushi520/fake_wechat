@@ -3,8 +3,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_app/entities.dart';
+import 'package:flutter_app/page/wechat/chat_detail_page.dart';
 import 'package:observable_ui/provider.dart';
 
+import '../../chat_model.dart';
 import '../../data_source.dart';
 import '../../home_model.dart';
 import '../../widgets.dart';
@@ -396,7 +398,7 @@ class ChatListPageState extends State<ChatListPage>
     );
   }
 
-  Widget _buildChatItem(BuildContext context, item) {
+  Widget _buildChatItem(BuildContext context, Entrance item) {
     return GestureDetector(
       child: Container(
           padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -405,28 +407,27 @@ class ChatListPageState extends State<ChatListPage>
               Subscript(
                 //圆角头像
                 content: Container(
-                  width: 50,
-                  height: 50,
+                  width: 46,
+                  height: 46,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.all(Radius.circular(6)),
                       image: DecorationImage(
-                          image: NetworkImage(
-                              "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg"))),
+                          image: NetworkImage(item.icon), fit: BoxFit.cover)),
                 ),
                 subscript: Container(
                   width: 16,
                   height: 16,
                   alignment: Alignment.center,
                   child: Text(
-                    "11",
+                    "${item.unreadCount}",
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white, fontSize: 8),
                   ),
                   decoration:
                       ShapeDecoration(shape: CircleBorder(), color: Colors.red),
                 ),
-                width: 60,
-                height: 60,
+                width: 54,
+                height: 54,
               ),
               SizedBox(
                 width: 8,
@@ -439,16 +440,37 @@ class ChatListPageState extends State<ChatListPage>
                     children: <Widget>[
                       Row(
                         children: <Widget>[
-                          Expanded(child: Text("梁朝伟")),
-                          Text("早上10:00")
+                          Expanded(
+                              child: Text(
+                            item.name,
+                            style: TextStyle(fontSize: 16, color: Colors.black),
+                          )),
+                          Text(
+                            item.recentMessage?.timestamp != null
+                                ? "${item.recentMessage.timestamp}"
+                                : "",
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Color.fromARGB(255, 185, 185, 185)),
+                          )
                         ],
                       ),
                       Row(
                         children: <Widget>[
                           Expanded(
-                            child: Text("暂无最近消息"),
+                            child: Text(
+                              item.recentMessage == null
+                                  ? "暂无最近消息"
+                                  : item.recentMessage.text,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color.fromARGB(255, 185, 185, 185)),
+                            ),
                           )
                         ],
+                      ),
+                      Divider(
+                        height: 1,
                       )
                     ],
                   ),
@@ -457,12 +479,17 @@ class ChatListPageState extends State<ChatListPage>
             ],
           )),
       onTap: () {
-        if (item is SubscriptionMsgBoxEntrance) {
+        if (item.name == "订阅号消息") {
           Navigator.of(context).pushNamed("/subscription_box");
           return;
         }
 
-        Navigator.of(context).pushNamed("/chat_detail");
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+          return ViewModelProvider(
+            viewModel: ChatModel(item.extra as Friend),
+            child: ChatDetailPage(),
+          );
+        }));
       },
     );
   }

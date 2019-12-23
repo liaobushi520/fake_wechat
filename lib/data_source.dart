@@ -4,6 +4,13 @@ import 'package:flutter_app/page/tiktok/video_feed.dart';
 
 import 'entities.dart';
 
+const USER = Friend(
+    name: "廖布斯",
+    avatar:
+        "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg",
+    momentsCover:
+        "https://ss0.bdstatic.com/94oJfD_bAAcT8t7mm9GUKT-xh_/timg?image&quality=100&size=b4000_4000&sec=1577093270&di=2bd3f20670a6b468b680664dda873c63&src=http://b-ssl.duitang.com/uploads/item/201709/21/20170921103932_vC4NR.jpeg");
+
 const List<Friend> FRIENDS = [
   Friend(
       name: "梁朝伟",
@@ -94,4 +101,59 @@ final VIDEO_FEEDS = [
       userName: "lh",
       text: "好好玩吗",
       voiceSourceText: "@周星驰创作的原声-周星驰")
+];
+
+final CHAT_ENTRANCES = [
+  FriendEntrance(
+      extra: FRIENDS[0],
+      unreadCount: 3,
+      recentMessage: Message(0, text: "一起拍电影吧", timestamp: 1000000000)),
+  FriendEntrance(
+      extra: FRIENDS[1],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "我要来中国了", timestamp: 100000000)),
+  FriendEntrance(
+      extra: FRIENDS[2],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "有什么电影推荐啊?")),
+  FriendEntrance(
+      extra: FRIENDS[3],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "我是天王杀手，ok？")),
+  FriendEntrance(
+      extra: FRIENDS[4],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "你做喜欢我的什么歌？")),
+  FriendEntrance(
+      extra: FRIENDS[5],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "周末一起吃饭吧")),
+  FriendEntrance(
+      extra: FRIENDS[6],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "我很帅的啊")),
+  FriendEntrance(
+      extra: FRIENDS[7],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "我可以是日本人啊！")),
+  FriendEntrance(
+      extra: FRIENDS[8],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "周末一起吃个饭吧")),
+  FriendEntrance(
+      extra: FRIENDS[9],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "啥时来看二人转？")),
+  FriendEntrance(
+      extra: FRIENDS[10],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "你喜欢我的什么呢？")),
+  FriendEntrance(
+      extra: FRIENDS[11],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "我出新歌了，来听听吧！")),
+  FriendEntrance(
+      extra: FRIENDS[12],
+      unreadCount: 10,
+      recentMessage: Message(0, text: "还记得我的电影吗？")),
 ];

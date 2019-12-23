@@ -12,8 +12,24 @@ class UserProfileScreen extends StatefulWidget {
 
 class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
   final List<Tab> myTabs = <Tab>[
-    Tab(text: '作品1012'),
-    Tab(text: '喜欢2091'),
+    Tab(
+      child: Padding(
+        child: Text(
+          "作品100",
+          style: TextStyle(fontSize: 16),
+        ),
+        padding: EdgeInsets.only(top: 8, bottom: 4),
+      ),
+    ),
+    Tab(
+      child: Padding(
+        child: Text(
+          "作品100",
+          style: TextStyle(fontSize: 16),
+        ),
+        padding: EdgeInsets.only(top: 8, bottom: 4),
+      ),
+    ),
   ];
 
   TabController _tabController;
@@ -38,45 +54,56 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
               color: Color.fromARGB(255, 22, 24, 35),
             ),
           ),
-          CustomScrollView(
+          NestedScrollView(
             physics: const BouncingScrollPhysics(),
-            slivers: <Widget>[
-              SliverAppBar(
-                expandedHeight: 200,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    color: Color(0x9988ee00),
-                    child: Image.network(
-                      "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
-                      fit: BoxFit.cover,
+            headerSliverBuilder:
+                (BuildContext context, bool innerBoxIsScrolled) {
+              return <Widget>[
+                SliverAppBar(
+                  pinned: true,
+                  expandedHeight: 160,
+                  flexibleSpace: FlexibleSpaceBar(
+                    stretchModes: [
+                      StretchMode.blurBackground,
+                      StretchMode.fadeTitle,
+                      StretchMode.zoomBackground
+                    ],
+                    background: Container(
+                      child: Image.network(
+                        "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: Container(
-                  child: Column(
-                    children: <Widget>[TopInfoSection(), BottomInfoSection()],
+                SliverToBoxAdapter(
+                  child: Container(
+                    child: Column(
+                      children: <Widget>[TopInfoSection(), BottomInfoSection()],
+                    ),
                   ),
                 ),
-              ),
-              PinnedHeader(
-                child: TabBar(
-                  controller: _tabController,
-                  tabs: myTabs,
+                PinnedHeader(
+                  child: Container(
+                    child: TabBar(
+                      indicatorColor: Color.fromARGB(255, 243, 206, 74),
+                      controller: _tabController,
+                      tabs: myTabs,
+                    ),
+                    color: Color.fromARGB(255, 22, 24, 35),
+                  ),
                 ),
-              ),
-              SliverFillRemaining(
-                  child: TabBarView(
-                controller: _tabController,
-                children: myTabs.map((Tab tab) {
-                  return Center(
-                    child: VideoGrid(),
-                  );
-                }).toList(),
-              )),
-            ],
-          )
+              ];
+            },
+            body: TabBarView(
+              controller: _tabController,
+              children: myTabs.map((Tab tab) {
+                return Center(
+                  child: VideoGrid(),
+                );
+              }).toList(),
+            ),
+          ),
         ],
       ),
     );
@@ -529,46 +556,49 @@ class VideoGrid extends StatefulWidget {
 class VideoGridState extends State<VideoGrid> {
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-        itemCount: 10,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 1,
-            mainAxisSpacing: 1,
-            childAspectRatio: 3.0 / 4.0),
-        itemBuilder: (context, index) {
-          return Stack(
-            children: <Widget>[
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                bottom: 0,
-                child: Image.network(
-                  "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg",
-                  fit: BoxFit.cover,
+    return Container(
+      child: GridView.builder(
+          padding: EdgeInsets.only(top: 0, bottom: 0),
+          itemCount: 10,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 1,
+              mainAxisSpacing: 1,
+              childAspectRatio: 3.0 / 4.0),
+          itemBuilder: (context, index) {
+            return Stack(
+              children: <Widget>[
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Image.network(
+                    "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg",
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
-              Positioned(
-                left: 5,
-                bottom: 5,
-                child: Row(
-                  children: <Widget>[
-                    Icon(
-                      Icons.favorite_border,
-                      color: Colors.white,
-                      size: 12,
-                    ),
-                    Text(
-                      "1000",
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    )
-                  ],
-                ),
-              )
-            ],
-          );
-        });
+                Positioned(
+                  left: 5,
+                  bottom: 5,
+                  child: Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.favorite_border,
+                        color: Colors.white,
+                        size: 12,
+                      ),
+                      Text(
+                        "1000",
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      )
+                    ],
+                  ),
+                )
+              ],
+            );
+          }),
+    );
   }
 }
 
@@ -599,10 +629,10 @@ class SliverPinnedPersistentHeaderDelegate
   }
 
   @override
-  double get maxExtent => 30;
+  double get maxExtent => 44;
 
   @override
-  double get minExtent => 30;
+  double get minExtent => 44;
 
   @override
   bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) {

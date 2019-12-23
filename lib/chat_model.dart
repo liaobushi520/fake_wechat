@@ -8,6 +8,8 @@ import 'package:observable_ui/core2.dart';
 import 'entities.dart';
 
 class ChatModel {
+  final Friend friend;
+
   final ScrollController dialogueScrollControl = ScrollController();
 
   StreamSubscription<RecordStatus> recorderSubscription;
@@ -29,4 +31,6 @@ class ChatModel {
   ValueNotifier<int> voiceLevel = ValueNotifier(0);
 
   num duration;
+
+  ChatModel(this.friend);
 }

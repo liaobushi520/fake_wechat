@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_app/memonts_model.dart';
-import 'package:flutter_app/page/wechat/chat_detail_page.dart';
 import 'package:flutter_app/page/wechat/moments_page.dart';
 import 'package:flutter_app/page/wechat/subscription_message_page.dart';
 import 'package:flutter_app/subscription_box_model.dart';
 import 'package:observable_ui/provider.dart';
 
 import 'app_model.dart';
-import 'chat_model.dart';
 import 'home_model.dart';
 import 'home_page.dart';
 
@@ -21,6 +19,7 @@ class MyApp extends StatelessWidget {
     return ViewModelProvider(
       child: MaterialApp(
         title: 'Flutter Demo',
+        onGenerateRoute: (settings) {},
         theme: ThemeData(
             // This is the theme of your application.
             //
@@ -38,14 +37,6 @@ class MyApp extends StatelessWidget {
             return ViewModelProvider(
               viewModel: HomeModel(),
               child: HomePage(),
-            );
-          },
-          "/chat_detail": (context) {
-            return ViewModelProvider(
-              viewModel: ChatModel(),
-              child: ChatDetailPage(
-                title: "WeChat",
-              ),
             );
           },
           "/subscription_box": (context) {

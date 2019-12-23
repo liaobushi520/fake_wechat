@@ -2,11 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_app/entities.dart';
 import 'package:observable_ui/core2.dart';
 
-const USER = Friend(
-    name: "廖布斯",
-    avatar:
-        "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg");
-
 const DEFAULT_FRIENDS = [
   Friend(
       name: "梁朝伟",

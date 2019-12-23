@@ -5,7 +5,16 @@ import 'package:flutter/cupertino.dart';
 class Item {}
 
 class Message implements Item {
-  const Message(this.type, {this.file, this.text, this.url, this.duration});
+  const Message(
+    this.type, {
+    this.sender,
+    this.receiver,
+    this.file,
+    this.text,
+    this.url,
+    this.duration,
+    this.timestamp,
+  });
 
   final int type; //0 文本  1 图片  2 声音 3 红包
 
@@ -16,6 +25,12 @@ class Message implements Item {
   final String url;
 
   final num duration;
+
+  final num timestamp;
+
+  final Friend sender;
+
+  final Friend receiver;
 }
 
 class Marker implements Item {
@@ -114,24 +129,32 @@ class Moment {
             "mement type is 2 ，but images is null");
 }
 
-class Entrance {
+abstract class Entrance<T> {
   final int unreadCount;
 
   final Message recentMessage;
 
-  const Entrance(this.unreadCount, this.recentMessage);
+  String icon;
+
+  String name;
+
+  final T extra;
+
+  Entrance({this.extra, this.unreadCount, this.recentMessage});
 }
 
-class SubscriptionMsgBoxEntrance extends Entrance {
-  const SubscriptionMsgBoxEntrance(int unreadCount, Message recentMessage)
-      : super(unreadCount, recentMessage);
-}
+class FriendEntrance extends Entrance<Friend> {
+  FriendEntrance({Friend extra, int unreadCount, Message recentMessage})
+      : super(
+            extra: extra,
+            unreadCount: unreadCount,
+            recentMessage: recentMessage);
 
-class ChatEntrance extends Entrance {
-  final Friend friend;
+  @override
+  String get name => super.extra.name;
 
-  const ChatEntrance({this.friend, unreadCount, recentMessage})
-      : super(unreadCount, recentMessage);
+  @override
+  String get icon => super.extra.avatar;
 }
 
 class MinProgram {

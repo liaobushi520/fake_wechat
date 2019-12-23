@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter_app/data_source.dart';
 import 'package:flutter_app/photo_preview.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:observable_ui/core2.dart';
@@ -14,9 +15,7 @@ import '../../chat_model.dart';
 import '../../entities.dart';
 
 class ChatDetailPage extends StatefulWidget {
-  ChatDetailPage({Key key, this.title}) : super(key: key);
-
-  final String title;
+  ChatDetailPage({Key key}) : super(key: key);
 
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
@@ -34,7 +33,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(model.friend.name),
       ),
       body: WillPopScope(
           onWillPop: () {
@@ -88,17 +87,26 @@ class DialoguePanel extends StatelessWidget {
           primary: false,
           controller: chatModel.dialogueScrollControl,
           itemBuilder: (context, item) {
-            StatelessWidget itemWidget;
+            Widget itemWidget;
             if (item is Message) {
               switch (item.type) {
                 case 0:
-                  itemWidget = TextMessage(item);
+                  itemWidget = MessageBox(
+                    message: item,
+                    child: _buildTextBox(context, item),
+                  );
                   break;
                 case 1:
-                  itemWidget = ImageMessage(item);
+                  itemWidget = MessageBox(
+                    message: item,
+                    child: _buildImageBox(context, item),
+                  );
                   break;
                 case 2:
-                  itemWidget = SoundMessage(item);
+                  itemWidget = MessageBox(
+                    message: item,
+                    child: _buildSoundBox(context, item),
+                  );
                   break;
                 default:
                   itemWidget = Text("暂不支持此类型消息");
@@ -117,42 +125,36 @@ class DialoguePanel extends StatelessWidget {
               itemWidget = Text("暂不支持此类型消息");
             }
 
-            return Dismissible(
-              key: ValueKey(item),
-              child: Padding(
-                  child: GestureDetector(
-                    child: itemWidget,
-                    onLongPressStart: (details) {
-                      print(details.globalPosition);
-                      print(details.localPosition);
-                      showMenu(
-                          context: context,
-                          position: RelativeRect.fromLTRB(
-                              -details.globalPosition.dx,
-                              details.globalPosition.dy,
-                              0,
-                              0),
-                          items: [
-                            PopupMenuItem(
-                              value: "删除",
-                              child: Text("删除"),
-                            ),
-                            PopupMenuItem(
-                              value: "复制",
-                              child: Text("复制"),
-                            )
-                          ]).then((v) {
-                        if ("删除" == v) {
-                          chatModel.msgList.remove(item);
-                        }
-                      });
-                    },
-                  ),
-                  padding: EdgeInsets.only(top: 10, bottom: 10)),
-              onDismissed: (direction) {
-                chatModel.msgList.remove(item);
-              },
-            );
+            return Padding(
+                child: GestureDetector(
+                  child: itemWidget,
+                  onLongPressStart: (details) {
+                    print(details.globalPosition);
+                    print(details.localPosition);
+                    showMenu(
+                        context: context,
+                        position: RelativeRect.fromLTRB(
+                            -details.globalPosition.dx,
+                            details.globalPosition.dy,
+                            0,
+                            0),
+                        items: [
+                          PopupMenuItem(
+                            value: "删除",
+                            child: Text("删除"),
+                          ),
+                          PopupMenuItem(
+                            value: "复制",
+                            child: Text("复制"),
+                          )
+                        ]).then((v) {
+                      if ("删除" == v) {
+                        chatModel.msgList.remove(item);
+                      }
+                    });
+                  },
+                ),
+                padding: EdgeInsets.only(top: 10, bottom: 10));
           }),
     );
   }
@@ -298,8 +300,10 @@ class InputModeTransformation extends StatelessWidget {
               if (model.recordUri == null || model.recordUri.length <= 0) {
                 return;
               }
-              model.msgList.add(
-                  Message(2, url: model.recordUri, duration: model.duration));
+              model.msgList.add(Message(2,
+                  url: model.recordUri,
+                  duration: model.duration,
+                  sender: USER));
               model.recordUri = null;
               model.duration = 0;
               model.recording.value = !model.recording.value;
@@ -374,10 +378,9 @@ class ControlPanel extends StatelessWidget {
                     onPressed: () {
                       FocusScope.of(context).requestFocus();
                       model.msgList.add(Marker(0, DateTime.now().toString()));
-                      model.msgList
-                          .add(Message(0, text: model.inputText.value));
+                      model.msgList.add(Message(0,
+                          text: model.inputText.value, sender: USER));
                       model.inputText.value = "";
-                      print(model.dialogueScrollControl.position.runtimeType);
                       model.dialogueScrollControl
                           .jumpTo((model.msgList.length * 60).toDouble());
                     },
@@ -412,106 +415,96 @@ class TimeMarker extends StatelessWidget {
   }
 }
 
-class ImageMessage extends StatelessWidget {
-  const ImageMessage(this.message);
-
+class MessageBox extends StatefulWidget {
   final Message message;
 
+  final Widget child;
+
+  const MessageBox({Key key, this.message, this.child}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return MessageBoxState();
+  }
+}
+
+Widget _buildImageBox(BuildContext context, Message message) {
+  return Container(
+    margin: EdgeInsets.only(left: 16),
+    padding: EdgeInsets.all(10),
+    child: PhotoHero(
+      width: 100,
+      photo: message.file.path,
+      onTap: () {
+        Navigator.of(context).push(PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                PhotoPreviewPage(message.file.path),
+            opaque: false));
+      },
+    ),
+  );
+}
+
+class MessageBoxState extends State<MessageBox> {
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        Image.network(
-          "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg",
-          width: 28,
-          height: 28,
-        ),
-        Container(
-          margin: EdgeInsets.only(left: 16),
-          padding: EdgeInsets.all(10),
-          child: PhotoHero(
-            width: 100,
-            photo: message.file.path,
-            onTap: () {
-              Navigator.of(context).push(PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) =>
-                      PhotoPreviewPage(message.file.path),
-                  opaque: false));
-            },
+    return Directionality(
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(3)),
+                image: DecorationImage(
+                    image: NetworkImage(widget.message.sender.avatar),
+                    fit: BoxFit.cover)),
           ),
-        )
-      ],
+          widget.child
+        ],
+      ),
+      textDirection:
+          widget.message.sender == USER ? TextDirection.rtl : TextDirection.ltr,
     );
   }
 }
 
-class SoundMessage extends StatelessWidget {
-  SoundMessage(this.message);
+Widget _buildSoundBox(BuildContext context, Message message) {
+  final radio = min(max(message.duration.toInt() / (60 * 1000), 0.3), 1);
+  final appModel = ViewModelProvider.of<AppModel>(context);
 
-  final Message message;
-
-  @override
-  Widget build(BuildContext context) {
-    final radio = min(max(message.duration.toInt() / (60 * 1000), 0.3), 1);
-    final appModel = ViewModelProvider.of<AppModel>(context);
-    return Row(
-      children: <Widget>[
-        Image.network(
-          "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg",
-          width: 28,
-          height: 28,
-        ),
-        Expanded(
-            child: FractionallySizedBox(
-          alignment: Alignment.centerLeft,
-          widthFactor: radio,
-          child: Container(
-              margin: EdgeInsets.only(left: 16),
-              child: RaisedButton(
-                color: Color(0xffffffff),
-                child: Text(
-                  "${message.duration.toInt() ~/ 1000}'",
-                  textAlign: TextAlign.start,
-                  style: TextStyle(fontSize: 16),
-                ),
-                onPressed: () {
-                  appModel.recorder.startPlayer(message.url).then((s) {});
-                },
-              )),
-        ))
-      ],
-    );
-  }
-}
-
-class TextMessage extends StatelessWidget {
-  const TextMessage(this.message);
-
-  final Message message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        Image.network(
-          "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg",
-          width: 28,
-          height: 28,
-        ),
-        Container(
-          constraints: BoxConstraints(minWidth: 40, maxWidth: 200),
-          margin: EdgeInsets.only(left: 16),
-          padding: EdgeInsets.all(10),
+  return Expanded(
+      child: FractionallySizedBox(
+    alignment: Alignment.centerLeft,
+    widthFactor: radio,
+    child: Container(
+        margin: EdgeInsets.only(left: 16),
+        child: RaisedButton(
           color: Color(0xffffffff),
           child: Text(
-            message.text,
-            softWrap: true,
+            "${message.duration.toInt() ~/ 1000}'",
+            textAlign: TextAlign.start,
             style: TextStyle(fontSize: 16),
           ),
-        )
-      ],
-    );
-  }
+          onPressed: () {
+            appModel.recorder.startPlayer(message.url).then((s) {});
+          },
+        )),
+  ));
+}
+
+Widget _buildTextBox(BuildContext context, Message message) {
+  return Container(
+    constraints: BoxConstraints(minWidth: 40, maxWidth: 300),
+    margin: EdgeInsetsDirectional.only(start: 10),
+    padding: EdgeInsets.all(6),
+    color: Color(0xffffffff),
+    child: Text(
+      message.text,
+      softWrap: true,
+      style: TextStyle(fontSize: 16),
+    ),
+  );
 }
 
 class ToolkitPanel extends StatefulWidget {
