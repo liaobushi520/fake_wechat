@@ -30,47 +30,29 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   @override
   Widget build(BuildContext context) {
     final model = ViewModelProvider.of<ChatModel>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: Text(model.friend.name),
       ),
-      body: WillPopScope(
-          onWillPop: () {
-            if (model.panelVisible.value) {
-              model.panelVisible.value = false;
-              return Future.value(false);
-            }
-            return Future.value(true);
+      body: Stack(children: <Widget>[
+        Center(
+            child: Column(
+          children: <Widget>[
+            Expanded(child: DialoguePanel()),
+            ControlPanel(),
+          ],
+        )),
+        Center(
+            child: ListenableBridge(
+          data: [model.recording],
+          childBuilder: (context) {
+            return Visibility(
+              child: SoundRecordingIndicator(),
+              visible: model.recording.value,
+            );
           },
-          child: Stack(children: <Widget>[
-            Center(
-                child: Column(
-              children: <Widget>[
-                Expanded(child: DialoguePanel()),
-                ControlPanel(),
-                ListenableBridge(
-                  data: [model.panelVisible],
-                  childBuilder: (context) {
-                    return Visibility(
-                      child: ToolkitPanel(),
-                      visible: model.panelVisible.value,
-                    );
-                  },
-                )
-              ],
-            )),
-            Center(
-                child: ListenableBridge(
-              data: [model.recording],
-              childBuilder: (context) {
-                return Visibility(
-                  child: SoundRecordingIndicator(),
-                  visible: model.recording.value,
-                );
-              },
-            ))
-          ])),
+        ))
+      ]),
     );
   }
 }
@@ -248,150 +230,232 @@ class VoiceIndicator extends CustomPainter {
   }
 }
 
-class InputModeTransformation extends StatelessWidget {
+class ControlPanel extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    final model = ViewModelProvider.of<ChatModel>(context);
-
-    final appModel = ViewModelProvider.of<AppModel>(context);
-
-    return ExchangeEx(
-        child1: Container(
-            padding: EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Color(0xffbdbdbd),
-                width: 1.0,
-              ),
-            ),
-            alignment: Alignment.centerLeft,
-            child: EditableTextEx(
-              data: model.inputText,
-              child: EditableText(
-                maxLines: 5,
-                minLines: 1,
-                focusNode: FocusNode(),
-                textAlign: TextAlign.start,
-                backgroundCursorColor: Color(0xff457832),
-                cursorColor: Color(0xff246786),
-                style: TextStyle(color: Color(0xff000000)),
-                controller: TextEditingController(),
-              ),
-            )),
-        child2: GestureDetector(
-            onLongPressStart: (details) async {
-              model.recordUri = await appModel.recorder.startRecorder(null);
-
-              model.recording.value = !model.recording.value;
-              print('startRecorder: ${model.recordUri}');
-              model.recorderSubscription =
-                  appModel.recorder.onRecorderStateChanged.listen((e) {
-                model.duration = e.currentPosition.toInt();
-                model.voiceLevel.value = Random().nextInt(7);
-              });
-            },
-            onLongPressEnd: (details) async {
-              String result = await appModel.recorder.stopRecorder();
-              print('stopRecorder: $result');
-              if (model.recorderSubscription != null) {
-                model.recorderSubscription.cancel();
-                model.recorderSubscription = null;
-              }
-              if (model.recordUri == null || model.recordUri.length <= 0) {
-                return;
-              }
-              model.msgList.add(Message(2,
-                  url: model.recordUri,
-                  duration: model.duration,
-                  sender: USER));
-              model.recordUri = null;
-              model.duration = 0;
-              model.recording.value = !model.recording.value;
-            },
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: RaisedButton(
-                    child: Text(
-                      "按住 说话",
-                      textAlign: TextAlign.center,
-                    ),
-                    onPressed: () {},
-                  ),
-                )
-              ],
-            )),
-        status: model.inputMode);
+  State<StatefulWidget> createState() {
+    return ControlPanelState();
   }
 }
 
-class ControlPanel extends StatelessWidget {
+class ControlPanelState extends State {
+  bool _panelVisible = false;
+
+  //false :录音  true :文本输入
+  bool _inputMode = false;
+
+  String _inputText = "";
+
+  TextEditingController _textEditingController = TextEditingController();
+
+  bool _recording = false;
+
+  _startRecording(ChatModel model, AppModel appModel) async {
+    model.recordUri = await appModel.recorder.startRecorder(null);
+    model.recording.value = !model.recording.value;
+
+    print('startRecorder: ${model.recordUri}');
+    model.recorderSubscription =
+        appModel.recorder.onRecorderStateChanged.listen((e) {
+      model.duration = e.currentPosition.toInt();
+      model.voiceLevel.value = Random().nextInt(7);
+    });
+    setState(() {
+      _recording = true;
+    });
+  }
+
+  _stopRecording(ChatModel model, AppModel appModel) async {
+    String result = await appModel.recorder.stopRecorder();
+    print('stopRecorder: $result');
+    if (model.recorderSubscription != null) {
+      model.recorderSubscription.cancel();
+      model.recorderSubscription = null;
+    }
+    if (model.recordUri == null || model.recordUri.length <= 0) {
+      return;
+    }
+    model.msgList.add(Message(2,
+        url: model.recordUri, duration: model.duration, sender: USER));
+    model.recordUri = null;
+    model.duration = 0;
+    model.recording.value = !model.recording.value;
+    setState(() {
+      _recording = false;
+    });
+  }
+
+  _sendTextMessage(ChatModel model, String text) {
+    model.msgList.add(Marker(0, DateTime.now().toString()));
+    model.msgList.add(Message(0, text: text, sender: USER));
+    setState(() {
+      _textEditingController.text = "";
+      _inputText = "";
+    });
+    model.dialogueScrollControl.jumpTo((model.msgList.length * 60).toDouble());
+  }
+
   @override
   Widget build(BuildContext context) {
     final model = ViewModelProvider.of<ChatModel>(context);
+    final appModel = ViewModelProvider.of<AppModel>(context);
 
-    return Container(
-      padding: EdgeInsets.only(left: 16, right: 16),
-      child: Row(
-        children: <Widget>[
-          ExchangeEx(
-              child1: IconButton(
-                padding: EdgeInsets.all(0),
-                icon: Icon(Icons.keyboard_voice),
-                onPressed: () {
-                  model.inputMode.value = !model.inputMode.value;
-                  model.panelVisible.value = false;
-                },
-              ),
-              child2: IconButton(
-                padding: EdgeInsets.all(0),
-                icon: Icon(Icons.keyboard),
-                onPressed: () {
-                  model.inputMode.value = !model.inputMode.value;
-                },
-              ),
-              status: model.inputMode),
-          Expanded(child: InputModeTransformation()),
-          IconButton(
-            padding: EdgeInsets.all(0),
-            icon: Icon(Icons.insert_emoticon),
-            onPressed: () {},
-          ),
-          IconButton(
-              padding: EdgeInsets.all(0),
-              icon: Icon(Icons.add),
-              onPressed: () {
-                model.panelVisible.value = !model.panelVisible.value;
-                print(model.panelVisible.value);
-                model.inputMode.value = true;
-              }),
-          ListenableBridge(
-              data: [model.inputMode, model.inputText],
-              childBuilder: (context) {
-                return Visibility(
-                  child: RaisedButton(
-                    child: Text(
-                      "发 送",
-                      style: TextStyle(color: Color(0xffffffff)),
+    return WillPopScope(
+        onWillPop: () {
+          if (_panelVisible) {
+            setState(() {
+              _panelVisible = false;
+            });
+            return Future.value(false);
+          }
+          return Future.value(true);
+        },
+        child: Container(
+          color: Color.fromARGB(255, 247, 247, 247),
+          child: Column(
+            children: <Widget>[
+              Padding(
+                child: Row(
+                  children: <Widget>[
+                    Exchange(
+                        child1: GestureDetector(
+                          child: Icon(
+                            Icons.keyboard_voice,
+                            size: 30,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              _inputMode = !_inputMode;
+                              _panelVisible = false;
+                            });
+                          },
+                        ),
+                        child2: GestureDetector(
+                          child: Icon(
+                            Icons.keyboard,
+                            size: 30,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              _inputMode = !_inputMode;
+                            });
+                          },
+                        ),
+                        status: _inputMode),
+                    SizedBox(
+                      width: 2,
                     ),
-                    color: Color(0xFF0D47A1),
-                    onPressed: () {
-                      FocusScope.of(context).requestFocus();
-                      model.msgList.add(Marker(0, DateTime.now().toString()));
-                      model.msgList.add(Message(0,
-                          text: model.inputText.value, sender: USER));
-                      model.inputText.value = "";
-                      model.dialogueScrollControl
-                          .jumpTo((model.msgList.length * 60).toDouble());
-                    },
-                  ),
-                  visible:
-                      model.inputMode.value && model.inputText.value.length > 0,
-                );
-              })
-        ],
-      ),
-    );
+                    Expanded(
+                      child: DecoratedBox(
+                        child: Padding(
+                            child: _inputMode
+                                ? Align(
+                                    child: EditableText(
+                                      maxLines: 5,
+                                      minLines: 1,
+                                      focusNode: FocusNode(),
+                                      textAlign: TextAlign.start,
+                                      backgroundCursorColor: Color(0xff457832),
+                                      cursorColor:
+                                          Color.fromARGB(255, 87, 189, 105),
+                                      style: TextStyle(
+                                          color: Color(0xff000000),
+                                          fontSize: 16),
+                                      controller: _textEditingController,
+                                      onChanged: (text) {
+                                        setState(() {
+                                          _inputText = text;
+                                        });
+                                      },
+                                    ),
+                                    alignment: Alignment.centerLeft,
+                                  )
+                                : Listener(
+                                    child: Center(
+                                      child: Text(
+                                        _recording ? "松开 结束" : "按住 说话",
+                                        style: TextStyle(fontSize: 15),
+                                      ),
+                                    ),
+                                    onPointerDown: (details) async {
+                                      _startRecording(model, appModel);
+                                    },
+                                    onPointerUp: (details) async {
+                                      _stopRecording(model, appModel);
+                                    }),
+                            padding: EdgeInsets.all(8)),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(2)),
+                            color: _recording
+                                ? Color.fromARGB(255, 160, 160, 160)
+                                : Colors.white),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 2,
+                    ),
+                    Exchange(
+                      status: _inputMode,
+                      child1: GestureDetector(
+                        child: Icon(
+                          Icons.insert_emoticon,
+                          size: 30,
+                        ),
+                        onTap: () {},
+                      ),
+                      child2: GestureDetector(
+                        child: Icon(
+                          Icons.keyboard,
+                        ),
+                        onTap: () {},
+                      ),
+                    ),
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: 500),
+                      child: _inputMode && _inputText.length > 0
+                          ? RawMaterialButton(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(2))),
+                              constraints: BoxConstraints(
+                                  minWidth: 60.0, minHeight: 30.0),
+                              padding: EdgeInsets.all(0),
+                              child: Text(
+                                "发 送",
+                                style: TextStyle(color: Color(0xffffffff)),
+                              ),
+                              fillColor: Color.fromARGB(255, 87, 189, 105),
+                              onPressed: () {
+                                FocusScope.of(context).requestFocus();
+                                _sendTextMessage(model, _inputText);
+                              },
+                            )
+                          : GestureDetector(
+                              child: Icon(
+                                Icons.add,
+                                size: 30,
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  _inputMode = true;
+                                  _panelVisible = !_panelVisible;
+                                });
+                              },
+                            ),
+                    )
+                  ],
+                ),
+                padding: EdgeInsets.only(top: 5, bottom: 5, left: 4, right: 4),
+              ),
+              Visibility(
+                child: Container(
+                    color: Color(0xfff1f1f1),
+                    height: 200,
+                    child: PageView(children: <Widget>[ToolkitPage()])),
+                visible: _panelVisible,
+              )
+            ],
+          ),
+        ));
   }
 }
 
@@ -475,10 +539,10 @@ Widget _buildSoundBox(BuildContext context, Message message) {
 
   return Expanded(
       child: FractionallySizedBox(
-    alignment: Alignment.centerLeft,
+    alignment: AlignmentDirectional.centerStart,
     widthFactor: radio,
     child: Container(
-        margin: EdgeInsets.only(left: 16),
+        margin: EdgeInsetsDirectional.only(start: 10),
         child: RaisedButton(
           color: Color(0xffffffff),
           child: Text(
@@ -507,24 +571,6 @@ Widget _buildTextBox(BuildContext context, Message message) {
   );
 }
 
-class ToolkitPanel extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() {
-    return ToolkitPanelState();
-  }
-}
-
-class ToolkitPanelState extends State {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        color: Color(0xfff1f1f1),
-        height: 200,
-        child: PageView(
-            children: <Widget>[ToolkitPage(), ToolkitPage(), ToolkitPage()]));
-  }
-}
-
 class ToolkitPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -538,7 +584,7 @@ class ToolkitPageState extends State {
     if (image != null) {
       ViewModelProvider.of<ChatModel>(context)
           .msgList
-          .add(Message(1, file: image));
+          .add(Message(1, file: image, sender: USER));
     }
   }
 
@@ -602,6 +648,33 @@ class ToolkitPageState extends State {
             ))),
           ],
         ))
+      ],
+    );
+  }
+}
+
+class Exchange extends StatelessWidget {
+  final Widget child1;
+
+  final Widget child2;
+
+  final bool status;
+
+  const Exchange({Key key, this.child1, this.child2, this.status})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: <Widget>[
+        Visibility(
+          visible: status,
+          child: child1,
+        ),
+        Visibility(
+          visible: !status,
+          child: child2,
+        )
       ],
     );
   }

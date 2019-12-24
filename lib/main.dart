@@ -19,7 +19,6 @@ class MyApp extends StatelessWidget {
     return ViewModelProvider(
       child: MaterialApp(
         title: 'Flutter Demo',
-        onGenerateRoute: (settings) {},
         theme: ThemeData(
             // This is the theme of your application.
             //

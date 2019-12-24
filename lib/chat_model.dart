@@ -18,15 +18,10 @@ class ChatModel {
 
   ListenableList<Item> msgList = ListenableList();
 
-  ValueNotifier<bool> panelVisible = ValueNotifier(false);
-
   ///是否正在录音
   ValueNotifier<bool> recording = ValueNotifier(false);
 
   //false :录音  true :文本输入
-  ValueNotifier<bool> inputMode = ValueNotifier(false);
-
-  ValueNotifier<String> inputText = ValueNotifier("");
 
   ValueNotifier<int> voiceLevel = ValueNotifier(0);
 
