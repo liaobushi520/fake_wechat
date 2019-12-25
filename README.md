@@ -5,3 +5,7 @@
 ## 微信音乐播放界面
 
 ![微信音乐播放界面](https://github.com/liaobushi520/fake_wechat/blob/master/gif/music_player.gif)
+
+## 微信聊天界面
+
+![微信聊天界面](https://github.com/liaobushi520/fake_wechat/blob/master/gif/chat_detail.gif)
