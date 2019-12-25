@@ -6,7 +6,6 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_app/data_source.dart';
 import 'package:flutter_app/photo_preview.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:observable_ui/core2.dart';
 import 'package:observable_ui/provider.dart';
 import 'package:observable_ui/widgets2.dart';
 
@@ -27,32 +26,264 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     super.initState();
   }
 
+  GlobalKey _recorderPanelKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
-    final model = ViewModelProvider.of<ChatModel>(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(model.friend.name),
+    var chatModel = ViewModelProvider.of<ChatModel>(context);
+
+    return NotificationListener(
+      child: Stack(
+        children: <Widget>[
+          Scaffold(
+              appBar: AppBar(
+                title: Text(chatModel.friend.name),
+              ),
+              body: Column(
+                children: <Widget>[
+                  Expanded(child: DialoguePanel()),
+                  ControlPanel(),
+                ],
+              )),
+          Positioned(
+              left: 0,
+              top: 0,
+              right: 0,
+              bottom: 0,
+              child: RecorderPanel(key: _recorderPanelKey))
+        ],
       ),
-      body: Stack(children: <Widget>[
-        Center(
-            child: Column(
+      onNotification: (ControlNotification notification) {
+        RecorderPanelState recorderPanelState =
+            (_recorderPanelKey.currentContext as StatefulElement).state;
+        recorderPanelState.handleControlEvent(notification);
+        return true;
+      },
+    );
+  }
+}
+
+class RecorderPanel extends StatefulWidget {
+  RecorderPanel({Key key}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return RecorderPanelState();
+  }
+}
+
+class RecorderPanelState extends State<RecorderPanel>
+    with TickerProviderStateMixin {
+  ControlNotification _controlNotification;
+
+  GlobalKey cancelBtnKey = GlobalKey();
+
+  GlobalKey translateBtnKey = GlobalKey();
+
+  bool _enterCancelBtnBounds = false;
+
+  bool _enterTranslateBtnBounds = false;
+
+  AnimationController _animationController, _animationController2;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+        vsync: this,
+        duration: Duration(milliseconds: 200),
+        lowerBound: 1.0,
+        upperBound: 1.3);
+    _animationController2 = AnimationController(
+        vsync: this,
+        duration: Duration(milliseconds: 200),
+        lowerBound: 1.0,
+        upperBound: 1.3);
+  }
+
+  void handleControlEvent(ControlNotification notification) {
+    bool invalidate = false;
+    if (cancelBtnKey.currentContext != null &&
+        translateBtnKey.currentContext != null) {
+      RenderBox cancelBtnBox = cancelBtnKey.currentContext.findRenderObject();
+      RenderBox translateBtnBox =
+          translateBtnKey.currentContext.findRenderObject();
+
+      var localOffset =
+          cancelBtnBox.globalToLocal(notification.pointerEvent.position);
+      if (cancelBtnBox.size.contains(localOffset) && !_enterCancelBtnBounds ||
+          !cancelBtnBox.size.contains(localOffset) && _enterCancelBtnBounds) {
+        _enterCancelBtnBounds = !_enterCancelBtnBounds;
+        if (_enterCancelBtnBounds) {
+          _animationController.forward();
+        } else {
+          _animationController.reverse();
+        }
+        invalidate = true;
+      }
+
+      localOffset =
+          translateBtnBox.globalToLocal(notification.pointerEvent.position);
+      if (translateBtnBox.size.contains(localOffset) &&
+              !_enterTranslateBtnBounds ||
+          !translateBtnBox.size.contains(localOffset) &&
+              _enterTranslateBtnBounds) {
+        _enterTranslateBtnBounds = !_enterTranslateBtnBounds;
+        if (_enterTranslateBtnBounds) {
+          _animationController2.forward();
+        } else {
+          _animationController2.reverse();
+        }
+
+        invalidate = true;
+      }
+    }
+
+    if (_controlNotification == null ||
+        _controlNotification.event != notification.event) {
+      invalidate = true;
+    }
+
+    if (invalidate) {
+      setState(() {});
+    }
+
+    _controlNotification = notification;
+
+    if (_controlNotification.event == -1) {
+      _enterTranslateBtnBounds = false;
+      _enterCancelBtnBounds = false;
+      _animationController2.reset();
+      _animationController.reset();
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _animationController2.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_controlNotification == null) {
+      return Container();
+    }
+
+    final model = ViewModelProvider.of<ChatModel>(context);
+    return Visibility(
+      child: Container(
+        alignment: Alignment.center,
+        color: _controlNotification.event == 1
+            ? Color.fromARGB(120, 0, 0, 0)
+            : Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Expanded(child: DialoguePanel()),
-            ControlPanel(),
+            SizedBox(
+              width: 160,
+              height: 160,
+              child: Container(
+                  decoration: _controlNotification.event == 0
+                      ? BoxDecoration(
+                          color: Color(0xaa000000),
+                          borderRadius: BorderRadius.all(Radius.circular(10)))
+                      : null,
+                  child: Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.keyboard_voice,
+                        size: 60,
+                      ),
+                      SizedBox(
+                        width: 50,
+                        height: 60,
+                        child: CustomPaint(
+                          painter: VoiceIndicator(model.voiceLevel),
+                          size: Size(60, 80),
+                        ),
+                      ),
+                    ],
+                    mainAxisAlignment: MainAxisAlignment.center,
+                  )),
+            ),
+            SizedBox(
+              height: 40,
+            ),
+            Opacity(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  SizedBox(
+                    width: 40,
+                  ),
+                  ScaleTransition(
+                    scale: _animationController,
+                    child: Container(
+                      key: cancelBtnKey,
+                      width: 80,
+                      height: 80,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.red,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Icon(
+                            Icons.delete,
+                            color: Colors.white,
+                          ),
+                          Text("取消",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  decoration: TextDecoration.none))
+                        ],
+                      ),
+                    ),
+                  ),
+                  Spacer(),
+                  ScaleTransition(
+                    scale: _animationController2,
+                    child: Container(
+                      key: translateBtnKey,
+                      width: 80,
+                      height: 80,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle, color: Colors.blue),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Icon(
+                            Icons.translate,
+                            color: Colors.white,
+                          ),
+                          Text(
+                            "转文字",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                decoration: TextDecoration.none),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 40,
+                  ),
+                ],
+              ),
+              opacity: _controlNotification.event == 1 ? 1 : 0,
+            ),
           ],
-        )),
-        Center(
-            child: ListenableBridge(
-          data: [model.recording],
-          childBuilder: (context) {
-            return Visibility(
-              child: SoundRecordingIndicator(),
-              visible: model.recording.value,
-            );
-          },
-        ))
-      ]),
+        ),
+      ),
+      visible: _controlNotification.event != -1,
     );
   }
 }
@@ -71,29 +302,9 @@ class DialoguePanel extends StatelessWidget {
           itemBuilder: (context, item) {
             Widget itemWidget;
             if (item is Message) {
-              switch (item.type) {
-                case 0:
-                  itemWidget = MessageBox(
-                    message: item,
-                    child: _buildTextBox(context, item),
-                  );
-                  break;
-                case 1:
-                  itemWidget = MessageBox(
-                    message: item,
-                    child: _buildImageBox(context, item),
-                  );
-                  break;
-                case 2:
-                  itemWidget = MessageBox(
-                    message: item,
-                    child: _buildSoundBox(context, item),
-                  );
-                  break;
-                default:
-                  itemWidget = Text("暂不支持此类型消息");
-                  break;
-              }
+              itemWidget = MessageBox(
+                message: item,
+              );
             } else if (item is Marker) {
               switch (item.type) {
                 case 0:
@@ -138,45 +349,6 @@ class DialoguePanel extends StatelessWidget {
                 ),
                 padding: EdgeInsets.only(top: 10, bottom: 10));
           }),
-    );
-  }
-}
-
-class SoundRecordingIndicator extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() {
-    return _SoundRecordingIndicator();
-  }
-}
-
-class _SoundRecordingIndicator extends State<SoundRecordingIndicator> {
-  @override
-  Widget build(BuildContext context) {
-    final model = ViewModelProvider.of<ChatModel>(context);
-    return SizedBox(
-      width: 200,
-      height: 200,
-      child: Container(
-          decoration: BoxDecoration(
-              color: Color(0xaa000000),
-              borderRadius: BorderRadius.all(Radius.circular(10))),
-          child: Row(
-            children: <Widget>[
-              Icon(
-                Icons.keyboard_voice,
-                size: 60,
-              ),
-              SizedBox(
-                width: 50,
-                height: 60,
-                child: CustomPaint(
-                  painter: VoiceIndicator(model.voiceLevel),
-                  size: Size(60, 80),
-                ),
-              ),
-            ],
-            mainAxisAlignment: MainAxisAlignment.center,
-          )),
     );
   }
 }
@@ -237,6 +409,14 @@ class ControlPanel extends StatefulWidget {
   }
 }
 
+class ControlNotification extends Notification {
+  final int event; // 0 录音手指在按钮范围内  1 录音手指不在按钮范围内   -1 结束录音
+
+  final PointerEvent pointerEvent;
+
+  const ControlNotification(this.event, this.pointerEvent);
+}
+
 class ControlPanelState extends State {
   bool _panelVisible = false;
 
@@ -249,10 +429,11 @@ class ControlPanelState extends State {
 
   bool _recording = false;
 
+  GlobalKey _recorderBtnKey = GlobalKey();
+
   _startRecording(ChatModel model, AppModel appModel) async {
     model.recordUri = await appModel.recorder.startRecorder(null);
     model.recording.value = !model.recording.value;
-
     print('startRecorder: ${model.recordUri}');
     model.recorderSubscription =
         appModel.recorder.onRecorderStateChanged.listen((e) {
@@ -342,9 +523,10 @@ class ControlPanelState extends State {
                         ),
                         status: _inputMode),
                     SizedBox(
-                      width: 2,
+                      width: 4,
                     ),
                     Expanded(
+                      key: _recorderBtnKey,
                       child: DecoratedBox(
                         child: Padding(
                             child: _inputMode
@@ -378,9 +560,29 @@ class ControlPanelState extends State {
                                     ),
                                     onPointerDown: (details) async {
                                       _startRecording(model, appModel);
+                                      ControlNotification(0, details)
+                                          .dispatch(context);
+                                    },
+                                    onPointerMove: (details) async {
+                                      var recorderBtn = (_recorderBtnKey
+                                          .currentContext
+                                          .findRenderObject() as RenderBox);
+                                      var localOffset = recorderBtn
+                                          .globalToLocal(details.position);
+                                      var contain = recorderBtn.size
+                                          .contains(localOffset);
+                                      if (contain) {
+                                        ControlNotification(0, details)
+                                            .dispatch(context);
+                                      } else {
+                                        ControlNotification(1, details)
+                                            .dispatch(context);
+                                      }
                                     },
                                     onPointerUp: (details) async {
                                       _stopRecording(model, appModel);
+                                      ControlNotification(-1, details)
+                                          .dispatch(context);
                                     }),
                             padding: EdgeInsets.all(8)),
                         decoration: BoxDecoration(
@@ -391,7 +593,7 @@ class ControlPanelState extends State {
                       ),
                     ),
                     SizedBox(
-                      width: 2,
+                      width: 4,
                     ),
                     Exchange(
                       status: _inputMode,
@@ -408,6 +610,9 @@ class ControlPanelState extends State {
                         ),
                         onTap: () {},
                       ),
+                    ),
+                    SizedBox(
+                      width: 4,
                     ),
                     AnimatedContainer(
                       duration: Duration(milliseconds: 500),
@@ -444,13 +649,16 @@ class ControlPanelState extends State {
                     )
                   ],
                 ),
-                padding: EdgeInsets.only(top: 5, bottom: 5, left: 4, right: 4),
+                padding: EdgeInsets.only(top: 5, bottom: 5, left: 5, right: 5),
               ),
               Visibility(
-                child: Container(
-                    color: Color(0xfff1f1f1),
-                    height: 200,
-                    child: PageView(children: <Widget>[ToolkitPage()])),
+                child: SizedBox(
+                    height: 260,
+                    child: PageView(children: <Widget>[
+                      ToolkitPage(
+                        entrances: ToolkitEntrances,
+                      )
+                    ])),
                 visible: _panelVisible,
               )
             ],
@@ -482,9 +690,7 @@ class TimeMarker extends StatelessWidget {
 class MessageBox extends StatefulWidget {
   final Message message;
 
-  final Widget child;
-
-  const MessageBox({Key key, this.message, this.child}) : super(key: key);
+  const MessageBox({Key key, this.message}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -492,26 +698,32 @@ class MessageBox extends StatefulWidget {
   }
 }
 
-Widget _buildImageBox(BuildContext context, Message message) {
-  return Container(
-    margin: EdgeInsets.only(left: 16),
-    padding: EdgeInsets.all(10),
-    child: PhotoHero(
-      width: 100,
-      photo: message.file.path,
-      onTap: () {
-        Navigator.of(context).push(PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                PhotoPreviewPage(message.file.path),
-            opaque: false));
-      },
-    ),
-  );
-}
-
 class MessageBoxState extends State<MessageBox> {
   @override
   Widget build(BuildContext context) {
+    Widget child;
+    switch (widget.message.type) {
+      case 0:
+        {
+          child = _buildTextBox(context, widget.message);
+          break;
+        }
+      case 1:
+        {
+          child = _buildImageBox(context, widget.message);
+          break;
+        }
+      case 2:
+        {
+          child = _buildSoundBox(context, widget.message);
+          break;
+        }
+      default:
+        {
+          child = Text("暂不支持该消息类型!");
+        }
+    }
+
     return Directionality(
       child: Row(
         children: <Widget>[
@@ -524,61 +736,110 @@ class MessageBoxState extends State<MessageBox> {
                     image: NetworkImage(widget.message.sender.avatar),
                     fit: BoxFit.cover)),
           ),
-          widget.child
+          SizedBox(
+            width: 10,
+          ),
+          child,
         ],
       ),
       textDirection:
           widget.message.sender == USER ? TextDirection.rtl : TextDirection.ltr,
     );
   }
-}
 
-Widget _buildSoundBox(BuildContext context, Message message) {
-  final radio = min(max(message.duration.toInt() / (60 * 1000), 0.3), 1);
-  final appModel = ViewModelProvider.of<AppModel>(context);
+  Widget _buildImageBox(BuildContext context, Message message) {
+    return Container(
+      child: PhotoHero(
+        width: 100,
+        photo: message.file.path,
+        onTap: () {
+          Navigator.of(context).push(PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  PhotoPreviewPage(message.file.path),
+              opaque: false));
+        },
+      ),
+    );
+  }
 
-  return Expanded(
-      child: FractionallySizedBox(
-    alignment: AlignmentDirectional.centerStart,
-    widthFactor: radio,
-    child: Container(
-        margin: EdgeInsetsDirectional.only(start: 10),
-        child: RaisedButton(
-          color: Color(0xffffffff),
+  Widget _buildSoundBox(BuildContext context, Message message) {
+    final radio = min(max(message.duration.toInt() / (60 * 1000), 0.3), 1);
+    final appModel = ViewModelProvider.of<AppModel>(context);
+    return Expanded(
+        child: FractionallySizedBox(
+      alignment: AlignmentDirectional.centerStart,
+      widthFactor: radio,
+      child: GestureDetector(
+        child: Container(
+          padding: EdgeInsets.all(8),
           child: Text(
             "${message.duration.toInt() ~/ 1000}'",
             textAlign: TextAlign.start,
             style: TextStyle(fontSize: 16),
           ),
-          onPressed: () {
-            appModel.recorder.startPlayer(message.url).then((s) {});
-          },
-        )),
-  ));
-}
+          decoration: BoxDecoration(
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.circular(2),
+            color: message.sender == USER
+                ? Color.fromARGB(255, 169, 232, 122)
+                : Color(0xffffffff),
+          ),
+        ),
+        onTap: () {
+          appModel.recorder.startPlayer(message.url).then((s) {});
+        },
+      ),
+    ));
+  }
 
-Widget _buildTextBox(BuildContext context, Message message) {
-  return Container(
-    constraints: BoxConstraints(minWidth: 40, maxWidth: 300),
-    margin: EdgeInsetsDirectional.only(start: 10),
-    padding: EdgeInsets.all(6),
-    color: Color(0xffffffff),
-    child: Text(
-      message.text,
-      softWrap: true,
-      style: TextStyle(fontSize: 16),
-    ),
-  );
+  Widget _buildTextBox(BuildContext context, Message message) {
+    return Container(
+      constraints: BoxConstraints(maxWidth: 200),
+      padding: EdgeInsets.all(7),
+      decoration: BoxDecoration(
+        shape: BoxShape.rectangle,
+        borderRadius: BorderRadius.circular(2),
+        color: message.sender == USER
+            ? Color.fromARGB(255, 169, 232, 122)
+            : Color(0xffffffff),
+      ),
+      child: Text(
+        message.text,
+        softWrap: true,
+        style: TextStyle(fontSize: 16),
+        textDirection: TextDirection.ltr,
+      ),
+    );
+  }
 }
 
 class ToolkitPage extends StatefulWidget {
+  final List<ToolkitEntrance> entrances;
+
+  const ToolkitPage({Key key, this.entrances}) : super(key: key);
+
   @override
   State<StatefulWidget> createState() {
     return ToolkitPageState();
   }
 }
 
-class ToolkitPageState extends State {
+class ToolkitEntrance {
+  final String name;
+
+  final IconData icon;
+
+  const ToolkitEntrance(this.name, this.icon);
+}
+
+final ToolkitEntrances = <ToolkitEntrance>[
+  ToolkitEntrance("相册", Icons.image),
+  ToolkitEntrance("拍摄", Icons.camera),
+  ToolkitEntrance("文件", Icons.attach_file),
+  ToolkitEntrance("红包", Icons.account_balance_wallet)
+];
+
+class ToolkitPageState extends State<ToolkitPage> {
   Future sendImageMessage(BuildContext context, ImageSource source) async {
     var image = await ImagePicker.pickImage(source: source);
     if (image != null) {
@@ -588,67 +849,70 @@ class ToolkitPageState extends State {
     }
   }
 
+  Widget _buildToolkitEntrance(BuildContext context, ToolkitEntrance item) {
+    BoxDecoration iconDecoration = BoxDecoration(
+        borderRadius: BorderRadius.circular(4), color: Colors.white);
+    return Expanded(
+        child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        DecoratedBox(
+          child: IconButton(
+              icon: Icon(item.icon),
+              onPressed: () {
+                if (item.name == "相册") {
+                  sendImageMessage(context, ImageSource.gallery);
+                } else if (item.name == "拍摄") {
+                  sendImageMessage(context, ImageSource.camera);
+                } else if (item.name == "文件") {
+                } else if (item.name == "红包") {}
+              }),
+          decoration: iconDecoration,
+        ),
+        Text(item.name)
+      ],
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Expanded(
-            child: Row(
+    var countForRow = 3;
+    int rowCount = ((widget.entrances.length / countForRow) + 0.5).round();
+    var rows = <Widget>[];
+    for (int i = 0; i < rowCount; i++) {
+      var widgets = <Widget>[];
+      for (int j = countForRow * i;
+          j < min(widget.entrances.length, countForRow * (i + 1));
+          j++) {
+        var item = widget.entrances[j];
+        widgets.add(
+          _buildToolkitEntrance(context, item),
+        );
+      }
+
+      if (i == rowCount - 1) {
+        for (int k = widget.entrances.length;
+            k < (rowCount) * countForRow;
+            k++) {
+          widgets.add(Spacer());
+        }
+      }
+      rows.add(Expanded(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Expanded(
-                child: Center(
-                    child: Column(
-              children: <Widget>[
-                IconButton(
-                    icon: Icon(Icons.image),
-                    onPressed: () {
-                      sendImageMessage(context, ImageSource.gallery);
-                    }),
-                Text("相册")
-              ],
-            ))),
-            Expanded(
-                child: Center(
-                    child: Column(
-              children: <Widget>[
-                IconButton(
-                    icon: Icon(Icons.camera),
-                    onPressed: () {
-                      sendImageMessage(context, ImageSource.camera);
-                    }),
-                Text("拍摄")
-              ],
-            ))),
-            Expanded(
-                child: Center(
-                    child: Column(
-              children: <Widget>[
-                IconButton(icon: Icon(Icons.attach_file), onPressed: () {}),
-                Text("文件")
-              ],
-            ))),
-          ],
-        )),
-        Expanded(
-            child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Expanded(
-                child: Center(
-                    child: Column(
-              children: <Widget>[
-                IconButton(
-                    icon: Icon(Icons.account_balance_wallet),
-                    onPressed: () {
-                      Navigator.of(context).pushNamed("/moments");
-                    }),
-                Text("红包")
-              ],
-            ))),
-          ],
-        ))
-      ],
+          children: widgets,
+        ),
+      ));
+    }
+
+    return Container(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: rows,
+      ),
+      color: Color(0xfff1f1f1),
+      padding: EdgeInsets.all(16),
+      alignment: Alignment.center,
     );
   }
 }
