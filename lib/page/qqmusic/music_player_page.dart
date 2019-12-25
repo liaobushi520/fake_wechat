@@ -1,10 +1,15 @@
 import 'dart:async';
-import 'dart:ui';
+import 'dart:collection';
+import 'dart:isolate';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_app/entities.dart';
+import 'package:http/http.dart' as http;
 import 'package:observable_ui/provider.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 import '../../app_model.dart';
 import '../../widgets.dart';
@@ -14,21 +19,185 @@ const _kControlPanelHeight = 200.0;
 const _kLrcBlockHeight = 30.0;
 const _kLrcPanelHeight = 400.0;
 
-class MusicPlayerPage extends StatelessWidget {
+class MusicPlayerThemeData {
+  final Color primaryColor;
+
+  final TextStyle titleTextStyle;
+
+  final TextStyle highlightTextStyle;
+
+  final TextStyle normalTextStyle;
+
+  final TextStyle timeIndicatorTextStyle;
+
+  final SliderThemeData sliderTheme;
+
+  final IconThemeData iconTheme;
+
+  const MusicPlayerThemeData({
+    this.titleTextStyle,
+    this.highlightTextStyle,
+    this.normalTextStyle,
+    this.timeIndicatorTextStyle,
+    this.sliderTheme,
+    this.iconTheme,
+    this.primaryColor,
+  });
+
+  MusicPlayerThemeData copyWith({
+    TextStyle titleTextStyle,
+    TextStyle highlightTextStyle,
+    TextStyle normalTextStyle,
+    TextStyle timeIndicatorTextStyle,
+    SliderThemeData sliderTheme,
+    IconThemeData iconTheme,
+    Color primaryColor,
+  }) {
+    return MusicPlayerThemeData(
+        timeIndicatorTextStyle:
+            timeIndicatorTextStyle ?? this.timeIndicatorTextStyle,
+        titleTextStyle: titleTextStyle ?? this.titleTextStyle,
+        highlightTextStyle: highlightTextStyle ?? this.highlightTextStyle,
+        normalTextStyle: normalTextStyle ?? this.normalTextStyle,
+        sliderTheme: sliderTheme ?? this.sliderTheme,
+        iconTheme: iconTheme ?? this.iconTheme,
+        primaryColor: primaryColor ?? this.primaryColor);
+  }
+}
+
+class MusicPlayerTheme extends InheritedTheme {
+  final MusicPlayerThemeData data;
+
+  MusicPlayerTheme({
+    this.data,
+    Widget child,
+    Key key,
+  })  : assert(child != null),
+        assert(data != null),
+        super(key: key, child: child);
+  static Color primaryColor = Color(0xff000000),
+      titleTextColor = Color(0xffffffff),
+      bodyTextColor = Color(0xffe3e3e3);
+
+  static MusicPlayerThemeData DEFAULT_MUSIC_PLAYER_THEME;
+
+  static MusicPlayerThemeData of(BuildContext context) {
+    final MusicPlayerTheme inheritedTheme =
+        context.dependOnInheritedWidgetOfExactType<MusicPlayerTheme>();
+    if (inheritedTheme != null && inheritedTheme.data != null) {
+      return inheritedTheme.data;
+    } else {
+      if (DEFAULT_MUSIC_PLAYER_THEME == null) {
+        ThemeData themeData = Theme.of(context);
+        SliderThemeData sliderTheme = themeData.sliderTheme;
+        IconThemeData iconThemeData = themeData.iconTheme;
+        DEFAULT_MUSIC_PLAYER_THEME = MusicPlayerThemeData(
+            primaryColor: primaryColor,
+            sliderTheme: sliderTheme.copyWith(
+                thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.0),
+                activeTrackColor: titleTextColor,
+                thumbColor: titleTextColor,
+                inactiveTrackColor: titleTextColor.withOpacity(0.1)),
+            iconTheme: iconThemeData.copyWith(color: titleTextColor),
+            titleTextStyle: TextStyle(
+                color: titleTextColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 16),
+            highlightTextStyle: TextStyle(
+                color: titleTextColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 14),
+            normalTextStyle:
+                TextStyle(color: bodyTextColor.withOpacity(0.5), fontSize: 14),
+            timeIndicatorTextStyle:
+                TextStyle(color: bodyTextColor, fontSize: 12));
+      }
+    }
+
+    return DEFAULT_MUSIC_PLAYER_THEME;
+  }
+
+  @override
+  Widget wrap(BuildContext context, Widget child) {
+    final SliderTheme ancestorTheme =
+        context.findAncestorWidgetOfExactType<SliderTheme>();
+    return identical(this, ancestorTheme)
+        ? child
+        : MusicPlayerTheme(data: data, child: child);
+  }
+
+  @override
+  bool updateShouldNotify(MusicPlayerTheme oldWidget) => data != oldWidget.data;
+}
+
+Map<String, PaletteGenerator> paletteCache = HashMap();
+
+class MusicPlayerPage extends StatefulWidget {
   final AudioLink song;
 
   const MusicPlayerPage({Key key, this.song}) : super(key: key);
 
   @override
+  State<StatefulWidget> createState() {
+    return MusicPlayerPageState();
+  }
+}
+
+class MusicPlayerPageState extends State<MusicPlayerPage> {
+  PaletteGenerator _paletteGenerator;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (paletteCache.containsKey(widget.song.cover)) {
+      _paletteGenerator = paletteCache[widget.song.cover];
+    } else {
+      exactColors(widget.song.cover).then((v) {
+        paletteCache[widget.song.cover] = v;
+        setState(() {
+          _paletteGenerator = v;
+        });
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     var appModel = ViewModelProvider.of<AppModel>(context);
+    MusicPlayerThemeData themeData = MusicPlayerTheme.of(context);
+    if (_paletteGenerator != null) {
+      Color primaryColor = _paletteGenerator.lightMutedColor.color;
+      Color titleTextColor = _paletteGenerator.lightMutedColor.titleTextColor;
+      Color bodyTextColor = _paletteGenerator.lightMutedColor.bodyTextColor;
+      themeData = themeData.copyWith(
+          primaryColor: primaryColor,
+          titleTextStyle:
+              themeData.titleTextStyle.copyWith(color: titleTextColor),
+          highlightTextStyle:
+              themeData.highlightTextStyle.copyWith(color: titleTextColor),
+          normalTextStyle:
+              themeData.normalTextStyle.copyWith(color: bodyTextColor),
+          sliderTheme: themeData.sliderTheme.copyWith(
+              activeTrackColor: titleTextColor,
+              thumbColor: titleTextColor,
+              inactiveTrackColor: titleTextColor.withOpacity(0.1)),
+          iconTheme: themeData.iconTheme.copyWith(color: titleTextColor),
+          timeIndicatorTextStyle:
+              themeData.timeIndicatorTextStyle.copyWith(color: bodyTextColor));
+    }
 
     return Scaffold(
-      body: _MusicPlayerPage(
-        song: song,
-        screenHeight: MediaQuery.of(context).size.height,
-        audioPlayer: appModel.audioPlayer,
-      ),
+      body: Container(
+          child: MusicPlayerTheme(
+            data: themeData,
+            child: _MusicPlayerPage(
+              song: widget.song,
+              screenHeight: MediaQuery.of(context).size.height,
+              audioPlayer: appModel.audioPlayer,
+            ),
+          ),
+          color: themeData.primaryColor),
     );
   }
 }
@@ -46,11 +215,11 @@ class _MusicPlayerPage extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return MusicPlayerPageState();
+    return _MusicPlayerPageState();
   }
 }
 
-class MusicPlayerPageState extends State<_MusicPlayerPage>
+class _MusicPlayerPageState extends State<_MusicPlayerPage>
     with SingleTickerProviderStateMixin {
   bool _expand = false;
 
@@ -102,61 +271,55 @@ class MusicPlayerPageState extends State<_MusicPlayerPage>
     _expand = !_expand;
   }
 
-  Widget _build(BuildContext context, AudioLink song) {
-    var appModel = ViewModelProvider.of<AppModel>(context);
-    return Container(
-        child: Column(
-          children: <Widget>[
-            Expanded(
-              child: Stack(
-                children: <Widget>[
-                  PositionedTransition(
-                    child: GestureDetector(
-                      child: LrcPanel(
-                        lrcBlocks: FAKE_LRC,
-                        audioLink: song,
-                        playStream: appModel.audioPlayer.playStream,
-                      ),
-                      onTap: () {
-                        if (_expand) {
-                          return;
-                        }
-                        _handleExpand();
-                      },
-                    ),
-                    rect: _lrcAnimation,
-                  ),
-                  PositionedTransition(
-                    child: VerticalGestureDetector(
-                      child: CoverPanel(
-                        song: song,
-                      ),
-                      onEvent: (e) {
-                        if (e == VerticalEvent.UP && !_expand ||
-                            e == VerticalEvent.DOWN && _expand) {
-                          _handleExpand();
-                        }
-                      },
-                    ),
-                    rect: _animation,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(
-                height: _kControlPanelHeight,
-                child: PlayControlPanel(
-                  audioLink: song,
-                  playStream: appModel.audioPlayer.playStream,
-                ))
-          ],
-        ),
-        color: Color(0xff3f51b5));
-  }
-
   @override
   Widget build(BuildContext context) {
-    return _build(context, widget.song);
+    var appModel = ViewModelProvider.of<AppModel>(context);
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: Stack(
+            children: <Widget>[
+              PositionedTransition(
+                child: GestureDetector(
+                  child: LrcPanel(
+                    lrcBlocks: FAKE_LRC,
+                    audioLink: widget.song,
+                    playStream: appModel.audioPlayer.playStream,
+                  ),
+                  onTap: () {
+                    if (_expand) {
+                      return;
+                    }
+                    _handleExpand();
+                  },
+                ),
+                rect: _lrcAnimation,
+              ),
+              PositionedTransition(
+                child: VerticalGestureDetector(
+                  child: CoverPanel(
+                    song: widget.song,
+                  ),
+                  onEvent: (e) {
+                    if (e == VerticalEvent.UP && !_expand ||
+                        e == VerticalEvent.DOWN && _expand) {
+                      _handleExpand();
+                    }
+                  },
+                ),
+                rect: _animation,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+            height: _kControlPanelHeight,
+            child: PlayControlPanel(
+              audioLink: widget.song,
+              playStream: appModel.audioPlayer.playStream,
+            ))
+      ],
+    );
   }
 
   @override
@@ -173,6 +336,7 @@ class CoverPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    MusicPlayerThemeData themeData = MusicPlayerTheme.of(context);
     return Stack(
       children: <Widget>[
         SizedBox.expand(
@@ -187,16 +351,16 @@ class CoverPanel extends StatelessWidget {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                Color(0xff3f51b5),
-                Color(0xaa3f51b5),
-                Color(0x663f51b5),
-                Color(0x003f51b5),
+                themeData.primaryColor.withOpacity(1.0),
+                themeData.primaryColor.withOpacity(0.6),
+                themeData.primaryColor.withOpacity(0.4),
+                themeData.primaryColor.withOpacity(0.0),
               ])),
         ),
         Positioned(
           child: Text(
             song.name,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: themeData.titleTextStyle,
             textAlign: TextAlign.center,
           ),
           bottom: 10,
@@ -270,11 +434,10 @@ class PlayControlPanelState extends ReactPlayWidgetState<PlayControlPanel> {
   @override
   Widget build(BuildContext context) {
     var appModel = ViewModelProvider.of<AppModel>(context);
-
+    MusicPlayerThemeData themeData = MusicPlayerTheme.of(context);
     if (_lastPlayEvent != null && _lastPlayEvent.status == -1) {
       appModel.audioPlayer.playOrStop(widget.audioLink, true);
     }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
@@ -282,32 +445,39 @@ class PlayControlPanelState extends ReactPlayWidgetState<PlayControlPanel> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(_lastPlayEvent != null
-                ? _lastPlayEvent.currentPositionText
-                : "--:--:--"),
-            Slider(
-              min: 0,
-              max: _lastPlayEvent != null ? _lastPlayEvent.duration : 0,
-              value:
-                  _lastPlayEvent != null ? _lastPlayEvent.currentPosition : 0,
-              onChanged: (v) {
-                appModel.audioPlayer.seekTo(v.toInt());
-              },
+            Text(
+              _lastPlayEvent != null
+                  ? _lastPlayEvent.currentPositionText
+                  : "--:--:--",
+              style: themeData.timeIndicatorTextStyle,
             ),
-            Text(_lastPlayEvent != null
-                ? _lastPlayEvent.durationText
-                : "--:--:--")
+            SliderTheme(
+              child: Slider(
+                min: 0,
+                max: _lastPlayEvent != null ? _lastPlayEvent.duration : 0,
+                value:
+                    _lastPlayEvent != null ? _lastPlayEvent.currentPosition : 0,
+                onChanged: (v) {
+                  appModel.audioPlayer.seekTo(v.toInt());
+                },
+              ),
+              data: themeData.sliderTheme,
+            ),
+            Text(
+              _lastPlayEvent != null ? _lastPlayEvent.durationText : "--:--:--",
+              style: themeData.timeIndicatorTextStyle,
+            )
           ],
         ),
         IconButton(
           icon: _isPlay()
               ? Icon(
                   Icons.pause,
-                  size: 40,
+                  size: 36,
                 )
               : Icon(
                   Icons.play_arrow,
-                  size: 40,
+                  size: 36,
                 ),
           onPressed: () {
             appModel.audioPlayer.playOrPause();
@@ -349,45 +519,12 @@ class LrcPanel extends ReactPlayWidget {
 class LrcPanelState extends ReactPlayWidgetState<LrcPanel> {
   LrcBlock _highlightBlock;
 
-//  @override
-//  Widget build(BuildContext context) {
-//    var scrollOffset = 500.0;
-//    if (_highlightBlock != null) {
-//      scrollOffset = widget.lrcBlocks.indexOf(_highlightBlock) * 30.0;
-//    }
-//
-//    var blocks = widget.lrcBlocks.map((block) {
-//      if (block == _highlightBlock) {
-//        return TextSpan(
-//            text: block.text + "\n",
-//            style: TextStyle(color: Colors.orange, fontSize: 16));
-//      }
-//
-//      return TextSpan(text: block.text + "\n", style: TextStyle(fontSize: 16));
-//    });
-//
-//    return CustomScrollView(
-//      anchor: 0.5,
-//      controller: ScrollController(initialScrollOffset: scrollOffset),
-//      slivers: <Widget>[
-//        SliverToBoxAdapter(
-//          child: RichText(
-//            textAlign: TextAlign.center,
-//            text: TextSpan(
-//                style: TextStyle(
-//                  color: Colors.black,
-//                ),
-//                children: blocks.toList()),
-//          ),
-//        )
-//      ],
-//    );
-//  }
   ScrollController scrollController =
       ScrollController(initialScrollOffset: _kLrcPanelHeight / 2);
 
   @override
   Widget build(BuildContext context) {
+    MusicPlayerThemeData themeData = MusicPlayerTheme.of(context);
     return ListView.builder(
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -407,7 +544,7 @@ class LrcPanelState extends ReactPlayWidgetState<LrcPanel> {
           return SizedBox(
             child: Text(
               block.text + "\n",
-              style: TextStyle(color: Colors.orange, fontSize: 16),
+              style: themeData.highlightTextStyle,
               textAlign: TextAlign.center,
             ),
             height: _kLrcBlockHeight,
@@ -417,7 +554,7 @@ class LrcPanelState extends ReactPlayWidgetState<LrcPanel> {
         return SizedBox(
           child: Text(
             block.text + "\n",
-            style: TextStyle(fontSize: 16),
+            style: themeData.normalTextStyle,
             textAlign: TextAlign.center,
           ),
           height: _kLrcBlockHeight,
@@ -426,34 +563,6 @@ class LrcPanelState extends ReactPlayWidgetState<LrcPanel> {
       itemCount: widget.lrcBlocks.length + 2,
       controller: scrollController,
     );
-
-//    return CustomScrollView(
-//      anchor: 0.5,
-//      controller: scrollController,
-//      slivers: <Widget>[
-//        SliverPadding(
-//          sliver: SliverFixedExtentList(
-//            itemExtent: 30,
-//            delegate: SliverChildBuilderDelegate((context, index) {
-//              var block = widget.lrcBlocks[index];
-//              if (block == _highlightBlock) {
-//                return Text(
-//                  block.text + "\n",
-//                  style: TextStyle(color: Colors.orange, fontSize: 16),
-//                  textAlign: TextAlign.center,
-//                );
-//              }
-//              return Text(
-//                block.text + "\n",
-//                style: TextStyle(fontSize: 16),
-//                textAlign: TextAlign.center,
-//              );
-//            }, childCount: widget.lrcBlocks.length),
-//          ),
-//          padding: EdgeInsets.only(bottom: 100),
-//        )
-//      ],
-//    );
   }
 
   @override
@@ -505,4 +614,34 @@ class LrcBlock {
   final String text;
 
   const LrcBlock({this.time, this.text});
+}
+
+Future<PaletteGenerator> exactColors(String imageURL) async {
+  ReceivePort receivePort = ReceivePort();
+  await Isolate.spawn(entryPoint, receivePort.sendPort);
+  SendPort sendPort = await receivePort.first;
+  Uint8List bytes = await sendReceive(sendPort, imageURL);
+  var image =
+      (await (await ui.instantiateImageCodec(bytes)).getNextFrame()).image;
+  return await PaletteGenerator.fromImage(image);
+}
+
+entryPoint(SendPort sendPort) async {
+  ReceivePort port = ReceivePort();
+  sendPort.send(port.sendPort);
+  await for (var msg in port) {
+    SendPort replyTo = msg[1];
+    if (msg[0] is String) {
+      String data = msg[0];
+      String dataURL = data;
+      http.Response response = await http.get(dataURL);
+      replyTo.send(response.bodyBytes);
+    }
+  }
+}
+
+Future sendReceive(SendPort port, msg) {
+  ReceivePort response = ReceivePort();
+  port.send([msg, response.sendPort]);
+  return response.first;
 }

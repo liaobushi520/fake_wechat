@@ -157,3 +157,96 @@ final CHAT_ENTRANCES = [
       unreadCount: 10,
       recentMessage: Message(0, text: "还记得我的电影吗？")),
 ];
+
+final MOMENTS = [
+  Moment(
+      text: "我喜欢的一首歌",
+      friend: FRIENDS[0],
+      type: 4,
+      timestamp: 1000123,
+      audioLink: AudioLink(
+          cover:
+              "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1577271400447&di=35b8834221385b63377f2bdbf64b41d4&imgtype=0&src=http%3A%2F%2Fcdn.music.migu.cn%2Fpicture%2F2018%2F0412%2F1800%2FARTL1610171034331187.jpg",
+          name: "回忆沙漠",
+          artist: "杨宗纬",
+          url:
+              "https://s128.xiami.net/319/7319/33091/2079859_1504591944341.mp3?ccode=xiami_web_web&expire=86400&duration=240&psid=5d941ef50b2cde1e54c20939cb7827c9&ups_client_netip=180.168.34.146&ups_ts=1577245143&ups_userid=0&utid=gRndEezL1FUCAcuc24qbR1GW&vid=2079859&fn=2079859_1504591944341.mp3&vkey=B31b0177eaa1a08dc891fa635b67134c8"),
+      likes: [],
+      comments: []),
+  Moment(
+      text: "分享一首好听的歌",
+      friend: FRIENDS[2],
+      type: 4,
+      timestamp: 1000123,
+      audioLink: AudioLink(
+          cover:
+              "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1577873709&di=97b1734cb9ad28ad9b619901610d74ce&imgtype=jpg&er=1&src=http%3A%2F%2Fcdnmusic.migu.cn%2Fpicture%2F2017%2F1109%2F0716%2FAL1609221019437724.jpg",
+          name: "你不是真正的快乐",
+          artist: "五月天",
+          url:
+              "https://s128.xiami.net/110/3110/305979/3381903_2526440_l.mp3?ccode=xiami_web_web&expire=86400&duration=300&psid=7ead731b0cccde9ebe23eb5b961c2aab&ups_client_netip=180.168.34.146&ups_ts=1577268784&ups_userid=0&utid=gRndEezL1FUCAcuc24qbR1GW&vid=3381903&fn=3381903_2526440_l.mp3&vkey=Bd733f2e1e5b2a3b1117e80f16b5701b9"),
+      likes: [],
+      comments: []),
+  Moment(
+      text: "我今天很开心",
+      friend: FRIENDS[5],
+      type: 1,
+      timestamp: 1000123,
+      likes: [],
+      comments: []),
+  Moment(
+    text: "看看这个新闻",
+    friend: FRIENDS[3],
+    type: 3,
+    timestamp: 1000123,
+    likes: [],
+    webPageLink: WebPageLink(
+        title: "网易绝情踢员工",
+        cover:
+            "http://pics1.baidu.com/feed/91529822720e0cf39dbaefe79e693c1abe09aa16.jpeg?token=7ef31617682291d1ad08c5b64621db06&s=BD9A7F9540224AAEBA0828ED03003033",
+        url:
+            "http://baijiahao.baidu.com/s?id=1651222227934364431&wfr=spider&for=pc"),
+  ),
+  Moment(
+    text: "看看这个新闻",
+    friend: FRIENDS[4],
+    type: 3,
+    timestamp: 1000123,
+    likes: [],
+    webPageLink: WebPageLink(
+        title: "网易绝情踢员工",
+        cover:
+            "http://pics1.baidu.com/feed/91529822720e0cf39dbaefe79e693c1abe09aa16.jpeg?token=7ef31617682291d1ad08c5b64621db06&s=BD9A7F9540224AAEBA0828ED03003033",
+        url:
+            "http://baijiahao.baidu.com/s?id=1651222227934364431&wfr=spider&for=pc"),
+  ),
+  Moment(
+    text: "看看这个新闻",
+    friend: FRIENDS[1],
+    type: 3,
+    timestamp: 1000123,
+    likes: [],
+    webPageLink: WebPageLink(
+        title: "网易绝情踢员工",
+        cover:
+            "http://pics1.baidu.com/feed/91529822720e0cf39dbaefe79e693c1abe09aa16.jpeg?token=7ef31617682291d1ad08c5b64621db06&s=BD9A7F9540224AAEBA0828ED03003033",
+        url:
+            "http://baijiahao.baidu.com/s?id=1651222227934364431&wfr=spider&for=pc"),
+  ),
+  Moment(
+      text: "我今天很开心",
+      friend: FRIENDS[0],
+      type: 2,
+      timestamp: 1000123,
+      images: [
+        "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg",
+        "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg",
+        "http://b-ssl.duitang.com/uploads/item/201811/04/20181104074412_wcelx.jpg"
+      ],
+      likes: [],
+      comments: [
+        Comment("好样的", FRIENDS[1]),
+        Comment("你是个人才", FRIENDS[1]),
+        Comment("你才是个人才", FRIENDS[0], replyer: FRIENDS[1]),
+      ])
+];

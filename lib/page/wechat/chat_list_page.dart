@@ -11,6 +11,8 @@ import '../../data_source.dart';
 import '../../home_model.dart';
 import '../../widgets.dart';
 
+const _kMinProgramPanelHeight = 500.0;
+
 class TopMaskLayer extends CustomPainter {
   final double shrinkOffset;
 
@@ -52,7 +54,7 @@ class TopMaskLayer extends CustomPainter {
       canvas.drawCircle(Offset(size.width / 2, size.height / 2), maxSize, p);
 
       canvas.drawCircle(Offset(size.width / 2 + gap, size.height / 2), 4, p);
-    } else if (shrinkOffset >= 400) {
+    } else if (shrinkOffset >= highLine) {
       canvas.drawCircle(Offset(size.width / 2, size.height / 2),
           17 - 3 / 100 * (shrinkOffset), p);
     }
@@ -71,7 +73,7 @@ class BottomMaskLayer extends CustomPainter {
 
   BottomMaskLayer(this.shrinkOffset);
 
-  static const int MAX_ALPHA = 244;
+  static const int MAX_ALPHA = 240;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -81,8 +83,8 @@ class BottomMaskLayer extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return true;
+  bool shouldRepaint(BottomMaskLayer oldDelegate) {
+    return oldDelegate.shrinkOffset != shrinkOffset;
   }
 }
 
@@ -110,9 +112,7 @@ class SliverRevealPersistentHeaderDelegate
     return CustomPaint(
       child: Transform.scale(
         scale: scale,
-        child: Container(
-          child: MinProgramHeader(),
-        ),
+        child: MinProgramHeader(),
       ),
       painter: BottomMaskLayer(shrinkOffset),
       foregroundPainter: TopMaskLayer(shrinkOffset),
@@ -120,7 +120,7 @@ class SliverRevealPersistentHeaderDelegate
   }
 
   @override
-  double get maxExtent => 600;
+  double get maxExtent => _kMinProgramPanelHeight;
 
   @override
   double get minExtent => 0;
@@ -175,7 +175,7 @@ class SliverPinnedPersistentHeaderDelegate
 
   @override
   bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) {
-    return true;
+    return false;
   }
 }
 
@@ -348,7 +348,7 @@ class ChatListPage extends StatefulWidget {
 class ChatListPageState extends State<ChatListPage>
     with AutomaticKeepAliveClientMixin {
   ScrollController _scrollController =
-      ScrollController(initialScrollOffset: 600);
+      ScrollController(initialScrollOffset: _kMinProgramPanelHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -358,26 +358,26 @@ class ChatListPageState extends State<ChatListPage>
       onNotification: (Notification notification) {
         if (notification is ScrollEndNotification &&
             notification.depth == 0 &&
-            notification.metrics.pixels <= 600) {
+            notification.metrics.pixels <= _kMinProgramPanelHeight) {
           Future.delayed(Duration(milliseconds: 10), () {
             if (notification.metrics.pixels > 300) {
-              _scrollController.animateTo(600,
+              _scrollController.animateTo(_kMinProgramPanelHeight,
                   duration: Duration(
                       milliseconds: (notification.metrics.pixels - 300)
-                          .clamp(200, 600)
+                          .clamp(200, _kMinProgramPanelHeight)
                           .toInt()),
                   curve: Curves.easeOutQuad);
             } else {
               _scrollController.animateTo(0,
                   duration: Duration(
                       milliseconds: (300 - notification.metrics.pixels)
-                          .clamp(200, 600)
+                          .clamp(200, _kMinProgramPanelHeight)
                           .toInt()),
                   curve: Curves.easeOutQuad);
             }
           });
         } else if (notification is OverScrollEndNotification) {
-          _scrollController.animateTo(600,
+          _scrollController.animateTo(_kMinProgramPanelHeight,
               duration: Duration(milliseconds: 500), curve: Curves.easeOutQuad);
         }
 

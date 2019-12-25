@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 class Subscript extends StatelessWidget {
   final double width;
@@ -206,4 +207,189 @@ Widget buildCircleImage2(double size, ImageProvider provider) {
     height: size,
     fit: BoxFit.cover,
   ));
+}
+
+///颜色析取
+class PalettePanel extends StatelessWidget {
+  final PaletteGenerator paletteGenerator;
+
+  const PalettePanel({Key key, this.paletteGenerator}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: ListView(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Container(
+                width: 20,
+                height: 20,
+                color: paletteGenerator.lightMutedColor?.color,
+              ),
+              Text(
+                "lightMuted",
+                style: TextStyle(
+                    color: paletteGenerator.lightMutedColor?.titleTextColor,
+                    fontSize: 20),
+              ),
+              SizedBox(
+                width: 4,
+              ),
+              Text(
+                "lightMuted",
+                style: TextStyle(
+                    color: paletteGenerator.lightMutedColor?.bodyTextColor,
+                    fontSize: 16),
+              )
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 20,
+                height: 20,
+                color: paletteGenerator.lightVibrantColor?.color,
+              ),
+              Text(
+                "lightVibrant",
+                style: TextStyle(
+                    color: paletteGenerator.lightVibrantColor?.titleTextColor,
+                    fontSize: 20),
+              ),
+              SizedBox(
+                width: 4,
+              ),
+              Text(
+                "lightMuted",
+                style: TextStyle(
+                    color: paletteGenerator.lightVibrantColor?.bodyTextColor,
+                    fontSize: 16),
+              )
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 20,
+                height: 20,
+                color: paletteGenerator.darkMutedColor?.color,
+              ),
+              Text(
+                "darkMutedColor",
+                style: TextStyle(
+                    color: paletteGenerator.lightMutedColor?.titleTextColor,
+                    fontSize: 20),
+              ),
+              SizedBox(
+                width: 4,
+              ),
+              Text(
+                "darkMutedColor",
+                style: TextStyle(
+                    color: paletteGenerator.darkMutedColor?.bodyTextColor,
+                    fontSize: 16),
+              )
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 20,
+                height: 20,
+                color: paletteGenerator.darkVibrantColor?.color,
+              ),
+              Text(
+                "darkVibrant",
+                style: TextStyle(
+                    color: paletteGenerator.darkVibrantColor?.titleTextColor,
+                    fontSize: 20),
+              ),
+              SizedBox(
+                width: 4,
+              ),
+              Text(
+                "darkVibrant",
+                style: TextStyle(
+                    color: paletteGenerator.darkVibrantColor?.bodyTextColor,
+                    fontSize: 16),
+              )
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 20,
+                height: 20,
+                color: paletteGenerator.dominantColor?.color,
+              ),
+              Text(
+                "dominant",
+                style: TextStyle(
+                    color: paletteGenerator.dominantColor?.titleTextColor,
+                    fontSize: 20),
+              ),
+              SizedBox(
+                width: 4,
+              ),
+              Text(
+                "dominant",
+                style: TextStyle(
+                    color: paletteGenerator.dominantColor?.bodyTextColor,
+                    fontSize: 16),
+              )
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 20,
+                height: 20,
+                color: paletteGenerator.mutedColor?.color,
+              ),
+              Text(
+                "muted",
+                style: TextStyle(
+                    color: paletteGenerator.mutedColor?.titleTextColor,
+                    fontSize: 20),
+              ),
+              SizedBox(
+                width: 4,
+              ),
+              Text(
+                "muted",
+                style: TextStyle(
+                    color: paletteGenerator.mutedColor?.bodyTextColor,
+                    fontSize: 16),
+              )
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 20,
+                height: 20,
+                color: paletteGenerator.vibrantColor?.color,
+              ),
+              Text(
+                "vibrant",
+                style: TextStyle(
+                    color: paletteGenerator.vibrantColor?.titleTextColor,
+                    fontSize: 20),
+              ),
+              SizedBox(
+                width: 4,
+              ),
+              Text(
+                "vibrant",
+                style: TextStyle(
+                    color: paletteGenerator.vibrantColor?.bodyTextColor,
+                    fontSize: 16),
+              )
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
