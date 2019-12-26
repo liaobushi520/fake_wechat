@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_app/entities.dart';
 import 'package:http/http.dart' as http;
@@ -199,6 +200,13 @@ class MusicPlayerPageState extends State<MusicPlayerPage> {
           ),
           color: themeData.primaryColor),
     );
+  }
+
+  updatePalette(ui.Image image) async {
+    var palette = await PaletteGenerator.fromImage(image);
+    setState(() {
+      _paletteGenerator = palette;
+    });
   }
 }
 
@@ -617,6 +625,10 @@ class LrcBlock {
 }
 
 Future<PaletteGenerator> exactColors(String imageURL) async {
+  ///  very serious   *****
+  // return await PaletteGenerator.fromImageProvider(NetworkImage(imageURL));
+
+  /// serious **
   ReceivePort receivePort = ReceivePort();
   await Isolate.spawn(entryPoint, receivePort.sendPort);
   SendPort sendPort = await receivePort.first;
@@ -632,9 +644,7 @@ entryPoint(SendPort sendPort) async {
   await for (var msg in port) {
     SendPort replyTo = msg[1];
     if (msg[0] is String) {
-      String data = msg[0];
-      String dataURL = data;
-      http.Response response = await http.get(dataURL);
+      http.Response response = await http.get(msg[0]);
       replyTo.send(response.bodyBytes);
     }
   }

@@ -265,6 +265,7 @@ class MomentItemState extends State<MomentItem> {
                   SizedBox(
                     height: 4,
                   ),
+                  if (widget.moment.text != null) Text(widget.moment.text),
                   this.widget.child,
                   Row(
                     children: <Widget>[
