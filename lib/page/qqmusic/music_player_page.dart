@@ -202,12 +202,7 @@ class MusicPlayerPageState extends State<MusicPlayerPage> {
     );
   }
 
-  updatePalette(ui.Image image) async {
-    var palette = await PaletteGenerator.fromImage(image);
-    setState(() {
-      _paletteGenerator = palette;
-    });
-  }
+
 }
 
 class _MusicPlayerPage extends StatefulWidget {
