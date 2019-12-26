@@ -118,7 +118,7 @@ class Moment {
     this.images,
     this.webPageLink,
     this.likes,
-    this.comments,
+    this.comments = const [],
   })  : assert(!(type == 4 && audioLink == null),
             "mement type is 4 ，but audio link is null"),
         assert(!(type == 3 && webPageLink == null),

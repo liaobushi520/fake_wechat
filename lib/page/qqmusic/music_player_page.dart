@@ -201,8 +201,6 @@ class MusicPlayerPageState extends State<MusicPlayerPage> {
           color: themeData.primaryColor),
     );
   }
-
-
 }
 
 class _MusicPlayerPage extends StatefulWidget {

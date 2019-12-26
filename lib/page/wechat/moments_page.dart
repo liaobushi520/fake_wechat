@@ -22,149 +22,233 @@ class MomentsPage extends StatefulWidget {
   }
 }
 
+class CommentEdit extends StatefulWidget {
+  CommentEdit(Key key) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return CommentEditState();
+  }
+}
+
+class CommentEditState extends State<CommentEdit> {
+  bool _show = false;
+
+  void Function(String text) _onSend;
+
+  String _text;
+
+  FocusNode _focusNode = FocusNode();
+
+  TextEditingController _textEditingController = TextEditingController();
+
+  handleCommentEvent(CommentEditNotification notification) {
+    if (_show != notification.show) {
+      setState(() {
+        _show = notification.show;
+        if (_show) {
+          _focusNode.requestFocus();
+        }
+      });
+    }
+    _onSend = notification.onSend;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Visibility(
+      child: Positioned(
+        left: 0, //widget距离stack左边界距离 ，width = stack宽 - left - right
+        right: 0,
+        bottom: 0,
+        child: Container(
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                  child: Container(
+                child: DecoratedBox(
+                  child: Padding(
+                    child: TextField(
+                      controller: _textEditingController,
+                      focusNode: _focusNode,
+                      decoration: null,
+                      maxLines: 5,
+                      minLines: 1,
+                      textAlign: TextAlign.start,
+                      cursorColor: Color.fromARGB(255, 87, 189, 105),
+                      style: TextStyle(color: Color(0xff000000), fontSize: 16),
+                      onChanged: (text) {
+                        _text = text;
+                      },
+                    ),
+                    padding: EdgeInsets.all(10),
+                  ),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(2)),
+                      color: Colors.white),
+                ),
+              )),
+              FlatButton(
+                child: Text("发送"),
+                onPressed: () {
+                  if (_onSend != null) {
+                    _onSend(_text);
+                  }
+                  setState(() {
+                    _show = false;
+                    _text = "";
+                    _textEditingController.text = "";
+                  });
+                },
+              )
+            ],
+          ),
+          color: Color.fromARGB(255, 247, 247, 247),
+          padding: EdgeInsets.only(left: 8, top: 4, right: 8, bottom: 4),
+        ),
+      ),
+      visible: _show,
+    );
+  }
+}
+
+class CommentEditNotification extends Notification {
+  final void Function(String text) onSend;
+
+  final bool show;
+
+  CommentEditNotification(this.show, {this.onSend});
+}
+
 class MomentsState extends State<MomentsPage> {
+  GlobalKey _commentEditKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     var model = ViewModelProvider.of<MomentsModel>(context);
     return Scaffold(
       //捕获回退键
-      body: WillPopScope(
-        child: Stack(
-          children: <Widget>[
-            CustomScrollView(physics: const BouncingScrollPhysics(), slivers: [
-              SliverAppBar(
-                pinned: true,
-                floating: true,
-                snap: true,
-                stretch: true,
-                actions: <Widget>[
-                  IconButton(
-                    icon: Icon(Icons.camera),
-                    onPressed: () => {
-                      showDialog(
-                          context: context,
-                          builder: (context) {
-                            var body = [
-                              Card(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Row(
-                                      children: <Widget>[
-                                        Expanded(
-                                          child: Text("拍摄",
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 16)),
-                                        ),
-                                        Align(
-                                          child: Text("照片或视频",
-                                              style: TextStyle(
-                                                  color: Colors.black54,
-                                                  fontSize: 10)),
-                                          alignment: Alignment.centerLeft,
-                                        ),
-                                      ],
-                                    ),
-                                    Divider(
-                                      height: 1,
-                                    ),
-                                    Text(
-                                      "从相册选择",
-                                      style: TextStyle(
-                                          color: Colors.black, fontSize: 16),
-                                      textAlign: TextAlign.left,
+      body: NotificationListener(
+        child: WillPopScope(
+          child: Stack(
+            children: <Widget>[
+              CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    SliverAppBar(
+                      pinned: true,
+                      stretch: true,
+                      actions: <Widget>[
+                        IconButton(
+                          icon: Icon(Icons.camera),
+                          onPressed: () => {
+                            showDialog(
+                                context: context,
+                                builder: (context) {
+                                  var body = [
+                                    Card(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Row(
+                                            children: <Widget>[
+                                              Expanded(
+                                                child: Text("拍摄",
+                                                    style: TextStyle(
+                                                        color: Colors.black,
+                                                        fontSize: 16)),
+                                              ),
+                                              Align(
+                                                child: Text("照片或视频",
+                                                    style: TextStyle(
+                                                        color: Colors.black54,
+                                                        fontSize: 10)),
+                                                alignment: Alignment.centerLeft,
+                                              ),
+                                            ],
+                                          ),
+                                          Divider(
+                                            height: 1,
+                                          ),
+                                          Text(
+                                            "从相册选择",
+                                            style: TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 16),
+                                            textAlign: TextAlign.left,
+                                          )
+                                        ],
+                                      ),
                                     )
-                                  ],
-                                ),
-                              )
-                            ];
-                            Widget dialogChild = Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: body,
-                            );
-                            return Dialog(
-                              child: dialogChild,
-                              backgroundColor: Colors.transparent,
-                            );
-                          })
-                    },
-                  )
-                ],
-                expandedHeight: 200,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    color: Color(0x9988ee00),
-                    child: Image.network(
-                      "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
-                      fit: BoxFit.cover,
+                                  ];
+                                  Widget dialogChild = Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: body,
+                                  );
+                                  return Dialog(
+                                    child: dialogChild,
+                                    backgroundColor: Colors.transparent,
+                                  );
+                                })
+                          },
+                        )
+                      ],
+                      expandedHeight: 200,
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: Container(
+                          color: Color(0x9988ee00),
+                          child: Image.network(
+                            "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        title: Text("朋友圈"),
+                      ),
                     ),
-                  ),
-                  title: Text("朋友圈"),
-                ),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  var item = model.moments[index];
-                  switch (item.type) {
-                    case 1:
-                      return MomentItem(child: Text(item.text), moment: item);
-                    case 4:
-                      return MomentItem(
-                          child: AudioItem(moment: item), moment: item);
-                    case 2:
-                      return MomentItem(
-                          child: buildImageGrid(item), moment: item);
-                    default:
-                      return MomentItem(
-                          child: buildWebPageItem(item), moment: item);
-                  }
-                }, childCount: model.moments.length),
-              )
-            ]),
-//            ListenableBridge(
-//              data: [model.showCommentEdit],
-//              childBuilder: (context) {
-//                return Visibility(
-//                  child: Positioned(
-//                    left: 0, //widget距离stack左边界距离 ，width = stack宽 - left - right
-//                    right: 0,
-//                    bottom: 0,
-//                    child: Container(
-//                      child: Row(
-//                        children: <Widget>[
-//                          Expanded(
-//                              child: Container(
-//                            child: EditableText(
-//                              controller: TextEditingController(),
-//                              focusNode: FocusNode(),
-//                              style: TextStyle(),
-//                              cursorColor: Color(0xff781929),
-//                              backgroundCursorColor: Color(0xff781929),
-//                            ),
-//                          )),
-//                          FlatButton(
-//                            child: Text("发送"),
-//                            onPressed: () {},
-//                          )
-//                        ],
-//                      ),
-//                      color: Color.fromARGB(255, 247, 247, 247),
-//                    ),
-//                  ),
-//                  visible: model.showCommentEdit.value,
-//                );
-//              },
-//            )
-          ],
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        var item = model.moments[index];
+                        switch (item.type) {
+                          case 1:
+                            return MomentItem(moment: item);
+                          case 4:
+                            return MomentItem(
+                                child: AudioItem(moment: item), moment: item);
+                          case 2:
+                            return MomentItem(
+                                child: buildImageGrid(item), moment: item);
+                          default:
+                            return MomentItem(
+                                child: buildWebPageItem(item), moment: item);
+                        }
+                      }, childCount: model.moments.length),
+                    )
+                  ]),
+              CommentEdit(_commentEditKey)
+            ],
+          ),
+          onWillPop: () {
+            if (model.showCommentEdit.value) {
+              model.showCommentEdit.value = false;
+              return Future.value(false);
+            }
+            return Future.value(true);
+          },
         ),
-        onWillPop: () {
-          if (model.showCommentEdit.value) {
-            model.showCommentEdit.value = false;
-            return Future.value(false);
+        onNotification: (notification) {
+          if (notification is CommentEditNotification) {
+            CommentEditState state =
+                (_commentEditKey.currentContext as StatefulElement).state;
+            state.handleCommentEvent(notification);
+          } else if (notification is UserScrollNotification) {
+            CommentEditState state =
+                (_commentEditKey.currentContext as StatefulElement).state;
+            state.handleCommentEvent(CommentEditNotification(false));
           }
-          return Future.value(true);
+          return true;
         },
       ),
     );
@@ -233,130 +317,83 @@ class MomentItem extends StatefulWidget {
 class MomentItemState extends State<MomentItem> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(left: 12, top: 8, right: 12, bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            width: 40,
-            height: 40,
-            color: Color(0x77889911),
-            child: Image.network(
-              this.widget.moment.friend.avatar,
-              fit: BoxFit.cover,
-            ),
-          ),
-          SizedBox(
-            width: 10,
-          ),
-          Expanded(
-            child: Container(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    this.widget.moment.friend.name,
-                    style: TextStyle(
-                        color: Color.fromARGB(255, 93, 107, 143),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600),
-                  ),
-                  SizedBox(
-                    height: 4,
-                  ),
-                  if (widget.moment.text != null) Text(widget.moment.text),
-                  this.widget.child,
-                  Row(
+    return Column(
+      children: <Widget>[
+        Container(
+          padding: EdgeInsets.only(left: 12, top: 8, right: 12, bottom: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 40,
+                height: 40,
+                color: Color(0x77889911),
+                child: Image.network(
+                  this.widget.moment.friend.avatar,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              SizedBox(
+                width: 10,
+              ),
+              Expanded(
+                child: Container(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Expanded(
-                        child: Text("10分钟前"),
+                      Text(
+                        this.widget.moment.friend.name,
+                        style: TextStyle(
+                            color: Color.fromARGB(255, 93, 107, 143),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600),
                       ),
-                      CommentActions(
-                        onLike: () {
-                          this.setState(() {
-                            this.widget.moment.likes.add(USER);
-                          });
-                        },
-                        onComment: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) {
-                                return CommentEditPage();
-                              }).then((v) {
-                            setState(() {
-                              this
-                                  .widget
-                                  .moment
-                                  .comments
-                                  .add(Comment(v.content, USER));
-                            });
-                          });
-                        },
+                      SizedBox(
+                        height: 4,
                       ),
+                      if (widget.moment.text != null) Text(widget.moment.text),
+                      SizedBox(
+                        height: 4,
+                      ),
+                      if (widget.child != null) widget.child,
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Text("10分钟前"),
+                          ),
+                          CommentActions(
+                            onLike: () {
+                              this.setState(() {
+                                this.widget.moment.likes.add(USER);
+                              });
+                            },
+                            onComment: () {
+                              CommentEditNotification(true, onSend: (text) {
+                                setState(() {
+                                  this
+                                      .widget
+                                      .moment
+                                      .comments
+                                      .add(Comment(text, USER));
+                                });
+                              }).dispatch(context);
+                            },
+                          ),
+                        ],
+                      ),
+                      buildCommentSection(
+                          this.widget.moment.likes, this.widget.moment.comments)
                     ],
                   ),
-                  buildCommentSection(
-                      this.widget.moment.likes, this.widget.moment.comments)
-                ],
-              ),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Future<T> showDialog<T>({
-    @required
-        BuildContext context,
-    bool barrierDismissible = true,
-    @Deprecated(
-        'Instead of using the "child" argument, return the child from a closure '
-        'provided to the "builder" argument. This will ensure that the BuildContext '
-        'is appropriate for widgets built in the dialog.')
-        Widget child,
-    WidgetBuilder builder,
-    bool useRootNavigator = true,
-  }) {
-    assert(child == null || builder == null);
-    assert(useRootNavigator != null);
-    assert(debugCheckHasMaterialLocalizations(context));
-
-    final ThemeData theme = Theme.of(context, shadowThemeOnly: true);
-    return showGeneralDialog(
-      context: context,
-      pageBuilder: (BuildContext buildContext, Animation<double> animation,
-          Animation<double> secondaryAnimation) {
-        final Widget pageChild = child ?? Builder(builder: builder);
-        return SafeArea(
-          child: Builder(builder: (BuildContext context) {
-            return theme != null
-                ? Theme(data: theme, child: pageChild)
-                : pageChild;
-          }),
-        );
-      },
-      barrierDismissible: barrierDismissible,
-      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Color(0x01ffffff),
-      transitionDuration: const Duration(milliseconds: 150),
-      transitionBuilder: _buildMaterialDialogTransitions,
-      useRootNavigator: useRootNavigator,
-    );
-  }
-
-  Widget _buildMaterialDialogTransitions(
-      BuildContext context,
-      Animation<double> animation,
-      Animation<double> secondaryAnimation,
-      Widget child) {
-    return FadeTransition(
-      opacity: CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOut,
-      ),
-      child: child,
+                ),
+              )
+            ],
+          ),
+        ),
+        Divider(
+          height: 1,
+        )
+      ],
     );
   }
 
@@ -383,7 +420,7 @@ class MomentItemState extends State<MomentItem> {
     }
 
     return Container(
-      color: Color.fromARGB(255, 247, 247, 247),
+      color: Color.fromARGB(255, 245, 245, 245),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: children,
@@ -483,56 +520,6 @@ class CommentEditResult {
   final int status; //-1 no send 0 send
 
   CommentEditResult(this.status, this.content);
-}
-
-class CommentEditPage extends StatefulWidget {
-  @override
-  CommentEditState createState() {
-    return CommentEditState();
-  }
-}
-
-class CommentEditState extends State<CommentEditPage> {
-  @override
-  Widget build(BuildContext context) {
-    var dialogChild = IntrinsicHeight(
-      child: Container(
-        color: Colors.transparent,
-        alignment: Alignment.bottomCenter,
-        child: Container(
-          height: 60,
-          color: Color.fromARGB(255, 247, 247, 247),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                  child: Container(
-                child: EditableText(
-                  controller: TextEditingController(),
-                  focusNode: FocusNode(),
-                  style: TextStyle(),
-                  cursorColor: Color(0xff781929),
-                  backgroundCursorColor: Color(0xff781929),
-                ),
-              )),
-              FlatButton(
-                child: Text(
-                  "发送",
-                  style: TextStyle(color: Color(0xff778fff)),
-                ),
-                onPressed: () {
-                  Navigator.pop(context, CommentEditResult(1, "编辑结果"));
-                },
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-
-    return Dialog(
-      child: dialogChild,
-    );
-  }
 }
 
 ///音频
@@ -761,15 +748,15 @@ class CommentActionsState extends State<CommentActions> {
               Icons.more,
               size: 16,
             ),
-            onPressed: _showPopupMenu)
+            onPressed: _showCommentActionMenu)
       ],
     );
   }
 
-  void _showPopupMenu() {
+  void _showCommentActionMenu() {
     var box = (placeholderKey.currentContext.findRenderObject() as RenderBox);
     var offset = box.localToGlobal(Offset(0, 0));
-    Navigator.of(context, rootNavigator: false).push(PopupMenuRoute(
+    Navigator.of(context, rootNavigator: false).push(CommentActionMenuRoute(
         position: RelativeRect.fromLTRB(
             offset.dx,
             offset.dy,
@@ -826,7 +813,7 @@ class LinkTextState extends State<LinkText> {
 
 const Duration _kMenuDuration = Duration(milliseconds: 300);
 
-class PopupMenuRoute<T> extends PopupRoute<T> {
+class CommentActionMenuRoute<T> extends PopupRoute<T> {
   final RelativeRect position;
 
   final void Function() onLike;
@@ -835,9 +822,8 @@ class PopupMenuRoute<T> extends PopupRoute<T> {
 
   final BuildContext showMenuContext;
 
-  PopupMenuRoute({
+  CommentActionMenuRoute({
     this.showMenuContext,
-    this.barrierLabel,
     this.position,
     this.onLike,
     this.onComment,
@@ -853,7 +839,7 @@ class PopupMenuRoute<T> extends PopupRoute<T> {
   Color get barrierColor => null;
 
   @override
-  final String barrierLabel;
+  final String barrierLabel = "comment_actions";
 
   @override
   Widget buildPage(BuildContext context, Animation<double> animation,
@@ -914,106 +900,6 @@ class _PopupMenuRouteLayout extends SingleChildLayoutDelegate {
 
   @override
   bool shouldRelayout(_PopupMenuRouteLayout oldDelegate) {
-    // If called when the old and new itemSizes have been initialized then
-    // we expect them to have the same length because there's no practical
-    // way to change length of the items list once the menu has been shown.
-
     return position != oldDelegate.position;
-  }
-}
-
-class Dialog extends StatelessWidget {
-  /// Creates a dialog.
-  ///
-  /// Typically used in conjunction with [showDialog].
-  const Dialog({
-    Key key,
-    this.backgroundColor,
-    this.elevation,
-    this.insetAnimationDuration = const Duration(milliseconds: 100),
-    this.insetAnimationCurve = Curves.decelerate,
-    this.shape,
-    this.child,
-  }) : super(key: key);
-
-  /// {@template flutter.material.dialog.backgroundColor}
-  /// The background color of the surface of this [Dialog].
-  ///
-  /// This sets the [Material.color] on this [Dialog]'s [Material].
-  ///
-  /// If `null`, [ThemeData.cardColor] is used.
-  /// {@endtemplate}
-  final Color backgroundColor;
-
-  /// {@template flutter.material.dialog.elevation}
-  /// The z-coordinate of this [Dialog].
-  ///
-  /// If null then [DialogTheme.elevation] is used, and if that's null then the
-  /// dialog's elevation is 24.0.
-  /// {@endtemplate}
-  /// {@macro flutter.material.material.elevation}
-  final double elevation;
-
-  /// {@template flutter.material.dialog.insetAnimationDuration}
-  /// The duration of the animation to show when the system keyboard intrudes
-  /// into the space that the dialog is placed in.
-  ///
-  /// Defaults to 100 milliseconds.
-  /// {@endtemplate}
-  final Duration insetAnimationDuration;
-
-  /// {@template flutter.material.dialog.insetAnimationCurve}
-  /// The curve to use for the animation shown when the system keyboard intrudes
-  /// into the space that the dialog is placed in.
-  ///
-  /// Defaults to [Curves.decelerate].
-  /// {@endtemplate}
-  final Curve insetAnimationCurve;
-
-  /// {@template flutter.material.dialog.shape}
-  /// The shape of this dialog's border.
-  ///
-  /// Defines the dialog's [Material.shape].
-  ///
-  /// The default shape is a [RoundedRectangleBorder] with a radius of 2.0.
-  /// {@endtemplate}
-  final ShapeBorder shape;
-
-  /// The widget below this widget in the tree.
-  ///
-  /// {@macro flutter.widgets.child}
-  final Widget child;
-
-  // TODO(johnsonmh): Update default dialog border radius to 4.0 to match material spec.
-  static const RoundedRectangleBorder _defaultDialogShape =
-      RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(2.0)));
-  static const double _defaultElevation = 24.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final DialogTheme dialogTheme = DialogTheme.of(context);
-    return MediaQuery.removeViewInsets(
-      removeLeft: true,
-      removeTop: true,
-      removeRight: true,
-      removeBottom: true,
-      context: context,
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 280.0),
-          child: Material(
-            color: backgroundColor ??
-                dialogTheme.backgroundColor ??
-                Theme.of(context).dialogBackgroundColor,
-            elevation: elevation ?? dialogTheme.elevation ?? _defaultElevation,
-            shape: shape ?? dialogTheme.shape ?? _defaultDialogShape,
-            type: MaterialType.card,
-            child: child,
-          ),
-        ),
-      ),
-    );
   }
 }

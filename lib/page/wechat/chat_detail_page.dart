@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -28,6 +29,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   GlobalKey _recorderPanelKey = GlobalKey();
 
+  FocusNode _focusNode = FocusNode();
+
   @override
   Widget build(BuildContext context) {
     var chatModel = ViewModelProvider.of<ChatModel>(context);
@@ -42,21 +45,26 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               body: Column(
                 children: <Widget>[
                   Expanded(child: DialoguePanel()),
-                  ControlPanel(),
+                  ControlPanel(
+                    focusNode: _focusNode,
+                  ),
                 ],
               )),
-          Positioned(
-              left: 0,
-              top: 0,
-              right: 0,
-              bottom: 0,
-              child: RecorderPanel(key: _recorderPanelKey))
+          Center(
+            child: RecorderPanel(key: _recorderPanelKey),
+          )
         ],
       ),
-      onNotification: (ControlNotification notification) {
-        RecorderPanelState recorderPanelState =
-            (_recorderPanelKey.currentContext as StatefulElement).state;
-        recorderPanelState.handleControlEvent(notification);
+      onNotification: (Notification notification) {
+        if (notification is ControlNotification) {
+          RecorderPanelState recorderPanelState =
+              (_recorderPanelKey.currentContext as StatefulElement).state;
+          recorderPanelState.handleControlEvent(notification);
+        } else if (notification is UserScrollNotification) {
+          if (_focusNode.hasFocus) {
+            _focusNode.unfocus();
+          }
+        }
         return true;
       },
     );
@@ -167,18 +175,22 @@ class RecorderPanelState extends State<RecorderPanel>
 
   @override
   Widget build(BuildContext context) {
-    if (_controlNotification == null) {
+    if (_controlNotification == null || _controlNotification.event == -1) {
       return Container();
     }
-
     final model = ViewModelProvider.of<ChatModel>(context);
-    return Visibility(
-      child: Container(
-        alignment: Alignment.center,
-        color: _controlNotification.event == 1
-            ? Color.fromARGB(120, 0, 0, 0)
-            : Colors.transparent,
-        child: Column(
+    return Stack(
+      alignment: AlignmentDirectional.center,
+      children: <Widget>[
+        if (_controlNotification.event == 1)
+          BackdropFilter(
+            child: Container(color: Color.fromARGB(200, 0, 0, 0)),
+            filter: ImageFilter.blur(
+              sigmaX: 5.0,
+              sigmaY: 5.0,
+            ),
+          ),
+        Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             SizedBox(
@@ -194,7 +206,8 @@ class RecorderPanelState extends State<RecorderPanel>
                     children: <Widget>[
                       Icon(
                         Icons.keyboard_voice,
-                        size: 60,
+                        size: 70,
+                        color: Colors.white,
                       ),
                       SizedBox(
                         width: 50,
@@ -282,8 +295,7 @@ class RecorderPanelState extends State<RecorderPanel>
             ),
           ],
         ),
-      ),
-      visible: _controlNotification.event != -1,
+      ],
     );
   }
 }
@@ -403,6 +415,10 @@ class VoiceIndicator extends CustomPainter {
 }
 
 class ControlPanel extends StatefulWidget {
+  final FocusNode focusNode;
+
+  const ControlPanel({Key key, this.focusNode}) : super(key: key);
+
   @override
   State<StatefulWidget> createState() {
     return ControlPanelState();
@@ -417,7 +433,7 @@ class ControlNotification extends Notification {
   const ControlNotification(this.event, this.pointerEvent);
 }
 
-class ControlPanelState extends State {
+class ControlPanelState extends State<ControlPanel> {
   bool _panelVisible = false;
 
   //false :录音  true :文本输入
@@ -430,6 +446,27 @@ class ControlPanelState extends State {
   bool _recording = false;
 
   GlobalKey _recorderBtnKey = GlobalKey();
+
+  void Function() _focusChangedListener;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusChangedListener = () {
+      if (_panelVisible && widget.focusNode.hasFocus) {
+        setState(() {
+          _panelVisible = false;
+        });
+      }
+    };
+    widget.focusNode.addListener(_focusChangedListener);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    widget.focusNode.removeListener(_focusChangedListener);
+  }
 
   _startRecording(ChatModel model, AppModel appModel) async {
     model.recordUri = await appModel.recorder.startRecorder(null);
@@ -480,63 +517,63 @@ class ControlPanelState extends State {
     final model = ViewModelProvider.of<ChatModel>(context);
     final appModel = ViewModelProvider.of<AppModel>(context);
 
-    return WillPopScope(
-        onWillPop: () {
-          if (_panelVisible) {
-            setState(() {
-              _panelVisible = false;
-            });
-            return Future.value(false);
-          }
-          return Future.value(true);
-        },
-        child: Container(
-          color: Color.fromARGB(255, 247, 247, 247),
-          child: Column(
-            children: <Widget>[
-              Padding(
-                child: Row(
-                  children: <Widget>[
-                    Exchange(
-                        child1: GestureDetector(
-                          child: Icon(
-                            Icons.keyboard_voice,
-                            size: 30,
+    return NotificationListener(
+      child: WillPopScope(
+          onWillPop: () {
+            if (_panelVisible) {
+              setState(() {
+                _panelVisible = false;
+              });
+              return Future.value(false);
+            }
+            return Future.value(true);
+          },
+          child: Container(
+            color: Color.fromARGB(255, 247, 247, 247),
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  child: Row(
+                    children: <Widget>[
+                      Exchange(
+                          child1: GestureDetector(
+                            child: Icon(
+                              Icons.keyboard_voice,
+                              size: 30,
+                            ),
+                            onTap: () {
+                              setState(() {
+                                _inputMode = !_inputMode;
+                                _panelVisible = false;
+                              });
+                            },
                           ),
-                          onTap: () {
-                            setState(() {
-                              _inputMode = !_inputMode;
-                              _panelVisible = false;
-                            });
-                          },
-                        ),
-                        child2: GestureDetector(
-                          child: Icon(
-                            Icons.keyboard,
-                            size: 30,
+                          child2: GestureDetector(
+                            child: Icon(
+                              Icons.keyboard,
+                              size: 30,
+                            ),
+                            onTap: () {
+                              setState(() {
+                                _inputMode = !_inputMode;
+                              });
+                            },
                           ),
-                          onTap: () {
-                            setState(() {
-                              _inputMode = !_inputMode;
-                            });
-                          },
-                        ),
-                        status: _inputMode),
-                    SizedBox(
-                      width: 4,
-                    ),
-                    Expanded(
-                      key: _recorderBtnKey,
-                      child: DecoratedBox(
-                        child: Padding(
-                            child: _inputMode
-                                ? Align(
-                                    child: EditableText(
+                          status: _inputMode),
+                      SizedBox(
+                        width: 4,
+                      ),
+                      Expanded(
+                        key: _recorderBtnKey,
+                        child: DecoratedBox(
+                          child: Padding(
+                              child: _inputMode
+                                  ? TextField(
+                                      focusNode: widget.focusNode,
+                                      decoration: null,
                                       maxLines: 5,
                                       minLines: 1,
-                                      focusNode: FocusNode(),
                                       textAlign: TextAlign.start,
-                                      backgroundCursorColor: Color(0xff457832),
                                       cursorColor:
                                           Color.fromARGB(255, 87, 189, 105),
                                       style: TextStyle(
@@ -548,122 +585,138 @@ class ControlPanelState extends State {
                                           _inputText = text;
                                         });
                                       },
-                                    ),
-                                    alignment: Alignment.centerLeft,
-                                  )
-                                : Listener(
-                                    child: Center(
-                                      child: Text(
-                                        _recording ? "松开 结束" : "按住 说话",
-                                        style: TextStyle(fontSize: 15),
+                                    )
+                                  : Listener(
+                                      child: Center(
+                                        child: Text(
+                                          _recording ? "松开 结束" : "按住 说话",
+                                          style: TextStyle(fontSize: 15),
+                                        ),
                                       ),
-                                    ),
-                                    onPointerDown: (details) async {
-                                      _startRecording(model, appModel);
-                                      ControlNotification(0, details)
-                                          .dispatch(context);
-                                    },
-                                    onPointerMove: (details) async {
-                                      var recorderBtn = (_recorderBtnKey
-                                          .currentContext
-                                          .findRenderObject() as RenderBox);
-                                      var localOffset = recorderBtn
-                                          .globalToLocal(details.position);
-                                      var contain = recorderBtn.size
-                                          .contains(localOffset);
-                                      if (contain) {
+                                      onPointerDown: (details) async {
+                                        _startRecording(model, appModel);
                                         ControlNotification(0, details)
                                             .dispatch(context);
-                                      } else {
-                                        ControlNotification(1, details)
+                                      },
+                                      onPointerMove: (details) async {
+                                        var recorderBtn = (_recorderBtnKey
+                                            .currentContext
+                                            .findRenderObject() as RenderBox);
+                                        var localOffset = recorderBtn
+                                            .globalToLocal(details.position);
+                                        var contain = recorderBtn.size
+                                            .contains(localOffset);
+                                        if (contain) {
+                                          ControlNotification(0, details)
+                                              .dispatch(context);
+                                        } else {
+                                          ControlNotification(1, details)
+                                              .dispatch(context);
+                                        }
+                                      },
+                                      onPointerUp: (details) async {
+                                        _stopRecording(model, appModel);
+                                        ControlNotification(-1, details)
                                             .dispatch(context);
-                                      }
-                                    },
-                                    onPointerUp: (details) async {
-                                      _stopRecording(model, appModel);
-                                      ControlNotification(-1, details)
-                                          .dispatch(context);
-                                    }),
-                            padding: EdgeInsets.all(8)),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(2)),
-                            color: _recording
-                                ? Color.fromARGB(255, 160, 160, 160)
-                                : Colors.white),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 4,
-                    ),
-                    Exchange(
-                      status: _inputMode,
-                      child1: GestureDetector(
-                        child: Icon(
-                          Icons.insert_emoticon,
-                          size: 30,
+                                      }),
+                              padding: EdgeInsets.all(8)),
+                          decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(2)),
+                              color: _recording
+                                  ? Color.fromARGB(255, 160, 160, 160)
+                                  : Colors.white),
                         ),
-                        onTap: () {},
                       ),
-                      child2: GestureDetector(
-                        child: Icon(
-                          Icons.keyboard,
+                      SizedBox(
+                        width: 4,
+                      ),
+                      Exchange(
+                        status: _inputMode,
+                        child1: GestureDetector(
+                          child: Icon(
+                            Icons.insert_emoticon,
+                            size: 30,
+                          ),
+                          onTap: () {},
                         ),
-                        onTap: () {},
+                        child2: GestureDetector(
+                          child: Icon(
+                            Icons.keyboard,
+                          ),
+                          onTap: () {},
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: 4,
-                    ),
-                    AnimatedContainer(
-                      duration: Duration(milliseconds: 500),
-                      child: _inputMode && _inputText.length > 0
-                          ? RawMaterialButton(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(2))),
-                              constraints: BoxConstraints(
-                                  minWidth: 60.0, minHeight: 30.0),
-                              padding: EdgeInsets.all(0),
-                              child: Text(
-                                "发 送",
-                                style: TextStyle(color: Color(0xffffffff)),
+                      SizedBox(
+                        width: 4,
+                      ),
+                      AnimatedContainer(
+                        curve: Curves.easeInToLinear,
+                        duration: Duration(milliseconds: 300),
+                        width: _inputMode && _inputText.length > 0 ? 50 : 30,
+                        height: 30,
+                        child: _inputMode && _inputText.length > 0
+                            ? RawMaterialButton(
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(2))),
+                                constraints: BoxConstraints(
+                                    minWidth: 60.0, minHeight: 30.0),
+                                padding: EdgeInsets.all(0),
+                                child: Text(
+                                  "发 送",
+                                  maxLines: 1,
+                                  style: TextStyle(color: Color(0xffffffff)),
+                                ),
+                                fillColor: Color.fromARGB(255, 87, 189, 105),
+                                onPressed: () {
+                                  FocusScope.of(context).requestFocus();
+                                  _sendTextMessage(model, _inputText);
+                                },
+                              )
+                            : GestureDetector(
+                                child: Icon(
+                                  Icons.add,
+                                  size: 30,
+                                ),
+                                onTap: () {
+                                  //hide keyboard
+                                  if (widget.focusNode.hasFocus) {
+                                    widget.focusNode.unfocus();
+                                  }
+                                  setState(() {
+                                    _inputMode = true;
+                                    _panelVisible = !_panelVisible;
+                                  });
+                                },
                               ),
-                              fillColor: Color.fromARGB(255, 87, 189, 105),
-                              onPressed: () {
-                                FocusScope.of(context).requestFocus();
-                                _sendTextMessage(model, _inputText);
-                              },
-                            )
-                          : GestureDetector(
-                              child: Icon(
-                                Icons.add,
-                                size: 30,
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  _inputMode = true;
-                                  _panelVisible = !_panelVisible;
-                                });
-                              },
-                            ),
-                    )
-                  ],
-                ),
-                padding: EdgeInsets.only(top: 5, bottom: 5, left: 5, right: 5),
-              ),
-              Visibility(
-                child: SizedBox(
-                    height: 260,
-                    child: PageView(children: <Widget>[
-                      ToolkitPage(
-                        entrances: ToolkitEntrances,
                       )
-                    ])),
-                visible: _panelVisible,
-              )
-            ],
-          ),
-        ));
+                    ],
+                  ),
+                  padding:
+                      EdgeInsets.only(top: 5, bottom: 5, left: 5, right: 5),
+                ),
+                Visibility(
+                  child: SizedBox(
+                      height: 260,
+                      child: PageView(children: <Widget>[
+                        ToolkitPage(
+                          entrances: ToolkitEntrances,
+                        )
+                      ])),
+                  visible: _panelVisible,
+                )
+              ],
+            ),
+          )),
+      onNotification: (notification) {
+        ///TextField contains Scrollable , we prevent scroll event  bubble up
+        if (notification is ScrollNotification) {
+          return true;
+        }
+        return false;
+      },
+    );
   }
 }
 
