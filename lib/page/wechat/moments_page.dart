@@ -120,8 +120,162 @@ class CommentEditNotification extends Notification {
   CommentEditNotification(this.show, {this.onSend});
 }
 
+class ScrollEvent {
+  final double offset;
+
+  final int type;
+
+  const ScrollEvent({this.offset, this.type});
+
+  ///1 :用户手指在拖拽    2:用户手指停止拖拽，但需要继续动画   3：结束
+
+}
+
+class MomentRefreshIndicator extends StatefulWidget {
+  const MomentRefreshIndicator({Key key}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return MomentRefreshIndicatorState();
+  }
+}
+
+class MomentRefreshIndicatorState extends State with TickerProviderStateMixin {
+  static final MAX_TRANSLATE_Y = 100.0;
+
+  AnimationController _rotateController, _translateController;
+
+  double _angle = 0.0;
+
+  double _translateY = 0.0;
+
+  handleScrollEvent(ScrollEvent event) {
+    print("${event.type} ${event.offset}");
+    if (event.type == 1) {
+      setState(() {
+        _translateY = min(MAX_TRANSLATE_Y, -event.offset);
+        _angle = -event.offset;
+      });
+    } else if (event.type == 2) {
+      //开始一个旋转动画
+      _rotateController
+        ..repeat()
+        ..addListener(() {
+          setState(() {
+            _angle = _rotateController.value;
+          });
+        });
+    } else {
+      //开始一个平移动画
+      _rotateController.stop();
+      _translateController.addListener(() {
+        setState(() {
+          _translateY = _translateController.value;
+        });
+      });
+      _translateController.reverse(from: _translateY);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _rotateController = AnimationController(
+        duration: const Duration(milliseconds: 600),
+        vsync: this,
+        lowerBound: 0.0,
+        upperBound: 2 * pi);
+
+    _translateController = AnimationController(
+        duration: const Duration(milliseconds: 400),
+        vsync: this,
+        lowerBound: 0.0,
+        upperBound: MAX_TRANSLATE_Y);
+  }
+
+  Widget _child = Icon(
+    Icons.camera,
+    size: 30,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.translate(
+      offset: Offset(0, _translateY),
+      child: Transform.rotate(angle: _angle, child: _child),
+    );
+  }
+
+  @override
+  void dispose() {
+    _rotateController.dispose();
+    _translateController.dispose();
+    super.dispose();
+  }
+}
+
 class MomentsState extends State<MomentsPage> {
   GlobalKey _commentEditKey = GlobalKey();
+
+  GlobalKey _indicatorKey = GlobalKey();
+
+  bool _refreshing = false;
+
+  Widget _buildCover() {
+    return Stack(
+      children: <Widget>[
+        Container(
+          child: Image.network(
+            "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
+            fit: BoxFit.cover,
+            height: 280,
+            width: double.infinity,
+          ),
+          padding: EdgeInsets.only(bottom: 30),
+        ),
+        Positioned(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Text(
+                    "来哦布斯",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(
+                    width: 6,
+                  ),
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                        image: DecorationImage(
+                            image: NetworkImage(
+                                "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg"),
+                            fit: BoxFit.cover)),
+                  )
+                ],
+              ),
+              SizedBox(
+                height: 4,
+              ),
+              Text(
+                "我是一个好人",
+                style: TextStyle(fontSize: 12, color: Color(0xff515151)),
+              )
+            ],
+          ),
+          right: 16,
+          bottom: 0,
+        )
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,78 +289,70 @@ class MomentsState extends State<MomentsPage> {
               CustomScrollView(
                   physics: const BouncingScrollPhysics(),
                   slivers: [
-                    SliverAppBar(
-                      pinned: true,
-                      stretch: true,
-                      actions: <Widget>[
-                        IconButton(
-                          icon: Icon(Icons.camera),
-                          onPressed: () => {
-                            showDialog(
-                                context: context,
-                                builder: (context) {
-                                  var body = [
-                                    Card(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Row(
-                                            children: <Widget>[
-                                              Expanded(
-                                                child: Text("拍摄",
-                                                    style: TextStyle(
-                                                        color: Colors.black,
-                                                        fontSize: 16)),
-                                              ),
-                                              Align(
-                                                child: Text("照片或视频",
-                                                    style: TextStyle(
-                                                        color: Colors.black54,
-                                                        fontSize: 10)),
-                                                alignment: Alignment.centerLeft,
-                                              ),
-                                            ],
-                                          ),
-                                          Divider(
-                                            height: 1,
-                                          ),
-                                          Text(
-                                            "从相册选择",
-                                            style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 16),
-                                            textAlign: TextAlign.left,
-                                          )
-                                        ],
-                                      ),
-                                    )
-                                  ];
-                                  Widget dialogChild = Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: body,
-                                  );
-                                  return Dialog(
-                                    child: dialogChild,
-                                    backgroundColor: Colors.transparent,
-                                  );
-                                })
-                          },
-                        )
-                      ],
-                      expandedHeight: 200,
-                      flexibleSpace: FlexibleSpaceBar(
-                        background: Container(
-                          color: Color(0x9988ee00),
-                          child: Image.network(
-                            "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        title: Text("朋友圈"),
-                      ),
+//                    SliverAppBar(
+//                      pinned: true,
+//                      stretch: true,
+//                      actions: <Widget>[
+//                        IconButton(
+//                          icon: Icon(Icons.camera),
+//                          onPressed: () => {
+//                            showDialog(
+//                                context: context,
+//                                builder: (context) {
+//                                  var body = [
+//                                    Card(
+//                                      child: Column(
+//                                        crossAxisAlignment:
+//                                            CrossAxisAlignment.start,
+//                                        children: <Widget>[
+//                                          Row(
+//                                            children: <Widget>[
+//                                              Expanded(
+//                                                child: Text("拍摄",
+//                                                    style: TextStyle(
+//                                                        color: Colors.black,
+//                                                        fontSize: 16)),
+//                                              ),
+//                                              Align(
+//                                                child: Text("照片或视频",
+//                                                    style: TextStyle(
+//                                                        color: Colors.black54,
+//                                                        fontSize: 10)),
+//                                                alignment: Alignment.centerLeft,
+//                                              ),
+//                                            ],
+//                                          ),
+//                                          Divider(
+//                                            height: 1,
+//                                          ),
+//                                          Text(
+//                                            "从相册选择",
+//                                            style: TextStyle(
+//                                                color: Colors.black,
+//                                                fontSize: 16),
+//                                            textAlign: TextAlign.left,
+//                                          )
+//                                        ],
+//                                      ),
+//                                    )
+//                                  ];
+//                                  Widget dialogChild = Column(
+//                                    mainAxisSize: MainAxisSize.min,
+//                                    crossAxisAlignment:
+//                                        CrossAxisAlignment.stretch,
+//                                    children: body,
+//                                  );
+//                                  return Dialog(
+//                                    child: dialogChild,
+//                                    backgroundColor: Colors.transparent,
+//                                  );
+//                                })
+//                          },
+//                        )
+//                      ],
+//                    ),
+                    SliverToBoxAdapter(
+                      child: _buildCover(),
                     ),
                     SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
@@ -227,7 +373,14 @@ class MomentsState extends State<MomentsPage> {
                       }, childCount: model.moments.length),
                     )
                   ]),
-              CommentEdit(_commentEditKey)
+              CommentEdit(_commentEditKey),
+              Positioned(
+                top: -30,
+                left: 30,
+                child: MomentRefreshIndicator(
+                  key: _indicatorKey,
+                ),
+              )
             ],
           ),
           onWillPop: () {
@@ -239,6 +392,36 @@ class MomentsState extends State<MomentsPage> {
           },
         ),
         onNotification: (notification) {
+          print(notification);
+          if (notification is ScrollNotification && !_refreshing) {
+            MomentRefreshIndicatorState state =
+                (_indicatorKey.currentContext as StatefulElement).state;
+            if (notification is ScrollUpdateNotification &&
+                notification.metrics.pixels <= 0) {
+              //用户手指在拖拽
+              if (notification.dragDetails != null) {
+                state.handleScrollEvent(
+                    ScrollEvent(type: 1, offset: notification.metrics.pixels));
+              } else {
+                if (notification.metrics.pixels < -140.0) {
+                  _refreshing = true;
+                  state.handleScrollEvent(ScrollEvent(
+                      type: 2, offset: notification.metrics.pixels));
+                  Future.delayed(Duration(seconds: 5), () {
+                    _refreshing = false;
+                    state.handleScrollEvent(ScrollEvent(
+                        type: 3, offset: notification.metrics.pixels));
+                  });
+                } else {
+                  state.handleScrollEvent(ScrollEvent(
+                      type: 3, offset: notification.metrics.pixels));
+                }
+              }
+            }
+
+            print(notification.metrics.pixels);
+          }
+
           if (notification is CommentEditNotification) {
             CommentEditState state =
                 (_commentEditKey.currentContext as StatefulElement).state;
@@ -247,6 +430,8 @@ class MomentsState extends State<MomentsPage> {
             CommentEditState state =
                 (_commentEditKey.currentContext as StatefulElement).state;
             state.handleCommentEvent(CommentEditNotification(false));
+          } else if (notification is OverscrollNotification) {
+            print(notification);
           }
           return true;
         },
