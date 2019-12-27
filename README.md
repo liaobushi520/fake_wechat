@@ -9,3 +9,7 @@
 ## 微信聊天界面
 
 ![微信聊天界面](https://github.com/liaobushi520/fake_wechat/blob/master/gif/chat_detail.gif)
+
+## 微信朋友圈界面
+
+![微信聊天界面](https://github.com/liaobushi520/fake_wechat/blob/master/gif/moments.gif)
