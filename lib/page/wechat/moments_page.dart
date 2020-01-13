@@ -57,55 +57,50 @@ class CommentEditState extends State<CommentEdit> {
   @override
   Widget build(BuildContext context) {
     return Visibility(
-      child: Positioned(
-        left: 0, //widget距离stack左边界距离 ，width = stack宽 - left - right
-        right: 0,
-        bottom: 0,
-        child: Container(
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                  child: Container(
-                child: DecoratedBox(
-                  child: Padding(
-                    child: TextField(
-                      controller: _textEditingController,
-                      focusNode: _focusNode,
-                      decoration: null,
-                      maxLines: 5,
-                      minLines: 1,
-                      textAlign: TextAlign.start,
-                      cursorColor: Color.fromARGB(255, 87, 189, 105),
-                      style: TextStyle(color: Color(0xff000000), fontSize: 16),
-                      onChanged: (text) {
-                        _text = text;
-                      },
-                    ),
-                    padding: EdgeInsets.all(10),
+      child: Container(
+        child: Row(
+          children: <Widget>[
+            Expanded(
+                child: Container(
+              child: DecoratedBox(
+                child: Padding(
+                  child: TextField(
+                    controller: _textEditingController,
+                    focusNode: _focusNode,
+                    decoration: null,
+                    maxLines: 5,
+                    minLines: 1,
+                    textAlign: TextAlign.start,
+                    cursorColor: Color.fromARGB(255, 87, 189, 105),
+                    style: TextStyle(color: Color(0xff000000), fontSize: 16),
+                    onChanged: (text) {
+                      _text = text;
+                    },
                   ),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(2)),
-                      color: Colors.white),
+                  padding: EdgeInsets.all(10),
                 ),
-              )),
-              FlatButton(
-                child: Text("发送"),
-                onPressed: () {
-                  if (_onSend != null) {
-                    _onSend(_text);
-                  }
-                  setState(() {
-                    _show = false;
-                    _text = "";
-                    _textEditingController.text = "";
-                  });
-                },
-              )
-            ],
-          ),
-          color: Color.fromARGB(255, 247, 247, 247),
-          padding: EdgeInsets.only(left: 8, top: 4, right: 8, bottom: 4),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(2)),
+                    color: Colors.white),
+              ),
+            )),
+            FlatButton(
+              child: Text("发送"),
+              onPressed: () {
+                if (_onSend != null) {
+                  _onSend(_text);
+                }
+                setState(() {
+                  _show = false;
+                  _text = "";
+                  _textEditingController.text = "";
+                });
+              },
+            )
+          ],
         ),
+        color: Color.fromARGB(255, 247, 247, 247),
+        padding: EdgeInsets.only(left: 8, top: 4, right: 8, bottom: 4),
       ),
       visible: _show,
     );
@@ -123,12 +118,10 @@ class CommentEditNotification extends Notification {
 class ScrollEvent {
   final double offset;
 
+  ///1 :用户手指在拖拽    2:用户手指停止拖拽，但需要继续动画   3：结束
   final int type;
 
   const ScrollEvent({this.offset, this.type});
-
-  ///1 :用户手指在拖拽    2:用户手指停止拖拽，但需要继续动画   3：结束
-
 }
 
 class MomentRefreshIndicator extends StatefulWidget {
@@ -140,9 +133,9 @@ class MomentRefreshIndicator extends StatefulWidget {
   }
 }
 
-class MomentRefreshIndicatorState extends State with TickerProviderStateMixin {
-  static final MAX_TRANSLATE_Y = 100.0;
+const MAX_TRANSLATE_Y = 100.0;
 
+class MomentRefreshIndicatorState extends State with TickerProviderStateMixin {
   AnimationController _rotateController, _translateController;
 
   double _angle = 0.0;
@@ -150,7 +143,6 @@ class MomentRefreshIndicatorState extends State with TickerProviderStateMixin {
   double _translateY = 0.0;
 
   handleScrollEvent(ScrollEvent event) {
-    print("${event.type} ${event.offset}");
     if (event.type == 1) {
       setState(() {
         _translateY = min(MAX_TRANSLATE_Y, -event.offset);
@@ -214,10 +206,130 @@ class MomentRefreshIndicatorState extends State with TickerProviderStateMixin {
   }
 }
 
+class MomentAppBar extends StatefulWidget {
+  const MomentAppBar({Key key}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return MomentAppBarState();
+  }
+}
+
+class MomentAppBarState extends State<MomentAppBar> {
+  bool hideTitle = true;
+
+  handleScrollEvent(ScrollEvent event) {
+    if (event.offset > 250 && hideTitle) {
+      setState(() {
+        hideTitle = false;
+      });
+    } else if (event.offset <= 250 && !hideTitle) {
+      setState(() {
+        hideTitle = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print(MediaQuery.of(context).padding);
+    return Container(
+      color: hideTitle ? Colors.transparent : Colors.white,
+      padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top, left: 16, right: 16),
+      child: Row(
+        children: <Widget>[
+          GestureDetector(
+            child: Icon(
+              Icons.arrow_back_ios,
+              size: 16,
+            ),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          SizedBox(
+            width: 12,
+          ),
+          Visibility(
+            child: Text(
+              "朋友圈",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            visible: !hideTitle,
+          ),
+          Spacer(),
+          IconButton(
+            icon: Icon(Icons.add_a_photo),
+            onPressed: () => {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return Dialog(
+                      child: Card(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 16, bottom: 16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Padding(
+                                child: Row(
+                                  children: <Widget>[
+                                    Expanded(
+                                      child: Text("拍摄",
+                                          style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 16)),
+                                    ),
+                                    Align(
+                                      child: Text("照片或视频",
+                                          style: TextStyle(
+                                              color: Colors.black54,
+                                              fontSize: 10)),
+                                      alignment: Alignment.centerLeft,
+                                    ),
+                                  ],
+                                ),
+                                padding: EdgeInsets.only(left: 8, right: 8),
+                              ),
+                              Padding(
+                                child: Divider(
+                                  height: 1,
+                                ),
+                                padding: EdgeInsets.only(top: 8, bottom: 8),
+                              ),
+                              Padding(
+                                child: Text(
+                                  "从相册选择",
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 16),
+                                  textAlign: TextAlign.left,
+                                ),
+                                padding: EdgeInsets.only(left: 8),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      backgroundColor: Colors.transparent,
+                    );
+                  })
+            },
+          )
+        ],
+      ),
+    );
+  }
+}
+
 class MomentsState extends State<MomentsPage> {
   GlobalKey _commentEditKey = GlobalKey();
 
   GlobalKey _indicatorKey = GlobalKey();
+
+  GlobalKey _appbarKey = GlobalKey();
 
   bool _refreshing = false;
 
@@ -240,7 +352,7 @@ class MomentsState extends State<MomentsPage> {
               Row(
                 children: <Widget>[
                   Text(
-                    "来哦布斯",
+                    "廖布斯",
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -289,68 +401,6 @@ class MomentsState extends State<MomentsPage> {
               CustomScrollView(
                   physics: const BouncingScrollPhysics(),
                   slivers: [
-//                    SliverAppBar(
-//                      pinned: true,
-//                      stretch: true,
-//                      actions: <Widget>[
-//                        IconButton(
-//                          icon: Icon(Icons.camera),
-//                          onPressed: () => {
-//                            showDialog(
-//                                context: context,
-//                                builder: (context) {
-//                                  var body = [
-//                                    Card(
-//                                      child: Column(
-//                                        crossAxisAlignment:
-//                                            CrossAxisAlignment.start,
-//                                        children: <Widget>[
-//                                          Row(
-//                                            children: <Widget>[
-//                                              Expanded(
-//                                                child: Text("拍摄",
-//                                                    style: TextStyle(
-//                                                        color: Colors.black,
-//                                                        fontSize: 16)),
-//                                              ),
-//                                              Align(
-//                                                child: Text("照片或视频",
-//                                                    style: TextStyle(
-//                                                        color: Colors.black54,
-//                                                        fontSize: 10)),
-//                                                alignment: Alignment.centerLeft,
-//                                              ),
-//                                            ],
-//                                          ),
-//                                          Divider(
-//                                            height: 1,
-//                                          ),
-//                                          Text(
-//                                            "从相册选择",
-//                                            style: TextStyle(
-//                                                color: Colors.black,
-//                                                fontSize: 16),
-//                                            textAlign: TextAlign.left,
-//                                          )
-//                                        ],
-//                                      ),
-//                                    )
-//                                  ];
-//                                  Widget dialogChild = Column(
-//                                    mainAxisSize: MainAxisSize.min,
-//                                    crossAxisAlignment:
-//                                        CrossAxisAlignment.stretch,
-//                                    children: body,
-//                                  );
-//                                  return Dialog(
-//                                    child: dialogChild,
-//                                    backgroundColor: Colors.transparent,
-//                                  );
-//                                })
-//                          },
-//                        )
-//                      ],
-//                    ),
                     SliverToBoxAdapter(
                       child: _buildCover(),
                     ),
@@ -373,14 +423,22 @@ class MomentsState extends State<MomentsPage> {
                       }, childCount: model.moments.length),
                     )
                   ]),
-              CommentEdit(_commentEditKey),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: CommentEdit(_commentEditKey),
+              ),
               Positioned(
                 top: -30,
                 left: 30,
                 child: MomentRefreshIndicator(
                   key: _indicatorKey,
                 ),
-              )
+              ),
+              MomentAppBar(
+                key: _appbarKey,
+              ),
             ],
           ),
           onWillPop: () {
@@ -392,13 +450,18 @@ class MomentsState extends State<MomentsPage> {
           },
         ),
         onNotification: (notification) {
-          print(notification);
+          if (notification is ScrollNotification) {
+            MomentAppBarState state =
+                (_appbarKey.currentContext as StatefulElement).state;
+            state.handleScrollEvent(
+                ScrollEvent(offset: notification.metrics.pixels));
+          }
+
           if (notification is ScrollNotification && !_refreshing) {
             MomentRefreshIndicatorState state =
                 (_indicatorKey.currentContext as StatefulElement).state;
             if (notification is ScrollUpdateNotification &&
                 notification.metrics.pixels <= 0) {
-              //用户手指在拖拽
               if (notification.dragDetails != null) {
                 state.handleScrollEvent(
                     ScrollEvent(type: 1, offset: notification.metrics.pixels));
@@ -418,8 +481,6 @@ class MomentsState extends State<MomentsPage> {
                 }
               }
             }
-
-            print(notification.metrics.pixels);
           }
 
           if (notification is CommentEditNotification) {
