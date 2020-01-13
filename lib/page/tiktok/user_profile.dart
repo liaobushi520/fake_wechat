@@ -59,15 +59,55 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
             headerSliverBuilder:
                 (BuildContext context, bool innerBoxIsScrolled) {
               return <Widget>[
+//                SliverOverlapAbsorber(
+//                  handle:
+//                      NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+//                  sliver: SliverList(
+//                    delegate: SliverChildListDelegate([
+//                      SliverAppBar(
+//                        pinned: true,
+//                        stretch: true,
+//                        expandedHeight: 200,
+//                        flexibleSpace: FlexibleSpaceBar(
+//                          stretchModes: [StretchMode.zoomBackground],
+//                          background: Container(
+//                            child: Image.network(
+//                              "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
+//                              fit: BoxFit.cover,
+//                            ),
+//                          ),
+//                        ),
+//                      ),
+//                      SliverToBoxAdapter(
+//                        child: Column(
+//                          children: <Widget>[
+//                            TopInfoSection(),
+//                            BottomInfoSection()
+//                          ],
+//                        )
+//                      ),
+//                      SliverPersistentHeader(
+//                        pinned: true,
+//                        delegate:
+//                            SliverPinnedPersistentHeaderDelegate(Container(
+//                          child: TabBar(
+//                            indicatorColor: Color.fromARGB(255, 243, 206, 74),
+//                            controller: _tabController,
+//                            tabs: myTabs,
+//                          ),
+//                          color: Color.fromARGB(255, 22, 24, 35),
+//                        )),
+//                      ),
+//                    ]),
+//                  ),
+//                ),
+
                 SliverAppBar(
                   pinned: true,
-                  expandedHeight: 160,
+                  stretch: true,
+                  expandedHeight: 200,
                   flexibleSpace: FlexibleSpaceBar(
-                    stretchModes: [
-                      StretchMode.blurBackground,
-                      StretchMode.fadeTitle,
-                      StretchMode.zoomBackground
-                    ],
+                    stretchModes: [StretchMode.zoomBackground],
                     background: Container(
                       child: Image.network(
                         "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
@@ -77,29 +117,38 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: Container(
                     child: Column(
-                      children: <Widget>[TopInfoSection(), BottomInfoSection()],
-                    ),
-                  ),
-                ),
-                PinnedHeader(
-                  child: Container(
+                  children: <Widget>[TopInfoSection(), BottomInfoSection()],
+                )),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: SliverPinnedPersistentHeaderDelegate(Container(
                     child: TabBar(
                       indicatorColor: Color.fromARGB(255, 243, 206, 74),
                       controller: _tabController,
                       tabs: myTabs,
                     ),
                     color: Color.fromARGB(255, 22, 24, 35),
-                  ),
+                  )),
                 ),
               ];
             },
             body: TabBarView(
               controller: _tabController,
               children: myTabs.map((Tab tab) {
-                return Center(
-                  child: VideoGrid(),
+                return Builder(
+                  builder: (context) {
+                    return CustomScrollView(
+                      slivers: <Widget>[
+//                          SliverOverlapInjector(
+//                            handle:
+//                                NestedScrollView.sliverOverlapAbsorberHandleFor(
+//                                    context),
+//                          ),
+                        VideoGrid(),
+                      ],
+                    );
+                  },
                 );
               }).toList(),
             ),
@@ -556,62 +605,45 @@ class VideoGrid extends StatefulWidget {
 class VideoGridState extends State<VideoGrid> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: GridView.builder(
-          padding: EdgeInsets.only(top: 0, bottom: 0),
-          itemCount: 10,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 1,
-              mainAxisSpacing: 1,
-              childAspectRatio: 3.0 / 4.0),
-          itemBuilder: (context, index) {
-            return Stack(
-              children: <Widget>[
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Image.network(
-                    "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg",
-                    fit: BoxFit.cover,
+    return SliverGrid(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 1,
+          mainAxisSpacing: 1,
+          childAspectRatio: 3.0 / 4.0),
+      delegate: SliverChildBuilderDelegate((BuildContext context, index) {
+        return Stack(
+          children: <Widget>[
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: Image.network(
+                "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg",
+                fit: BoxFit.cover,
+              ),
+            ),
+            Positioned(
+              left: 5,
+              bottom: 5,
+              child: Row(
+                children: <Widget>[
+                  Icon(
+                    Icons.favorite_border,
+                    color: Colors.white,
+                    size: 12,
                   ),
-                ),
-                Positioned(
-                  left: 5,
-                  bottom: 5,
-                  child: Row(
-                    children: <Widget>[
-                      Icon(
-                        Icons.favorite_border,
-                        color: Colors.white,
-                        size: 12,
-                      ),
-                      Text(
-                        "1000",
-                        style: TextStyle(color: Colors.white, fontSize: 12),
-                      )
-                    ],
-                  ),
-                )
-              ],
-            );
-          }),
-    );
-  }
-}
-
-class PinnedHeader extends StatelessWidget {
-  final Widget child;
-
-  const PinnedHeader({Key key, this.child}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverPersistentHeader(
-      pinned: true,
-      delegate: SliverPinnedPersistentHeaderDelegate(child),
+                  Text(
+                    "1000",
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  )
+                ],
+              ),
+            )
+          ],
+        );
+      }, childCount: 20),
     );
   }
 }

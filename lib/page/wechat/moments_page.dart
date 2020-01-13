@@ -232,7 +232,6 @@ class MomentAppBarState extends State<MomentAppBar> {
 
   @override
   Widget build(BuildContext context) {
-    print(MediaQuery.of(context).padding);
     return Container(
       color: hideTitle ? Colors.transparent : Colors.white,
       padding: EdgeInsets.only(

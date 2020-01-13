@@ -131,16 +131,6 @@ class SliverRevealPersistentHeaderDelegate
   }
 }
 
-class PinnedHeader extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SliverPersistentHeader(
-      pinned: true,
-      delegate: SliverPinnedPersistentHeaderDelegate(),
-    );
-  }
-}
-
 class SliverPinnedPersistentHeaderDelegate
     extends SliverPersistentHeaderDelegate {
   @override
@@ -387,7 +377,10 @@ class ChatListPageState extends State<ChatListPage>
         controller: _scrollController,
         slivers: <Widget>[
           RevealHeader(),
-          PinnedHeader(),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: SliverPinnedPersistentHeaderDelegate(),
+          ),
           SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               return _buildChatItem(context, model.chatItems[index]);

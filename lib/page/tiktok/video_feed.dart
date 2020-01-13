@@ -368,10 +368,38 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
                 ),
                 Column(
                   children: <Widget>[
+                    GestureDetector(
+                      child: Column(
+                        children: <Widget>[
+                          Icon(
+                            Icons.message,
+                            color: Colors.white,
+                          ),
+                          Text(
+                            "评论",
+                            style: TextStyle(color: Colors.white),
+                          )
+                        ],
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                                opaque: false,
+                                fullscreenDialog: true,
+                                pageBuilder: (BuildContext context,
+                                        Animation<double> animation,
+                                        Animation<double> secondaryAnimation) =>
+                                    CommentPage()));
+                      },
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
                     Column(
                       children: <Widget>[
                         Icon(
-                          Icons.message,
+                          Icons.share,
                           color: Colors.white,
                         ),
                         Text(
@@ -414,6 +442,49 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
 
   @override
   bool get wantKeepAlive => true;
+}
+
+class CommentPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SizedBox.expand(child: DraggableScrollableActuator(
+        child: Builder(
+          builder: (context) {
+            return NotificationListener(
+              child: DraggableScrollableSheet(
+                minChildSize: 0.0,
+                maxChildSize: 0.8,
+                initialChildSize: 0.8,
+                builder:
+                    (BuildContext context, ScrollController scrollController) {
+                  return Container(
+                    color: Colors.blue[100],
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: 25,
+                      itemBuilder: (BuildContext context, int index) {
+                        return ListTile(title: Text('Item $index'));
+                      },
+                    ),
+                  );
+                },
+              ),
+              onNotification: (notification) {
+                print(notification);
+                if (notification is ScrollEndNotification) {
+                  print(DraggableScrollableActuator.reset(context));
+                }
+
+                return true;
+              },
+            );
+          },
+        ),
+      )),
+    );
+  }
 }
 
 class Jukebox extends StatefulWidget {
