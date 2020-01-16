@@ -35,6 +35,10 @@ dependencies:
   palette_generator:
     ^0.2.0
 
+
+  webview_flutter:
+    ^0.3.19
+
   observable_ui:
     path: ../flutter_app/observable_ui
 

@@ -59,49 +59,6 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
             headerSliverBuilder:
                 (BuildContext context, bool innerBoxIsScrolled) {
               return <Widget>[
-//                SliverOverlapAbsorber(
-//                  handle:
-//                      NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-//                  sliver: SliverList(
-//                    delegate: SliverChildListDelegate([
-//                      SliverAppBar(
-//                        pinned: true,
-//                        stretch: true,
-//                        expandedHeight: 200,
-//                        flexibleSpace: FlexibleSpaceBar(
-//                          stretchModes: [StretchMode.zoomBackground],
-//                          background: Container(
-//                            child: Image.network(
-//                              "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
-//                              fit: BoxFit.cover,
-//                            ),
-//                          ),
-//                        ),
-//                      ),
-//                      SliverToBoxAdapter(
-//                        child: Column(
-//                          children: <Widget>[
-//                            TopInfoSection(),
-//                            BottomInfoSection()
-//                          ],
-//                        )
-//                      ),
-//                      SliverPersistentHeader(
-//                        pinned: true,
-//                        delegate:
-//                            SliverPinnedPersistentHeaderDelegate(Container(
-//                          child: TabBar(
-//                            indicatorColor: Color.fromARGB(255, 243, 206, 74),
-//                            controller: _tabController,
-//                            tabs: myTabs,
-//                          ),
-//                          color: Color.fromARGB(255, 22, 24, 35),
-//                        )),
-//                      ),
-//                    ]),
-//                  ),
-//                ),
-
                 SliverAppBar(
                   pinned: true,
                   stretch: true,
@@ -140,11 +97,6 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
                   builder: (context) {
                     return CustomScrollView(
                       slivers: <Widget>[
-//                          SliverOverlapInjector(
-//                            handle:
-//                                NestedScrollView.sliverOverlapAbsorberHandleFor(
-//                                    context),
-//                          ),
                         VideoGrid(),
                       ],
                     );
