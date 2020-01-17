@@ -259,6 +259,8 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
 
   Animation<double> scaleAnimation;
 
+  GlobalKey<CommentBottomSheetState> commentBottomSheetKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -380,7 +382,12 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
                           )
                         ],
                       ),
-                      onTap: () {},
+                      onTap: () {
+                        CommentBottomSheetState state = (commentBottomSheetKey
+                                .currentContext as StatefulElement)
+                            .state as CommentBottomSheetState;
+                        state.show();
+                      },
                     ),
                     SizedBox(
                       height: 20,
@@ -422,7 +429,7 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
               right: 0,
               top: 200,
               bottom: 0,
-              child: CommentBottomSheet())
+              child: CommentBottomSheet(key: commentBottomSheetKey))
         ],
       ),
       color: Colors.black,
@@ -444,34 +451,43 @@ class CommentBottomSheet extends StatefulWidget {
   State<StatefulWidget> createState() {
     return CommentBottomSheetState();
   }
+
+  CommentBottomSheet({Key key}) : super(key: key);
 }
 
-class CommentBottomSheetState extends State<CommentBottomSheet>
-    with SingleTickerProviderStateMixin {
+class CommentBottomSheetState extends State<CommentBottomSheet> {
+  GlobalKey key = GlobalKey();
   @override
   void initState() {
     super.initState();
   }
 
+  show() {
+    MyBottomSheet.DraggableScrollableActuator.expand(key.currentContext);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MyBottomSheet.DraggableScrollableSheet(
-      minChildSize: 0.0,
-      maxChildSize: 1.0,
-      initialChildSize: 1.0,
-      expand: false,
-      builder: (BuildContext context, ScrollController scrollController) {
-        return Container(
-          color: Colors.blue[100],
-          child: ListView.builder(
-            controller: scrollController,
-            itemCount: 25,
-            itemBuilder: (BuildContext context, int index) {
-              return ListTile(title: Text('Item $index'));
-            },
-          ),
-        );
-      },
+    return MyBottomSheet.DraggableScrollableActuator(
+      child: MyBottomSheet.DraggableScrollableSheet(
+        key: key,
+        minChildSize: 0.0,
+        maxChildSize: 1.0,
+        initialChildSize: 1.0,
+        expand: false,
+        builder: (BuildContext context, ScrollController scrollController) {
+          return Container(
+            color: Colors.blue[100],
+            child: ListView.builder(
+              controller: scrollController,
+              itemCount: 25,
+              itemBuilder: (BuildContext context, int index) {
+                return ListTile(title: Text('Item $index'));
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }

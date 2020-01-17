@@ -288,6 +288,7 @@ class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
 
   AnimationController animationController;
   void Function() listener;
+
   @override
   void initState() {
     super.initState();
@@ -305,7 +306,6 @@ class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
         duration: Duration(milliseconds: 500),
         lowerBound: 0.0,
         upperBound: 1.0);
-
     listener = () {
       setState(() {
         _extent._currentExtent.value = animationController.value;
@@ -317,7 +317,18 @@ class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_InheritedResetNotifier.shouldReset(context)) {
+
+    if (_InheritedExpandFoldNotifier.shouldExpand(context)) {
+      _scrollController.animateTo(
+        1.0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.linear,
+      );
+      //   _extent._currentExtent.value = _extent.initialExtent;
+      return;
+    }
+
+    if (_InheritedExpandFoldNotifier.shouldReset(context)) {
       // jumpTo can result in trying to replace semantics during build.
       // Just animate really fast.
       // Avoid doing it at all if the offset is already 0.0.
@@ -579,7 +590,7 @@ class DraggableScrollableActuator extends StatelessWidget {
   /// Must not be null.
   final Widget child;
 
-  final _ResetNotifier _notifier = _ResetNotifier();
+  final _ExpandFoldNotifier _notifier = _ExpandFoldNotifier();
 
   /// Notifies any descendant [DraggableScrollableSheet] that it should reset
   /// to its initial position.
@@ -587,70 +598,102 @@ class DraggableScrollableActuator extends StatelessWidget {
   /// Returns `true` if a [DraggableScrollableActuator] is available and
   /// some [DraggableScrollableSheet] is listening for updates, `false`
   /// otherwise.
-  static bool reset(BuildContext context) {
-    final _InheritedResetNotifier notifier =
-        context.dependOnInheritedWidgetOfExactType<_InheritedResetNotifier>();
+  static bool expand(BuildContext context, {bool expand = false}) {
+    final _InheritedExpandFoldNotifier notifier = context
+        .dependOnInheritedWidgetOfExactType<_InheritedExpandFoldNotifier>();
     if (notifier == null) {
       return false;
     }
-    return notifier._sendReset();
+    return notifier._send(expand);
   }
 
   @override
   Widget build(BuildContext context) {
-    return _InheritedResetNotifier(child: child, notifier: _notifier);
+    return _InheritedExpandFoldNotifier(child: child, notifier: _notifier);
   }
 }
 
 /// A [ChangeNotifier] to use with [InheritedResetNotifer] to notify
 /// descendants that they should reset to initial state.
-class _ResetNotifier extends ChangeNotifier {
+class _ExpandFoldNotifier extends ChangeNotifier {
   /// Whether someone called [sendReset] or not.
   ///
   /// This flag should be reset after checking it.
-  bool _wasCalled = false;
+  bool _wasFold = false;
+
+  bool _wasExpand = false;
 
   /// Fires a reset notification to descendants.
   ///
   /// Returns false if there are no listeners.
-  bool sendReset() {
+  bool sendFold() {
     if (!hasListeners) {
       return false;
     }
-    _wasCalled = true;
+    _wasFold = true;
+    notifyListeners();
+    return true;
+  }
+
+  bool sendExpand() {
+    if (!hasListeners) {
+      return false;
+    }
+    _wasExpand = true;
     notifyListeners();
     return true;
   }
 }
 
-class _InheritedResetNotifier extends InheritedNotifier<_ResetNotifier> {
+class _InheritedExpandFoldNotifier
+    extends InheritedNotifier<_ExpandFoldNotifier> {
   /// Creates an [InheritedNotifier] that the [DraggableScrollableSheet] will
   /// listen to for an indication that it should change its extent.
   ///
   /// The [child] and [notifier] properties must not be null.
-  const _InheritedResetNotifier({
+  const _InheritedExpandFoldNotifier({
     Key key,
     @required Widget child,
-    @required _ResetNotifier notifier,
+    @required _ExpandFoldNotifier notifier,
   }) : super(key: key, child: child, notifier: notifier);
 
-  bool _sendReset() => notifier.sendReset();
+  bool _send(bool expand) {
+    if (expand) {
+      return notifier.sendExpand();
+    } else {
+      return notifier.sendFold();
+    }
+  }
 
   /// Specifies whether the [DraggableScrollableSheet] should reset to its
   /// initial position.
   ///
   /// Returns true if the notifier requested a reset, false otherwise.
   static bool shouldReset(BuildContext context) {
-    final InheritedWidget widget =
-        context.dependOnInheritedWidgetOfExactType<_InheritedResetNotifier>();
+    final InheritedWidget widget = context
+        .dependOnInheritedWidgetOfExactType<_InheritedExpandFoldNotifier>();
     if (widget == null) {
       return false;
     }
-    assert(widget is _InheritedResetNotifier);
-    final _InheritedResetNotifier inheritedNotifier =
-        widget as _InheritedResetNotifier;
-    final bool wasCalled = inheritedNotifier.notifier._wasCalled;
-    inheritedNotifier.notifier._wasCalled = false;
+    assert(widget is _InheritedExpandFoldNotifier);
+    final _InheritedExpandFoldNotifier inheritedNotifier =
+        widget as _InheritedExpandFoldNotifier;
+    final bool wasCalled = inheritedNotifier.notifier._wasFold;
+    inheritedNotifier.notifier._wasFold = false;
+    return wasCalled;
+  }
+
+  static bool shouldExpand(BuildContext context) {
+    final InheritedWidget widget = context
+        .dependOnInheritedWidgetOfExactType<_InheritedExpandFoldNotifier>();
+    if (widget == null) {
+      return false;
+    }
+    assert(widget is _InheritedExpandFoldNotifier);
+    final _InheritedExpandFoldNotifier inheritedNotifier =
+        widget as _InheritedExpandFoldNotifier;
+    final bool wasCalled = inheritedNotifier.notifier._wasExpand;
+    inheritedNotifier.notifier._wasExpand = false;
     return wasCalled;
   }
 }
