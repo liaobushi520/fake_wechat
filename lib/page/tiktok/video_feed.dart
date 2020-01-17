@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_app/page/tiktok/user_profile.dart';
 import 'package:flutter_app/utils.dart';
 import 'package:flutter_app/widgets.dart';
@@ -10,6 +9,7 @@ import 'package:observable_ui/provider.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../amazing_page_view.dart';
+import '../../bottom_sheet.dart' as MyBottomSheet;
 import '../../data_source.dart';
 import '../../entities.dart';
 
@@ -259,8 +259,6 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
 
   Animation<double> scaleAnimation;
 
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   @override
   void initState() {
     super.initState();
@@ -292,163 +290,142 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Scaffold(
-      key: _scaffoldKey,
-      body: Container(
-        child: Stack(
-          children: <Widget>[
-            GestureDetector(
-              child: Stack(
-                children: <Widget>[
-                  Center(
-                    child: _controller.value.initialized
-                        ? AspectRatio(
-                            aspectRatio: _controller.value.aspectRatio,
-                            child: VideoPlayer(_controller),
-                          )
-                        : Container(),
-                  ),
-                  Center(
-                    child: ScaleTransition(
-                        scale: scaleAnimation,
-                        child: _controller.value.isPlaying
-                            ? SizedBox(
-                                width: 80,
-                                height: 80,
-                              )
-                            : SizedBox(
-                                width: 80,
-                                height: 80,
-                                child: Icon(
-                                  Icons.play_arrow,
-                                  size: 80,
-                                ),
-                              )),
-                  ),
-                ],
-              ),
-              onTap: () {
-                setState(() {
-                  if (_controller.value.isPlaying) {
-                    _controller.pause();
-                    _scaleController.forward(from: 2.0);
-                  } else {
-                    _controller.play();
-                  }
-                });
-              },
-            ),
-            Positioned(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: <Widget>[
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          widget.videoFeed.userName,
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        ),
-                        SizedBox(
-                          height: 8,
-                        ),
-                        Text(
-                          widget.videoFeed.text,
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        ),
-                        SizedBox(
-                          height: 8,
-                        ),
-                        MarqueeText(
-                          text: widget.videoFeed.voiceSourceText,
-                          style: TextStyle(color: Colors.white, fontSize: 14),
-                          width: 160,
-                          height: 20,
+    return Container(
+      child: Stack(
+        children: <Widget>[
+          GestureDetector(
+            child: Stack(
+              children: <Widget>[
+                Center(
+                  child: _controller.value.initialized
+                      ? AspectRatio(
+                          aspectRatio: _controller.value.aspectRatio,
+                          child: VideoPlayer(_controller),
                         )
-                      ],
-                    ),
-                  ),
-                  Column(
-                    children: <Widget>[
-                      GestureDetector(
-                        child: Column(
-                          children: <Widget>[
-                            Icon(
-                              Icons.message,
-                              color: Colors.white,
-                            ),
-                            Text(
-                              "评论",
-                              style: TextStyle(color: Colors.white),
+                      : Container(),
+                ),
+                Center(
+                  child: ScaleTransition(
+                      scale: scaleAnimation,
+                      child: _controller.value.isPlaying
+                          ? SizedBox(
+                              width: 80,
+                              height: 80,
                             )
-                          ],
-                        ),
-                        onTap: () {
-                          _scaffoldKey.currentState
-                              .showBottomSheet<void>((BuildContext context) {
-                            return DraggableScrollableSheet(
-                              minChildSize: 0.0,
-                              maxChildSize: 1.0,
-                              initialChildSize: 1.0,
-                              builder: (BuildContext context,
-                                  ScrollController scrollController) {
-                                return Container(
-                                  color: Colors.blue[100],
-                                  child: ListView.builder(
-                                    controller: scrollController,
-                                    itemCount: 25,
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      return ListTile(
-                                          title: Text('Item $index'));
-                                    },
-                                  ),
-                                );
-                              },
-                            );
-                          });
-                        },
+                          : SizedBox(
+                              width: 80,
+                              height: 80,
+                              child: Icon(
+                                Icons.play_arrow,
+                                size: 80,
+                              ),
+                            )),
+                ),
+              ],
+            ),
+            onTap: () {
+              setState(() {
+                if (_controller.value.isPlaying) {
+                  _controller.pause();
+                  _scaleController.forward(from: 2.0);
+                } else {
+                  _controller.play();
+                }
+              });
+            },
+          ),
+          Positioned(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        widget.videoFeed.userName,
+                        style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                       SizedBox(
-                        height: 20,
+                        height: 8,
                       ),
-                      Column(
+                      Text(
+                        widget.videoFeed.text,
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                      SizedBox(
+                        height: 8,
+                      ),
+                      MarqueeText(
+                        text: widget.videoFeed.voiceSourceText,
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                        width: 160,
+                        height: 20,
+                      )
+                    ],
+                  ),
+                ),
+                Column(
+                  children: <Widget>[
+                    GestureDetector(
+                      child: Column(
                         children: <Widget>[
                           Icon(
-                            Icons.share,
+                            Icons.message,
                             color: Colors.white,
                           ),
                           Text(
-                            "分享",
+                            "评论",
                             style: TextStyle(color: Colors.white),
                           )
                         ],
                       ),
-                      SizedBox(
-                        height: 60,
-                      ),
-                      Jukebox()
-                    ],
-                  )
-                ],
-              ),
-              bottom: _kProgressRegulatorIntrinsicHeight,
-              left: 10,
-              right: 10,
+                      onTap: () {},
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    Column(
+                      children: <Widget>[
+                        Icon(
+                          Icons.share,
+                          color: Colors.white,
+                        ),
+                        Text(
+                          "分享",
+                          style: TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
+                    SizedBox(
+                      height: 60,
+                    ),
+                    Jukebox()
+                  ],
+                )
+              ],
             ),
-            Positioned(
-              bottom: 0,
+            bottom: _kProgressRegulatorIntrinsicHeight,
+            left: 10,
+            right: 10,
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: ProgressRegulator(
+              videoPlayerController: _controller,
+            ),
+          ),
+          Positioned(
               left: 0,
               right: 0,
-              child: ProgressRegulator(
-                videoPlayerController: _controller,
-              ),
-            )
-          ],
-        ),
-        color: Colors.black,
+              top: 200,
+              bottom: 0,
+              child: CommentBottomSheet())
+        ],
       ),
+      color: Colors.black,
     );
   }
 
@@ -460,6 +437,43 @@ class VideoFeedScreenState extends State<VideoFeedScreen>
 
   @override
   bool get wantKeepAlive => true;
+}
+
+class CommentBottomSheet extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return CommentBottomSheetState();
+  }
+}
+
+class CommentBottomSheetState extends State<CommentBottomSheet>
+    with SingleTickerProviderStateMixin {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MyBottomSheet.DraggableScrollableSheet(
+      minChildSize: 0.0,
+      maxChildSize: 1.0,
+      initialChildSize: 1.0,
+      expand: false,
+      builder: (BuildContext context, ScrollController scrollController) {
+        return Container(
+          color: Colors.blue[100],
+          child: ListView.builder(
+            controller: scrollController,
+            itemCount: 25,
+            itemBuilder: (BuildContext context, int index) {
+              return ListTile(title: Text('Item $index'));
+            },
+          ),
+        );
+      },
+    );
+  }
 }
 
 class Jukebox extends StatefulWidget {
