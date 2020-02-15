@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_app/memonts_model.dart';
+
 import 'package:flutter_app/page/wechat/moments_page.dart';
 import 'package:flutter_app/page/wechat/subscription_message_page.dart';
 import 'package:flutter_app/subscription_box_model.dart';
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ViewModelProvider(
       child: MaterialApp(
-        title: 'Flutter Demo',
+        title: 'WeChat',
         theme: ThemeData(
             // This is the theme of your application.
             //

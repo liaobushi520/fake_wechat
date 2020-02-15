@@ -42,7 +42,7 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(child: Scaffold(
       body: Stack(
         children: <Widget>[
           Positioned(
@@ -59,24 +59,51 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
             headerSliverBuilder:
                 (BuildContext context, bool innerBoxIsScrolled) {
               return <Widget>[
-                SliverAppBar(
+                SliverPersistentHeader(
                   pinned: true,
-                  stretch: true,
-                  expandedHeight: 200,
-                  flexibleSpace: FlexibleSpaceBar(
-                    stretchModes: [StretchMode.zoomBackground],
-                    background: Container(
-                      child: Image.network(
-                        "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
-                        fit: BoxFit.cover,
-                      ),
+                  floating: true,
+                  delegate: SliverPinnedPersistentHeaderDelegate(Container(
+                    child: Row(
+                      children: <Widget>[
+                        Container(child: IconButton(
+                          icon: Icon(Icons.arrow_back_ios,color: Colors.white,),
+                          onPressed: (){},
+                        ),
+                          alignment: Alignment.center,
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0x66000000),
+                          ),
+                        ),
+                        Spacer(),
+                        Text("中国新闻网",style: TextStyle(fontSize: 16,color: Colors.white),),
+                        RaisedButton(
+                          onPressed: () {},
+                          child: Text("关注"),
+                          color: BUTTON_ACCENT_COLOR,
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.more_horiz,color: Colors.white,),
+                          onPressed: (){},
+                        ),
+                      ],
                     ),
-                  ),
+                    color: Color.fromARGB(255, 22, 24, 35),
+                  )),
                 ),
                 SliverToBoxAdapter(
                     child: Column(
-                  children: <Widget>[TopInfoSection(), BottomInfoSection()],
-                )),
+                      children: <Widget>[
+                        Image.network(
+                          "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
+                          fit: BoxFit.cover,
+                        ),
+                        TopInfoSection(),
+                        BottomInfoSection()
+                      ],
+                    )),
                 SliverPersistentHeader(
                   pinned: true,
                   delegate: SliverPinnedPersistentHeaderDelegate(Container(
@@ -105,9 +132,11 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
               }).toList(),
             ),
           ),
+
         ],
       ),
-    );
+    ),);
+
   }
 }
 
@@ -609,6 +638,8 @@ class SliverPinnedPersistentHeaderDelegate
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
+
+
     return child;
   }
 

@@ -40,7 +40,7 @@ dependencies:
     ^0.3.19
 
   observable_ui:
-    path: ../flutter_app/observable_ui
+    path: ../fake_wechat/observable_ui
 
   sqflite: ^1.1.6
 

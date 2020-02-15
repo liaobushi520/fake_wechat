@@ -21,7 +21,7 @@ class HomeState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    var model = ViewModelProvider.of<HomeModel>(context);
+
 
     return Scaffold(
       body: SafeArea(
