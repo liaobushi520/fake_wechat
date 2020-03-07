@@ -57,7 +57,7 @@ class Friend {
 }
 
 class Comment {
-  const Comment(this.text, this.poster, {this.replyer});
+  Comment(this.text, this.poster, {this.replyer, this.timestamp, this.likeCount=0,this.iLike=false});
 
   final String text;
 
@@ -66,6 +66,22 @@ class Comment {
 
   //回复评论者
   final Friend replyer;
+
+  final num timestamp;
+
+  num likeCount=0 ;
+
+  bool iLike=false;
+}
+
+class TiTokComment{
+
+  final Comment mainComment;
+
+  final List<Comment> subComments;
+
+  TiTokComment(this.mainComment,{ this.subComments});
+
 }
 
 class AudioLink {
@@ -188,10 +204,3 @@ class VideoFeed {
 }
 
 
-class TikTokComment{
-
-
-
-
-
-}

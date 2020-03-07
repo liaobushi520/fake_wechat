@@ -481,9 +481,9 @@ class CommentBottomSheetState extends State<CommentBottomSheet> {
             color: Colors.white,
             child: ListView.builder(
               controller: scrollController,
-              itemCount: 25,
+              itemCount: TikTokComments.length,
               itemBuilder: (BuildContext context, int index) {
-                return CommentItem();
+                return CommentItem(TikTokComments[index]);
               },
             ),
           );
@@ -494,6 +494,13 @@ class CommentBottomSheetState extends State<CommentBottomSheet> {
 }
 
 class CommentItem extends StatefulWidget {
+  final TiTokComment tiktokComment;
+
+  const CommentItem(
+    this.tiktokComment, {
+    Key key,
+  }) : super(key: key);
+
   @override
   State<StatefulWidget> createState() {
     return CommentItemState();
@@ -503,103 +510,52 @@ class CommentItem extends StatefulWidget {
 class CommentItemState extends State<CommentItem> {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[_buildItem(), _buildItem(), _buildItem()],
-    );
-  }
-
-  Widget _buildMinItem() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        buildCircleImage(
-            18,
-            NetworkImage(
-                "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg")),
-        SizedBox(
-          width: 6,
-        ),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                "你我本无缘，全靠钱",
-                style: TextStyle(color: Color.fromARGB(255, 154, 155, 158)),
-              ),
-              Text(
-                "高飞治得大气不敢出一声kkkkkkkkkkkkkkkkk",
-                style: TextStyle(color: Colors.black, fontSize: 15),
-              ),
-            ],
-          ),
-        ),
-        LikeBox()
-      ],
-    );
+    return _buildItem();
   }
 
   Widget _buildItem() {
+    var subComments = this.widget.tiktokComment.subComments.map((comment) {
+      return Container(
+        child: SingleComment(2, comment),
+        margin: EdgeInsets.only(top: 8),
+      );
+    });
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            SizedBox(
-              width: 16,
-            ),
-            buildCircleImage(
-                36,
-                NetworkImage(
-                    "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg")),
-            SizedBox(
-              width: 6,
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "你我本无缘，全靠钱",
-                    style: TextStyle(color: Color.fromARGB(255, 154, 155, 158)),
-                  ),
-                  SizedBox(height: 6,),
-                  Text(
-                    "高飞治得大气不敢出一声我是woshikkkkkkkkkkkkkkkkkjjjjjjjjjjkkkksacsDFfsdf",
-                    style: TextStyle(color: Colors.black, fontSize: 15),
-                  ),
-                ],
-              ),
-            ),
-            LikeBox(),
-          ],
+        Container(
+          child: SingleComment(1, this.widget.tiktokComment.mainComment),
+          margin: EdgeInsets.only(left: 16),
         ),
         Row(
           children: <Widget>[
             SizedBox(
               width: 58,
             ),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                SizedBox(height: 4,),
-                _buildMinItem(),
-                SizedBox(height: 4,),
-                _buildMinItem(),
-                SizedBox(height: 4,),
-                GestureDetector(
-                  child: Text(
-                    "---展开更多回复",
-                    style: TextStyle(color: Color.fromARGB(255, 171, 171, 171)),
-                  ),
-                  onTap: () {
-
-
-                  },
-                )
-              ],
-            ),)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  ...subComments,
+                  GestureDetector(
+                    child: Text(
+                      "---展开更多回复",
+                      style:
+                          TextStyle(color: Color.fromARGB(255, 171, 171, 171)),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        this.widget.tiktokComment.subComments.add(Comment(
+                              "我是展开评论",
+                              FRIENDS[3],
+                              likeCount: 111,
+                            ));
+                      });
+                    },
+                  )
+                ],
+              ),
+            )
           ],
         ),
       ],
@@ -607,29 +563,75 @@ class CommentItemState extends State<CommentItem> {
   }
 }
 
-class LikeBox extends StatefulWidget{
+class SingleComment extends StatefulWidget {
+  final num type; //1 主评论  2  子评论
+
+  final Comment content;
+
+  const SingleComment(this.type, this.content, {Key key}) : super(key: key);
+
   @override
   State<StatefulWidget> createState() {
-    return LikeBoxState();
+    return SingleCommentState();
   }
 }
 
-class LikeBoxState extends State{
+class SingleCommentState extends State<SingleComment> {
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(child: Column(
+    double avatarSize = this.widget.type == 1 ? 36 : 18;
+    double avatarRightMargin = this.widget.type == 1 ? 12 : 8;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Icon(
-          Icons.favorite,
-          size: 20,
+        buildCircleImage(
+            avatarSize, NetworkImage(this.widget.content.poster.avatar)),
+        SizedBox(
+          width: avatarRightMargin,
         ),
-        Text(
-          "1111",
-          style: TextStyle(fontSize: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                this.widget.content.poster.name,
+                style: TextStyle(color: Color.fromARGB(255, 154, 155, 158)),
+              ),
+              SizedBox(
+                height: 4,
+              ),
+              Text(
+                this.widget.content.text,
+                style: TextStyle(color: Colors.black, fontSize: 15),
+              ),
+            ],
+          ),
         ),
+        GestureDetector(
+          child: Column(
+            children: <Widget>[
+              Icon(
+                Icons.favorite,
+                size: 20,
+                color:
+                    this.widget.content.iLike ? Colors.redAccent : Colors.black,
+              ),
+              Text(
+                this.widget.content.likeCount.toString(),
+                style: TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+          onTap: () {
+            setState(() {
+              this.widget.content.iLike = !this.widget.content.iLike;
+              this.widget.content.likeCount +=
+                  this.widget.content.iLike ? 1 : -1;
+            });
+          },
+        )
       ],
-    ),onTap: (){
-      },);
+    );
   }
 }
 

@@ -158,10 +158,32 @@ final CHAT_ENTRANCES = [
       recentMessage: Message(0, text: "还记得我的电影吗？")),
 ];
 
-final TikTokComments=[
+final TikTokComments = [
+  TiTokComment(
+      Comment("你是好样的", FRIENDS[0], likeCount: 1000, ),
+      subComments: [
+        Comment("你才是好样的", FRIENDS[1], likeCount: 1111, ),
+        Comment("你最棒", FRIENDS[2], likeCount: 1133, )
+      ]),
 
+  TiTokComment(
+      Comment("你是好样的", FRIENDS[2], likeCount: 100, ),
+      subComments: [
+        Comment("你才是好样的", FRIENDS[3], likeCount: 111, )
+      ]),
 
+  TiTokComment(
+      Comment("你是好样的", FRIENDS[0], likeCount: 10, ),
+      subComments: [
+        Comment("你才是好样的", FRIENDS[2], likeCount: 11, )
+      ])
 
+  ,
+  TiTokComment(
+      Comment("你是好样的", FRIENDS[3], likeCount: 110, ),
+      subComments: [
+        Comment("你才是好样的", FRIENDS[4], likeCount: 11, )
+      ])
 ];
 
 final MOMENTS = [
