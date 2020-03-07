@@ -42,20 +42,12 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(child: Scaffold(
-      body: Stack(
-        children: <Widget>[
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: 0,
-            child: Container(
-              color: Color.fromARGB(255, 22, 24, 35),
-            ),
-          ),
-          NestedScrollView(
-            physics: const BouncingScrollPhysics(),
+    return SafeArea(
+      child: Scaffold(
+        body :  NotificationListener(child: Container(
+          color: Color.fromARGB(255, 22, 24, 35),
+          constraints: BoxConstraints.expand(),
+          child: NestedScrollView(
             headerSliverBuilder:
                 (BuildContext context, bool innerBoxIsScrolled) {
               return <Widget>[
@@ -65,10 +57,14 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
                   delegate: SliverPinnedPersistentHeaderDelegate(Container(
                     child: Row(
                       children: <Widget>[
-                        Container(child: IconButton(
-                          icon: Icon(Icons.arrow_back_ios,color: Colors.white,),
-                          onPressed: (){},
-                        ),
+                        Container(
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.arrow_back_ios,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {},
+                          ),
                           alignment: Alignment.center,
                           width: 30,
                           height: 30,
@@ -78,20 +74,28 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
                           ),
                         ),
                         Spacer(),
-                        Text("中国新闻网",style: TextStyle(fontSize: 16,color: Colors.white),),
+                        Text(
+                          "中国新闻网",
+                          style:
+                          TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                        SizedBox(width: 10,),
                         RaisedButton(
                           onPressed: () {},
-                          child: Text("关注"),
+                          child: Text("关注",style: TextStyle(color: Colors.white,fontSize: 16),),
                           color: BUTTON_ACCENT_COLOR,
                         ),
                         IconButton(
-                          icon: Icon(Icons.more_horiz,color: Colors.white,),
-                          onPressed: (){},
+                          icon: Icon(
+                            Icons.more_horiz,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {},
                         ),
                       ],
                     ),
                     color: Color.fromARGB(255, 22, 24, 35),
-                  )),
+                  ),44,44),
                 ),
                 SliverToBoxAdapter(
                     child: Column(
@@ -113,7 +117,7 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
                       tabs: myTabs,
                     ),
                     color: Color.fromARGB(255, 22, 24, 35),
-                  )),
+                  ),44,44),
                 ),
               ];
             },
@@ -132,11 +136,13 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
               }).toList(),
             ),
           ),
+        ),onNotification: (notification){
+          print(notification);
+          return false;
 
-        ],
+        },)
       ),
-    ),);
-
+    );
   }
 }
 
@@ -631,23 +637,21 @@ class VideoGridState extends State<VideoGrid> {
 
 class SliverPinnedPersistentHeaderDelegate
     extends SliverPersistentHeaderDelegate {
+
+
   final Widget child;
 
-  SliverPinnedPersistentHeaderDelegate(this.child);
+  final double maxExtent;
+
+  final double minExtent;
+
+  SliverPinnedPersistentHeaderDelegate(this.child, this.maxExtent, this.minExtent);
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-
-
     return child;
   }
-
-  @override
-  double get maxExtent => 44;
-
-  @override
-  double get minExtent => 44;
 
   @override
   bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) {

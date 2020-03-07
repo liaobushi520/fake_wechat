@@ -158,6 +158,12 @@ final CHAT_ENTRANCES = [
       recentMessage: Message(0, text: "还记得我的电影吗？")),
 ];
 
+final TikTokComments=[
+
+
+
+];
+
 final MOMENTS = [
   Moment(
       text: "我喜欢的一首歌",

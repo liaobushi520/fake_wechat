@@ -457,6 +457,7 @@ class CommentBottomSheet extends StatefulWidget {
 
 class CommentBottomSheetState extends State<CommentBottomSheet> {
   GlobalKey key = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -477,18 +478,158 @@ class CommentBottomSheetState extends State<CommentBottomSheet> {
         expand: false,
         builder: (BuildContext context, ScrollController scrollController) {
           return Container(
-            color: Colors.blue[100],
+            color: Colors.white,
             child: ListView.builder(
               controller: scrollController,
               itemCount: 25,
               itemBuilder: (BuildContext context, int index) {
-                return ListTile(title: Text('Item $index'));
+                return CommentItem();
               },
             ),
           );
         },
       ),
     );
+  }
+}
+
+class CommentItem extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return CommentItemState();
+  }
+}
+
+class CommentItemState extends State<CommentItem> {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[_buildItem(), _buildItem(), _buildItem()],
+    );
+  }
+
+  Widget _buildMinItem() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        buildCircleImage(
+            18,
+            NetworkImage(
+                "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg")),
+        SizedBox(
+          width: 6,
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                "你我本无缘，全靠钱",
+                style: TextStyle(color: Color.fromARGB(255, 154, 155, 158)),
+              ),
+              Text(
+                "高飞治得大气不敢出一声kkkkkkkkkkkkkkkkk",
+                style: TextStyle(color: Colors.black, fontSize: 15),
+              ),
+            ],
+          ),
+        ),
+        LikeBox()
+      ],
+    );
+  }
+
+  Widget _buildItem() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            SizedBox(
+              width: 16,
+            ),
+            buildCircleImage(
+                36,
+                NetworkImage(
+                    "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1236308033,3321919462&fm=26&gp=0.jpg")),
+            SizedBox(
+              width: 6,
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "你我本无缘，全靠钱",
+                    style: TextStyle(color: Color.fromARGB(255, 154, 155, 158)),
+                  ),
+                  SizedBox(height: 6,),
+                  Text(
+                    "高飞治得大气不敢出一声我是woshikkkkkkkkkkkkkkkkkjjjjjjjjjjkkkksacsDFfsdf",
+                    style: TextStyle(color: Colors.black, fontSize: 15),
+                  ),
+                ],
+              ),
+            ),
+            LikeBox(),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            SizedBox(
+              width: 58,
+            ),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                SizedBox(height: 4,),
+                _buildMinItem(),
+                SizedBox(height: 4,),
+                _buildMinItem(),
+                SizedBox(height: 4,),
+                GestureDetector(
+                  child: Text(
+                    "---展开更多回复",
+                    style: TextStyle(color: Color.fromARGB(255, 171, 171, 171)),
+                  ),
+                  onTap: () {
+
+
+                  },
+                )
+              ],
+            ),)
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class LikeBox extends StatefulWidget{
+  @override
+  State<StatefulWidget> createState() {
+    return LikeBoxState();
+  }
+}
+
+class LikeBoxState extends State{
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(child: Column(
+      children: <Widget>[
+        Icon(
+          Icons.favorite,
+          size: 20,
+        ),
+        Text(
+          "1111",
+          style: TextStyle(fontSize: 14),
+        ),
+      ],
+    ),onTap: (){
+      },);
   }
 }
 

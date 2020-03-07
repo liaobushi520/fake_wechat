@@ -186,3 +186,12 @@ class VideoFeed {
     this.voiceSourceCover,
   });
 }
+
+
+class TikTokComment{
+
+
+
+
+
+}
