@@ -3,8 +3,11 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_app/widgets.dart';
+
+const Color _kTikTokBackgroundColor = Color.fromARGB(255, 22, 24, 35);
 
 class UserProfileScreen extends StatefulWidget {
   @override
@@ -19,8 +22,112 @@ class CompleteFoldingNotification extends Notification {
   const CompleteFoldingNotification(this.completeFolding);
 }
 
-class TikTokHeader extends SliverMultiBoxAdaptorWidget {
-  const TikTokHeader({
+class TikTokHeader extends StatefulWidget {
+  final TabController tabController;
+
+  final List<Tab> tabs;
+
+  const TikTokHeader({Key key, this.tabController, this.tabs})
+      : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return TikTokHeaderState();
+  }
+}
+
+class TikTokHeaderState extends State<TikTokHeader> {
+  Color backgroundColor = Colors.transparent;
+
+  @override
+  Widget build(BuildContext context) {
+    return NotificationListener(
+      onNotification: (notification) {
+        if (notification is CompleteFoldingNotification) {
+          print(notification.completeFolding);
+          SchedulerBinding.instance.addPostFrameCallback((timestamp) {
+            setState(() {
+              backgroundColor = notification.completeFolding
+                  ? _kTikTokBackgroundColor
+                  : Colors.transparent;
+            });
+          });
+        }
+        return true;
+      },
+      child: _TikTokHeader(
+        delegate: SliverChildListDelegate([
+          Column(
+            children: <Widget>[
+              Image.network(
+                "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
+                fit: BoxFit.cover,
+              ),
+              TopInfoSection(),
+              BottomInfoSection()
+            ],
+          ),
+          Container(
+            child: Row(
+              children: <Widget>[
+                Container(
+                  child: Icon(
+                    Icons.arrow_back_ios,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  alignment: Alignment.center,
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0x66000000),
+                  ),
+                ),
+                Spacer(),
+                Text(
+                  "中国新闻网",
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                RaisedButton(
+                  onPressed: () {},
+                  child: Text(
+                    "关注",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  color: BUTTON_ACCENT_COLOR,
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.more_horiz,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+            padding: EdgeInsets.only(left: 16),
+            color: backgroundColor,
+          ),
+          Container(
+            child: TabBar(
+              indicatorColor: Color.fromARGB(255, 243, 206, 74),
+              controller: widget.tabController,
+              tabs: widget.tabs,
+            ),
+            color: Color.fromARGB(255, 22, 24, 35),
+          )
+        ]),
+      ),
+    );
+  }
+}
+
+class _TikTokHeader extends SliverMultiBoxAdaptorWidget {
+  const _TikTokHeader({
     Key key,
     @required SliverChildDelegate delegate,
   }) : super(key: key, delegate: delegate);
@@ -37,6 +144,8 @@ class TikTokHeaderRenderSliver extends RenderSliverMultiBoxAdaptor {
   TikTokHeaderRenderSliver({
     @required RenderSliverBoxChildManager childManager,
   }) : super(childManager: childManager);
+
+  bool _completeFolding = false;
 
   @override
   void performLayout() {
@@ -95,18 +204,21 @@ class TikTokHeaderRenderSliver extends RenderSliverMultiBoxAdaptor {
             constraints.scrollOffset,
         secondChild.size.height + thirdChild.size.height);
 
-    (childManager as SliverMultiBoxAdaptorElement)
-        .visitChildElements((element) {
+    var element = childManager as SliverMultiBoxAdaptorElement;
 
-
-      if (element.renderObject == secondChild) {
-        if (secondChild.size.height + thirdChild.size.height == paintExtent) {
-          CompleteFoldingNotification(true).dispatch(element);
-        } else {
-          CompleteFoldingNotification(false).dispatch(element);
-        }
-      }
-    });
+    print("${secondChild.size.height + thirdChild.size.height}" +
+        "--" +
+        "${paintExtent.round()}");
+    if (secondChild.size.height + thirdChild.size.height ==
+            paintExtent.round() &&
+        _completeFolding == false) {
+      print(_completeFolding.toString() + "vvv");
+      _completeFolding = true;
+      CompleteFoldingNotification(true).dispatch(element);
+    } else if (_completeFolding == true) {
+      _completeFolding = false;
+      CompleteFoldingNotification(false).dispatch(element);
+    }
 
     geometry = SliverGeometry(
         scrollExtent: firstChild.size.height - secondChild.size.height,
@@ -117,7 +229,7 @@ class TikTokHeaderRenderSliver extends RenderSliverMultiBoxAdaptor {
 }
 
 class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
-  final List<Tab> myTabs = <Tab>[
+  final List<Tab> _tabs = <Tab>[
     Tab(
       child: Padding(
         child: Text(
@@ -140,10 +252,12 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
 
   TabController _tabController;
 
+  GlobalKey key = GlobalKey();
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(vsync: this, length: myTabs.length);
+    _tabController = TabController(vsync: this, length: _tabs.length);
   }
 
   @override
@@ -151,39 +265,20 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
     return SafeArea(
       child: Scaffold(
           body: Container(
-        color: Color.fromARGB(255, 22, 24, 35),
+        color: _kTikTokBackgroundColor,
         constraints: BoxConstraints.expand(),
         child: NestedScrollView(
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return <Widget>[
               TikTokHeader(
-                delegate: SliverChildListDelegate([
-                  Column(
-                    children: <Widget>[
-                      Image.network(
-                        "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
-                        fit: BoxFit.cover,
-                      ),
-                      TopInfoSection(),
-                      BottomInfoSection()
-                    ],
-                  ),
-                  ProfileTopBar(),
-                  Container(
-                    child: TabBar(
-                      indicatorColor: Color.fromARGB(255, 243, 206, 74),
-                      controller: _tabController,
-                      tabs: myTabs,
-                    ),
-                    color: Color.fromARGB(255, 22, 24, 35),
-                  )
-                ]),
-              ),
+                tabController: _tabController,
+                tabs: _tabs,
+              )
             ];
           },
           body: TabBarView(
             controller: _tabController,
-            children: myTabs.map((Tab tab) {
+            children: _tabs.map((Tab tab) {
               return Builder(
                 builder: (context) {
                   return CustomScrollView(
@@ -197,79 +292,6 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
           ),
         ),
       )),
-    );
-  }
-}
-
-class ProfileTopBar extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() {
-    return ProfileTopBarState();
-  }
-}
-
-class ProfileTopBarState extends State<ProfileTopBar> {
-  Color backgroundColor = Colors.transparent;
-
-  @override
-  Widget build(BuildContext context) {
-    return NotificationListener(
-      child: Container(
-        child: Row(
-          children: <Widget>[
-            Container(
-              child: Icon(
-                Icons.arrow_back_ios,
-                color: Colors.white,
-                size: 16,
-              ),
-              alignment: Alignment.center,
-              width: 26,
-              height: 26,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0x66000000),
-              ),
-            ),
-            Spacer(),
-            Text(
-              "中国新闻网",
-              style: TextStyle(fontSize: 16, color: Colors.white),
-            ),
-            SizedBox(
-              width: 10,
-            ),
-            RaisedButton(
-              onPressed: () {},
-              child: Text(
-                "关注",
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-              color: BUTTON_ACCENT_COLOR,
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.more_horiz,
-                color: Colors.white,
-              ),
-              onPressed: () {},
-            ),
-          ],
-        ),
-        padding: EdgeInsets.only(left: 16),
-        color: backgroundColor,
-      ),
-      onNotification: (notification) {
-        if (notification is CompleteFoldingNotification) {
-          setState(() {
-            backgroundColor = notification.completeFolding
-                ? Colors.black
-                : Colors.transparent;
-          });
-        }
-
-        return true;
-      },
     );
   }
 }
