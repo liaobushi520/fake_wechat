@@ -179,7 +179,7 @@ class _PageViewState extends State<AmazingPageView> {
 
   bool _loading = false;
 
-  Widget _createDafaultLoadMoreFooter(BuildContext context) {
+  Widget _createDefaultLoadMoreFooter(BuildContext context) {
     return Container(
       alignment: Alignment.bottomCenter,
       height: 80,
@@ -218,7 +218,7 @@ class _PageViewState extends State<AmazingPageView> {
     if (widget.loadMoreFooter != null) {
       loadMoreFooter = widget.loadMoreFooter;
     } else {
-      loadMoreFooter = _createDafaultLoadMoreFooter(context);
+      loadMoreFooter = _createDefaultLoadMoreFooter(context);
     }
 
     return NotificationListener<ScrollNotification>(

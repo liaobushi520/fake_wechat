@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_app/widgets.dart';
 
@@ -7,6 +10,109 @@ class UserProfileScreen extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     return UserProfileScreenState();
+  }
+}
+
+class CompleteFoldingNotification extends Notification {
+  final bool completeFolding;
+
+  const CompleteFoldingNotification(this.completeFolding);
+}
+
+class TikTokHeader extends SliverMultiBoxAdaptorWidget {
+  const TikTokHeader({
+    Key key,
+    @required SliverChildDelegate delegate,
+  }) : super(key: key, delegate: delegate);
+
+  @override
+  RenderSliverMultiBoxAdaptor createRenderObject(BuildContext context) {
+    final SliverMultiBoxAdaptorElement element =
+        context as SliverMultiBoxAdaptorElement;
+    return TikTokHeaderRenderSliver(childManager: element);
+  }
+}
+
+class TikTokHeaderRenderSliver extends RenderSliverMultiBoxAdaptor {
+  TikTokHeaderRenderSliver({
+    @required RenderSliverBoxChildManager childManager,
+  }) : super(childManager: childManager);
+
+  @override
+  void performLayout() {
+    childManager.didStartLayout();
+    childManager.setDidUnderflow(false);
+
+    if (firstChild == null) {
+      addInitialChild();
+
+      firstChild.layout(constraints.asBoxConstraints().tighten(),
+          parentUsesSize: true);
+
+      var secondChild = insertAndLayoutChild(
+          constraints.asBoxConstraints().tighten(),
+          after: firstChild,
+          parentUsesSize: true);
+
+      final SliverMultiBoxAdaptorParentData secondChildParentData =
+          secondChild.parentData as SliverMultiBoxAdaptorParentData;
+      secondChildParentData.layoutOffset = 0.0;
+
+      var thirdChild = insertAndLayoutChild(
+          constraints.asBoxConstraints().tighten(),
+          after: secondChild,
+          parentUsesSize: true);
+      final SliverMultiBoxAdaptorParentData thirdChildParentData =
+          thirdChild.parentData as SliverMultiBoxAdaptorParentData;
+      thirdChildParentData.layoutOffset = firstChild.size.height;
+    } else {
+      firstChild.layout(constraints.asBoxConstraints().tighten(),
+          parentUsesSize: true);
+
+      final SliverMultiBoxAdaptorParentData firstChildParentData =
+          firstChild.parentData as SliverMultiBoxAdaptorParentData;
+      firstChildParentData.layoutOffset = 0.0;
+
+      var secondChild = childAfter(firstChild);
+      var thirdChild = childAfter(secondChild);
+
+      final SliverMultiBoxAdaptorParentData secondChildParentData =
+          secondChild.parentData as SliverMultiBoxAdaptorParentData;
+      secondChildParentData.layoutOffset = constraints.scrollOffset;
+
+      final SliverMultiBoxAdaptorParentData thirdChildParentData =
+          thirdChild.parentData as SliverMultiBoxAdaptorParentData;
+
+      thirdChildParentData.layoutOffset =
+          max(secondChild.size.height, firstChild.size.height);
+    }
+    var secondChild = childAfter(firstChild);
+    var thirdChild = childAfter(secondChild);
+
+    var paintExtent = max(
+        firstChild.size.height +
+            thirdChild.size.height -
+            constraints.scrollOffset,
+        secondChild.size.height + thirdChild.size.height);
+
+    (childManager as SliverMultiBoxAdaptorElement)
+        .visitChildElements((element) {
+
+
+      if (element.renderObject == secondChild) {
+        if (secondChild.size.height + thirdChild.size.height == paintExtent) {
+          CompleteFoldingNotification(true).dispatch(element);
+        } else {
+          CompleteFoldingNotification(false).dispatch(element);
+        }
+      }
+    });
+
+    geometry = SliverGeometry(
+        scrollExtent: firstChild.size.height - secondChild.size.height,
+        maxPaintExtent: firstChild.size.height + thirdChild.size.height,
+        paintExtent: paintExtent);
+    childManager.didFinishLayout();
   }
 }
 
@@ -44,104 +150,126 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        body :  NotificationListener(child: Container(
-          color: Color.fromARGB(255, 22, 24, 35),
-          constraints: BoxConstraints.expand(),
-          child: NestedScrollView(
-            headerSliverBuilder:
-                (BuildContext context, bool innerBoxIsScrolled) {
-              return <Widget>[
-                SliverPersistentHeader(
-                  pinned: true,
-                  floating: true,
-                  delegate: SliverPinnedPersistentHeaderDelegate(Container(
-                    child: Row(
-                      children: <Widget>[
-                        Container(
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.arrow_back_ios,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {},
-                          ),
-                          alignment: Alignment.center,
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0x66000000),
-                          ),
-                        ),
-                        Spacer(),
-                        Text(
-                          "中国新闻网",
-                          style:
-                          TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                        SizedBox(width: 10,),
-                        RaisedButton(
-                          onPressed: () {},
-                          child: Text("关注",style: TextStyle(color: Colors.white,fontSize: 16),),
-                          color: BUTTON_ACCENT_COLOR,
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.more_horiz,
-                            color: Colors.white,
-                          ),
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-                    color: Color.fromARGB(255, 22, 24, 35),
-                  ),44,44),
-                ),
-                SliverToBoxAdapter(
-                    child: Column(
-                      children: <Widget>[
-                        Image.network(
-                          "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
-                          fit: BoxFit.cover,
-                        ),
-                        TopInfoSection(),
-                        BottomInfoSection()
-                      ],
-                    )),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: SliverPinnedPersistentHeaderDelegate(Container(
+          body: Container(
+        color: Color.fromARGB(255, 22, 24, 35),
+        constraints: BoxConstraints.expand(),
+        child: NestedScrollView(
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            return <Widget>[
+              TikTokHeader(
+                delegate: SliverChildListDelegate([
+                  Column(
+                    children: <Widget>[
+                      Image.network(
+                        "https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3129531823,304476160&fm=26&gp=0.jpg",
+                        fit: BoxFit.cover,
+                      ),
+                      TopInfoSection(),
+                      BottomInfoSection()
+                    ],
+                  ),
+                  ProfileTopBar(),
+                  Container(
                     child: TabBar(
                       indicatorColor: Color.fromARGB(255, 243, 206, 74),
                       controller: _tabController,
                       tabs: myTabs,
                     ),
                     color: Color.fromARGB(255, 22, 24, 35),
-                  ),44,44),
-                ),
-              ];
-            },
-            body: TabBarView(
-              controller: _tabController,
-              children: myTabs.map((Tab tab) {
-                return Builder(
-                  builder: (context) {
-                    return CustomScrollView(
-                      slivers: <Widget>[
-                        VideoGrid(),
-                      ],
-                    );
-                  },
-                );
-              }).toList(),
-            ),
+                  )
+                ]),
+              ),
+            ];
+          },
+          body: TabBarView(
+            controller: _tabController,
+            children: myTabs.map((Tab tab) {
+              return Builder(
+                builder: (context) {
+                  return CustomScrollView(
+                    slivers: <Widget>[
+                      VideoGrid(),
+                    ],
+                  );
+                },
+              );
+            }).toList(),
           ),
-        ),onNotification: (notification){
-          print(notification);
-          return false;
+        ),
+      )),
+    );
+  }
+}
 
-        },)
+class ProfileTopBar extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return ProfileTopBarState();
+  }
+}
+
+class ProfileTopBarState extends State<ProfileTopBar> {
+  Color backgroundColor = Colors.transparent;
+
+  @override
+  Widget build(BuildContext context) {
+    return NotificationListener(
+      child: Container(
+        child: Row(
+          children: <Widget>[
+            Container(
+              child: Icon(
+                Icons.arrow_back_ios,
+                color: Colors.white,
+                size: 16,
+              ),
+              alignment: Alignment.center,
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0x66000000),
+              ),
+            ),
+            Spacer(),
+            Text(
+              "中国新闻网",
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+            SizedBox(
+              width: 10,
+            ),
+            RaisedButton(
+              onPressed: () {},
+              child: Text(
+                "关注",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              color: BUTTON_ACCENT_COLOR,
+            ),
+            IconButton(
+              icon: Icon(
+                Icons.more_horiz,
+                color: Colors.white,
+              ),
+              onPressed: () {},
+            ),
+          ],
+        ),
+        padding: EdgeInsets.only(left: 16),
+        color: backgroundColor,
       ),
+      onNotification: (notification) {
+        if (notification is CompleteFoldingNotification) {
+          setState(() {
+            backgroundColor = notification.completeFolding
+                ? Colors.black
+                : Colors.transparent;
+          });
+        }
+
+        return true;
+      },
     );
   }
 }
@@ -259,7 +387,7 @@ class TopInfoSectionState extends State with SingleTickerProviderStateMixin {
 
   static const MAX_HEIGHT = 255.0;
 
-  static const MIN_HEIGHT = 60.0;
+  static const MIN_HEIGHT = 70.0;
 
   static const ANIMATION_DURATION = Duration(milliseconds: 500);
 
@@ -637,15 +765,14 @@ class VideoGridState extends State<VideoGrid> {
 
 class SliverPinnedPersistentHeaderDelegate
     extends SliverPersistentHeaderDelegate {
-
-
   final Widget child;
 
   final double maxExtent;
 
   final double minExtent;
 
-  SliverPinnedPersistentHeaderDelegate(this.child, this.maxExtent, this.minExtent);
+  SliverPinnedPersistentHeaderDelegate(
+      this.child, this.maxExtent, this.minExtent);
 
   @override
   Widget build(
