@@ -13,3 +13,7 @@
 ## 微信朋友圈界面
 
 ![微信聊天界面](https://github.com/liaobushi520/fake_wechat/blob/master/gif/moments.gif)
+
+## 抖音详情页面
+
+![微信聊天界面](https://github.com/liaobushi520/fake_wechat/blob/master/gif/tiktok_detail.gif)
