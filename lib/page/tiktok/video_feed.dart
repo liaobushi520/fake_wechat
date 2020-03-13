@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/page/tiktok/user_profile.dart';
 import 'package:flutter_app/utils.dart';
@@ -17,166 +18,6 @@ class VideoFeedModel {
   ValueNotifier<VideoFeed> currentVideoFeed = ValueNotifier(null);
 
   ListenableList<VideoFeed> videoFeeds = ListenableList(initValue: VIDEO_FEEDS);
-}
-
-class VideoFeedPage extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() {
-    return VideoFeedPageState();
-  }
-}
-
-class VideoFeedPageState extends State<VideoFeedPage> {
-  double _tabBarLeft = 0;
-
-  double _tabBarIndicatorRadio = 0;
-
-  PageController _pageController = PageController();
-
-  @override
-  Widget build(BuildContext context) {
-    return ViewModelProvider(
-      viewModel: VideoFeedModel(),
-      child: Scaffold(
-        body: Container(
-          color: Colors.black,
-          child: NotificationListener(
-            child: Stack(
-              children: <Widget>[
-                PageView(
-                  controller: _pageController,
-                  scrollDirection: Axis.horizontal,
-                  children: <Widget>[
-                    VideoFeedsScreen(),
-                    VideoFeedsScreen(),
-                    UserProfileScreen()
-                  ],
-                ),
-                Positioned(
-                  child: SafeArea(
-                    child: Center(
-                      child: TabBar(
-                        radio: _tabBarIndicatorRadio,
-                        onSelected: (pos) {
-                          _pageController.animateToPage(pos,
-                              duration: Duration(milliseconds: 500),
-                              curve: Curves.ease);
-                        },
-                      ),
-                    ),
-                  ),
-                  left: _tabBarLeft,
-                  right: -_tabBarLeft,
-                  top: 10,
-                ),
-              ],
-            ),
-            onNotification: (ScrollNotification notification) {
-              if (notification.depth == 0 &&
-                  notification is ScrollUpdateNotification &&
-                  notification.metrics is PageMetrics) {
-                if (notification.metrics.pixels >=
-                    notification.metrics.viewportDimension) {
-                  var delta = (notification.metrics.pixels -
-                      notification.metrics.viewportDimension);
-                  setState(() {
-                    _tabBarLeft = -delta;
-                  });
-                } else {
-                  var radio = (notification.metrics.pixels /
-                          notification.metrics.viewportDimension)
-                      .clamp(0, 1);
-                  setState(() {
-                    _tabBarIndicatorRadio = radio;
-                  });
-                }
-              }
-              return true;
-            },
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class TabBar extends StatefulWidget {
-  final double radio;
-
-  final void Function(int pos) onSelected;
-
-  const TabBar({Key key, this.radio, this.onSelected}) : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() {
-    return TabBarState();
-  }
-}
-
-class TabBarState extends State<TabBar> {
-  static const TAB_WIDTH = 70.0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            GestureDetector(
-              child: Container(
-                child: Text(
-                  "关注",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                width: TAB_WIDTH,
-              ),
-              onTap: () {
-                widget.onSelected(0);
-              },
-            ),
-            GestureDetector(
-              child: Container(
-                child: Text(
-                  "推荐",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                width: TAB_WIDTH,
-              ),
-              onTap: () {
-                widget.onSelected(1);
-              },
-            )
-          ],
-        ),
-        SizedBox(
-          height: 6,
-        ),
-        SizedBox(
-          width: TAB_WIDTH * 2,
-          height: 2,
-          child: Align(
-            alignment: Alignment(2 * widget.radio - 1, 0),
-            child: Container(
-              width: TAB_WIDTH,
-              padding: EdgeInsets.only(left: 20, right: 20),
-              child: Container(
-                decoration: BoxDecoration(color: Colors.white),
-              ),
-            ),
-          ),
-        )
-      ],
-    );
-  }
 }
 
 class VideoFeedsScreen extends StatefulWidget {
@@ -525,38 +366,34 @@ class CommentItemState extends State<CommentItem> {
       children: <Widget>[
         Container(
           child: SingleComment(1, this.widget.tiktokComment.mainComment),
-          margin: EdgeInsets.only(left: 16),
+          margin: EdgeInsets.only(left: 16, right: 16),
         ),
-        Row(
-          children: <Widget>[
-            SizedBox(
-              width: 58,
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  ...subComments,
-                  GestureDetector(
-                    child: Text(
-                      "---展开更多回复",
-                      style:
-                          TextStyle(color: Color.fromARGB(255, 171, 171, 171)),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        this.widget.tiktokComment.subComments.add(Comment(
-                              "我是展开评论",
-                              FRIENDS[3],
-                              likeCount: 111,
-                            ));
-                      });
-                    },
-                  )
-                ],
-              ),
-            )
-          ],
+        Container(
+          margin: EdgeInsets.only(left: 58, right: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              ...subComments,
+              Container(
+                child: GestureDetector(
+                  child: Text(
+                    "---展开更多回复",
+                    style: TextStyle(color: Color.fromARGB(255, 171, 171, 171)),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      this.widget.tiktokComment.subComments.add(Comment(
+                            "我是展开评论",
+                            FRIENDS[3],
+                            likeCount: 111,
+                          ));
+                    });
+                  },
+                ),
+                margin: EdgeInsets.only(top: 8, bottom: 8),
+              )
+            ],
+          ),
         ),
       ],
     );
@@ -577,6 +414,25 @@ class SingleComment extends StatefulWidget {
 }
 
 class SingleCommentState extends State<SingleComment> {
+  TapGestureRecognizer _tapGestureRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _tapGestureRecognizer = TapGestureRecognizer()..onTap = handleTap;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _tapGestureRecognizer.dispose();
+  }
+
+  void handleTap() {
+    print("onTap");
+  }
+
   @override
   Widget build(BuildContext context) {
     double avatarSize = this.widget.type == 1 ? 36 : 18;
@@ -600,9 +456,24 @@ class SingleCommentState extends State<SingleComment> {
               SizedBox(
                 height: 4,
               ),
-              Text(
-                this.widget.content.text,
-                style: TextStyle(color: Colors.black, fontSize: 15),
+              RichText(
+                text: TextSpan(children: [
+                  TextSpan(
+                      text: "@新垣结衣",
+                      style: TextStyle(
+                          fontSize: 15,
+                          color: Color.fromARGB(255, 235, 201, 108)),
+                      recognizer: _tapGestureRecognizer),
+                  TextSpan(
+                      text: "我的第一天评论",
+                      style: TextStyle(color: Colors.black, fontSize: 15)),
+                  TextSpan(
+                    text: "13分钟前",
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Color.fromARGB(255, 174, 174, 174)),
+                  )
+                ]),
               ),
             ],
           ),
@@ -629,10 +500,12 @@ class SingleCommentState extends State<SingleComment> {
                   this.widget.content.iLike ? 1 : -1;
             });
           },
-        )
+        ),
       ],
     );
   }
+
+  
 }
 
 class Jukebox extends StatefulWidget {

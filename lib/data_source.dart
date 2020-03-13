@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/page/tiktok/video_feed.dart';
 
 import 'entities.dart';
+import 'page/tiktok/main.dart';
 
 const USER = Friend(
     name: "廖布斯",
@@ -75,7 +76,7 @@ final MIN_PROGRAMS = [
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => VideoFeedPage(),
+        builder: (context) => TikTokPage(),
       ),
     );
   }),

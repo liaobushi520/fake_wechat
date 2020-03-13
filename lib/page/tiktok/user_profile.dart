@@ -37,6 +37,7 @@ class TikTokHeader extends StatefulWidget {
 }
 
 class TikTokHeaderState extends State<TikTokHeader> {
+
   Color backgroundColor = Colors.transparent;
 
   @override
@@ -44,7 +45,6 @@ class TikTokHeaderState extends State<TikTokHeader> {
     return NotificationListener(
       onNotification: (notification) {
         if (notification is CompleteFoldingNotification) {
-          print(notification.completeFolding);
           SchedulerBinding.instance.addPostFrameCallback((timestamp) {
             setState(() {
               backgroundColor = notification.completeFolding
@@ -112,13 +112,10 @@ class TikTokHeaderState extends State<TikTokHeader> {
             padding: EdgeInsets.only(left: 16),
             color: backgroundColor,
           ),
-          Container(
-            child: TabBar(
-              indicatorColor: Color.fromARGB(255, 243, 206, 74),
-              controller: widget.tabController,
-              tabs: widget.tabs,
-            ),
-            color: Color.fromARGB(255, 22, 24, 35),
+          TabBar(
+            indicatorColor: Color.fromARGB(255, 243, 206, 74),
+            controller: widget.tabController,
+            tabs: widget.tabs,
           )
         ]),
       ),
@@ -205,19 +202,17 @@ class TikTokHeaderRenderSliver extends RenderSliverMultiBoxAdaptor {
         secondChild.size.height + thirdChild.size.height);
 
     var element = childManager as SliverMultiBoxAdaptorElement;
-
-    print("${secondChild.size.height + thirdChild.size.height}" +
-        "--" +
-        "${paintExtent.round()}");
-    if (secondChild.size.height + thirdChild.size.height ==
-            paintExtent.round() &&
-        _completeFolding == false) {
-      print(_completeFolding.toString() + "vvv");
-      _completeFolding = true;
-      CompleteFoldingNotification(true).dispatch(element);
-    } else if (_completeFolding == true) {
-      _completeFolding = false;
-      CompleteFoldingNotification(false).dispatch(element);
+    if(secondChild.size.height + thirdChild.size.height ==
+        paintExtent.round()){
+      if( _completeFolding == false){
+        _completeFolding = true;
+        CompleteFoldingNotification(true).dispatch(element);
+      }
+    }else{
+      if(_completeFolding == true){
+        _completeFolding = false;
+        CompleteFoldingNotification(false).dispatch(element);
+      }
     }
 
     geometry = SliverGeometry(
@@ -228,7 +223,7 @@ class TikTokHeaderRenderSliver extends RenderSliverMultiBoxAdaptor {
   }
 }
 
-class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
+class UserProfileScreenState extends State with SingleTickerProviderStateMixin , AutomaticKeepAliveClientMixin{
   final List<Tab> _tabs = <Tab>[
     Tab(
       child: Padding(
@@ -251,8 +246,6 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
   ];
 
   TabController _tabController;
-
-  GlobalKey key = GlobalKey();
 
   @override
   void initState() {
@@ -294,6 +287,9 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin {
       )),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class TopInfoSection extends StatefulWidget {
