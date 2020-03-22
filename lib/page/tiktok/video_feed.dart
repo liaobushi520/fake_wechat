@@ -505,7 +505,7 @@ class SingleCommentState extends State<SingleComment> {
     );
   }
 
-  
+
 }
 
 class Jukebox extends StatefulWidget {

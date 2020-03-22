@@ -151,7 +151,6 @@ class TikTokHeaderRenderSliver extends RenderSliverMultiBoxAdaptor {
 
     if (firstChild == null) {
       addInitialChild();
-
       firstChild.layout(constraints.asBoxConstraints().tighten(),
           parentUsesSize: true);
 
@@ -255,6 +254,7 @@ class UserProfileScreenState extends State with SingleTickerProviderStateMixin ,
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SafeArea(
       child: Scaffold(
           body: Container(
