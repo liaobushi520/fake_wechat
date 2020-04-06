@@ -304,11 +304,18 @@ class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
     animationController = AnimationController(
         vsync: this,
         duration: Duration(milliseconds: 500),
-        lowerBound: 0.0,
-        upperBound: 1.0);
+        lowerBound: widget.minChildSize,
+        upperBound: widget.maxChildSize);
     listener = () {
       setState(() {
         _extent._currentExtent.value = animationController.value;
+        DraggableScrollableNotification(
+                minExtent: widget.minChildSize,
+                maxExtent: widget.maxChildSize,
+                context: context,
+                extent: animationController.value,
+                initialExtent: widget.initialChildSize)
+            .dispatch(context);
       });
     };
     animationController.addListener(listener);
@@ -320,7 +327,7 @@ class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
 
     if (_InheritedExpandFoldNotifier.shouldExpand(context)) {
       _scrollController.animateTo(
-        1.0,
+        widget.maxChildSize,
         duration: const Duration(milliseconds: 500),
         curve: Curves.linear,
       );
@@ -334,7 +341,7 @@ class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
       // Avoid doing it at all if the offset is already 0.0.
       if (_scrollController.offset != 0.0) {
         _scrollController.animateTo(
-          0.0,
+          widget.minChildSize,
           duration: const Duration(milliseconds: 1),
           curve: Curves.linear,
         );
@@ -366,13 +373,13 @@ class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
       ),
       onNotification: (notification) {
         if (notification is EndDragNotification) {
-          if (notification.endValue == 0.0) {
+          if (notification.endValue == widget.minChildSize) {
             animationController.reverse(from: _extent._currentExtent.value);
           } else {
             animationController.forward(from: _extent._currentExtent.value);
           }
         }
-        return true;
+        return false;
       },
     );
   }
@@ -498,12 +505,15 @@ class _DraggableScrollableSheetScrollPosition
     super.didEndScroll();
     print(extent._currentExtent.value);
     if (!listShouldScroll) {
-      if (extent._currentExtent.value < 0.5) {
+      if (extent._currentExtent.value <
+          (extent.maxExtent + extent.minExtent) / 2) {
         //  extent._currentExtent.value = 0.0;
-        EndDragNotification(0.0).dispatch(context.notificationContext);
+        EndDragNotification(extent.minExtent)
+            .dispatch(context.notificationContext);
       } else {
         // extent._currentExtent.value = 1.0;
-        EndDragNotification(1.0).dispatch(context.notificationContext);
+        EndDragNotification(extent.maxExtent)
+            .dispatch(context.notificationContext);
       }
     }
   }

@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_app/entities.dart';
-import 'package:flutter_app/page/tiktok/user_profile.dart';
 import 'package:flutter_app/page/wechat/chat_detail_page.dart';
 import 'package:observable_ui/provider.dart';
 

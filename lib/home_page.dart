@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_app/page/wechat/message_page.dart';
 import 'package:observable_ui/provider.dart';
 
 import 'home_model.dart';
@@ -33,7 +34,7 @@ class HomeState extends State<HomePage> {
             });
           },
           children: <Widget>[
-            ChatListPage(),
+            MessagePage(),
             FriendListPage(),
             DiscoveryPage(),
           ],

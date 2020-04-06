@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_app/data_source.dart';
 import 'package:flutter_app/photo_preview.dart';
+import 'package:flutter_app/server/ChatAI.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:observable_ui/provider.dart';
 import 'package:observable_ui/widgets2.dart';
@@ -301,9 +302,15 @@ class RecorderPanelState extends State<RecorderPanel>
 }
 
 class DialoguePanel extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     var chatModel = ViewModelProvider.of<ChatModel>(context);
+
+    ChatAI.listenMessage((message) {
+      chatModel.msgList.add(Message(0, text: message, sender: FRIENDS[0]));
+    });
+
     return Container(
       color: Color(0xfff1f1f1),
       padding: EdgeInsets.only(left: 16, right: 16),
@@ -469,7 +476,7 @@ class ControlPanelState extends State<ControlPanel> {
   }
 
   _startRecording(ChatModel model, AppModel appModel) async {
-    model.recordUri = await appModel.recorder.startRecorder(null);
+    model.recordUri = await appModel.recorder.startRecorder();
     model.recording.value = !model.recording.value;
     print('startRecorder: ${model.recordUri}');
     model.recorderSubscription =
@@ -502,9 +509,13 @@ class ControlPanelState extends State<ControlPanel> {
     });
   }
 
-  _sendTextMessage(ChatModel model, String text) {
+  _sendTextMessage(ChatModel model, String text) async {
+    String response = await ChatAI.sendMessage();
+
+
     model.msgList.add(Marker(0, DateTime.now().toString()));
     model.msgList.add(Message(0, text: text, sender: USER));
+
     setState(() {
       _textEditingController.text = "";
       _inputText = "";

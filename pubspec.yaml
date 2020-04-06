@@ -26,7 +26,7 @@ dependencies:
     ^3.0.0
 
   flutter_sound:
-    ^1.6.0
+    ^2.1.1
 
   video_player:
      ^0.10.5

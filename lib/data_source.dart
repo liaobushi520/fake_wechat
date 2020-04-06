@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_app/page/douban/douban_page.dart';
 import 'package:flutter_app/page/tiktok/video_feed.dart';
 
 import 'entities.dart';
@@ -83,7 +84,15 @@ final MIN_PROGRAMS = [
   MinProgram("QQ音乐", "http://pic.962.net/up/2016-4/2016418917511892.png",
       (context, item) {}),
   MinProgram("豆瓣", "http://pic2.orsoon.com/2016/0914/20160914112533658.png",
-      (context, item) {}),
+      (context, item) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DoubanPage(),
+          ),
+        );
+
+      }),
   MinProgram(
       "今日头条",
       "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1576669446398&di=1cb9308cd9645a4f434bba43d66056ea&imgtype=0&src=http%3A%2F%2Fimg1.sooshong.com%2Fpics%2F201606%2F4%2F201664223036205.jpg",
