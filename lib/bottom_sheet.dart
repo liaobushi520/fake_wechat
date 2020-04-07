@@ -331,7 +331,6 @@ class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
         duration: const Duration(milliseconds: 500),
         curve: Curves.linear,
       );
-      //   _extent._currentExtent.value = _extent.initialExtent;
       return;
     }
 
@@ -374,9 +373,15 @@ class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
       onNotification: (notification) {
         if (notification is EndDragNotification) {
           if (notification.endValue == widget.minChildSize) {
-            animationController.reverse(from: _extent._currentExtent.value);
+            animationController.value = _extent._currentExtent.value;
+            animationController.animateBack(widget.minChildSize,
+                duration: Duration(milliseconds: 200),
+                curve: Curves.fastOutSlowIn);
           } else {
-            animationController.forward(from: _extent._currentExtent.value);
+            animationController.value = _extent._currentExtent.value;
+            animationController.animateTo(widget.maxChildSize,
+                duration: Duration(milliseconds: 200),
+                curve: Curves.fastOutSlowIn);
           }
         }
         return false;

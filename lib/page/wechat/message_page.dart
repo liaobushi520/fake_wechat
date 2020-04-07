@@ -20,11 +20,16 @@ class MessagePage extends StatefulWidget {
   }
 }
 
+const _kMinSheetSize=0.15;
+
+
+
+
 class MessagePageState extends State<MessagePage>
     with SingleTickerProviderStateMixin {
   GlobalKey revealHeaderKey = GlobalKey();
 
-  GlobalKey dotsAnimation=GlobalKey();
+  GlobalKey dotsAnimation = GlobalKey();
 
   @override
   void initState() {
@@ -39,31 +44,28 @@ class MessagePageState extends State<MessagePage>
   @override
   Widget build(BuildContext context) {
     var model = ViewModelProvider.of<HomeModel>(context);
-
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
           return Stack(
             children: <Widget>[
-              RevealHeader(revealHeaderKey, constraints.maxHeight),
-              DotsAnimation(dotsAnimation,constraints.maxHeight),
               NotificationListener(
                 onNotification: (notification) {
                   print(notification);
                   if (notification
-                  is AutoBottomSheet.DraggableScrollableNotification) {
+                      is AutoBottomSheet.DraggableScrollableNotification) {
                     RevealHeaderState revealHeaderState =
-                    (revealHeaderKey.currentState as RevealHeaderState);
+                        (revealHeaderKey.currentState as RevealHeaderState);
                     revealHeaderState.update(notification.extent);
 
                     DotsAnimationState dotsAnimationState =
-                    (dotsAnimation.currentState as DotsAnimationState);
+                        (dotsAnimation.currentState as DotsAnimationState);
                     dotsAnimationState.update(notification.extent);
                   }
                   return true;
                 },
                 child: AutoBottomSheet.DraggableScrollableSheet(
-                  minChildSize: 0.25,
+                  minChildSize: _kMinSheetSize,
                   initialChildSize: 1,
                   builder: (context, scrollControl) {
                     return Column(
@@ -83,6 +85,8 @@ class MessagePageState extends State<MessagePage>
                   },
                 ),
               ),
+              RevealHeader(revealHeaderKey, constraints.maxHeight),
+              DotsAnimation(dotsAnimation, constraints.maxHeight),
             ],
           );
         },
@@ -92,15 +96,16 @@ class MessagePageState extends State<MessagePage>
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
+      padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
       decoration: BoxDecoration(
+          color: Color.fromARGB(255, 237, 237, 237),
           borderRadius: BorderRadius.only(
               topLeft: Radius.circular(10), topRight: Radius.circular(10))),
       child: Row(
         children: <Widget>[
           Text(
             "微信(130)",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           Spacer(),
           IconButton(
@@ -116,6 +121,7 @@ class MessagePageState extends State<MessagePage>
     return GestureDetector(
       child: Container(
           padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+          color: Colors.white,
           child: Row(
             children: <Widget>[
               Subscript(
@@ -216,11 +222,64 @@ class RevealHeader extends StatefulWidget {
   State<StatefulWidget> createState() {
     return RevealHeaderState();
   }
-
   const RevealHeader(Key key, this.stackHeight) : super(key: key);
 }
 
+
+class RevealHeaderState extends State<RevealHeader> {
+
+  double offset = 1;
+
+  bool expand = false;
+
+  void update(double offset) {
+    setState(() {
+      if (offset == 1) {
+        expand = false;
+      }
+      if (offset == _kMinSheetSize) {
+        expand = true;
+      }
+      this.offset = offset;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!expand) {
+      return Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: widget.stackHeight - (1 - offset) * widget.stackHeight,
+        child: CustomPaint(
+          child: Transform.scale(
+            scale: 1 - offset + _kMinSheetSize,
+            child: MinProgramHeader(),
+          ),
+          painter: BottomMaskLayer(offset),
+        ),
+      );
+    }
+
+    return Positioned(
+      top: -(1-_kMinSheetSize) * widget.stackHeight -
+          widget.stackHeight * offset +
+          widget.stackHeight,
+      height: (1-_kMinSheetSize) * widget.stackHeight,
+      left: 0,
+      right: 0,
+      child: CustomPaint(
+        child: MinProgramHeader(),
+        painter: BottomMaskLayer(offset),
+      ),
+    );
+  }
+}
+
+
 class DotsAnimation extends StatefulWidget {
+
   final double stackHeight;
 
   const DotsAnimation(Key key, this.stackHeight) : super(key: key);
@@ -232,6 +291,7 @@ class DotsAnimation extends StatefulWidget {
 }
 
 class DotsAnimationState extends State<DotsAnimation> {
+
   double offset = 1;
 
   void update(double offset) {
@@ -273,26 +333,30 @@ class TopMaskLayer extends CustomPainter {
 
     double maxSize = 5;
 
-    int alpha = (255 * shrinkOffset).toInt().clamp(0, 255);
+    int alpha=255;
+
+    if(shrinkOffset>=0.6){
+      alpha=255;
+    }else{
+      alpha = (255 * 1/(0.6-_kMinSheetSize)*shrinkOffset-1/(0.6-_kMinSheetSize)*_kMinSheetSize).toInt().clamp(0, 255);
+    }
 
     canvas.save();
-
     canvas.clipRect(Rect.fromLTRB(0, 0, size.width, size.height));
-
-   // canvas.drawColor(Color.fromARGB(alpha, 255, 255, 255), BlendMode.srcATop);
+    canvas.drawColor(Color.fromARGB(alpha, 255, 255, 255), BlendMode.srcATop);
     canvas.restore();
 
     p.color = Color.fromARGB(alpha, 21, 21, 21);
 
     if (shrinkOffset > lowLine && shrinkOffset < highLine) {
+
       double gap = maxGap / (lowLine - highLine) * shrinkOffset +
           (maxGap * highLine) / (highLine - lowLine);
 
       canvas.drawCircle(Offset(size.width / 2 - gap, size.height / 2), 4, p);
-
       canvas.drawCircle(Offset(size.width / 2, size.height / 2), maxSize, p);
-
       canvas.drawCircle(Offset(size.width / 2 + gap, size.height / 2), 4, p);
+
     } else if (shrinkOffset >= highLine) {
       canvas.drawCircle(Offset(size.width / 2, size.height / 2),
           maxSize * (-5 * shrinkOffset + 5), p);
@@ -312,12 +376,13 @@ class BottomMaskLayer extends CustomPainter {
 
   BottomMaskLayer(this.offset);
 
-  static const int MAX_ALPHA = 180;
+  static const int MAX_ALPHA = 255;
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.drawColor(
-        Color.fromARGB(((1 - this.offset) * MAX_ALPHA).toInt(), 42, 40, 60), BlendMode.srcATop);
+        Color.fromARGB(((1 - this.offset) * MAX_ALPHA).toInt(), 42, 40, 60),
+        BlendMode.srcATop);
   }
 
   @override
@@ -326,59 +391,10 @@ class BottomMaskLayer extends CustomPainter {
   }
 }
 
-////0.25  --- 1      1---- 0.25
 
-class RevealHeaderState extends State<RevealHeader> {
-  double offset = 1;
 
-  bool expand = false;
 
-  void update(double offset) {
-    setState(() {
-      if (offset == 1) {
-        expand = false;
-      }
 
-      if (offset == 0.25) {
-        expand = true;
-      }
-      this.offset = offset;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!expand) {
-      return Positioned(
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: widget.stackHeight - (1 - offset) * widget.stackHeight,
-        child: CustomPaint(
-          child: Transform.scale(
-            scale: 1 - offset + 0.25,
-            child: MinProgramHeader(),
-          ),
-          painter: BottomMaskLayer(offset),
-
-        ),
-      );
-    }
-
-    return Positioned(
-      top: -0.75 * widget.stackHeight -
-          widget.stackHeight * offset +
-          widget.stackHeight,
-      height: 0.75 * widget.stackHeight,
-      left: 0,
-      right: 0,
-      child: CustomPaint(
-        child: MinProgramHeader(),
-        painter: BottomMaskLayer(offset),
-      ),
-    );
-  }
-}
 
 class OverScrollEndNotification extends Notification {}
 
@@ -447,7 +463,7 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
                           padding: EdgeInsets.only(
                               left: 6, right: 6, top: 8, bottom: 8),
                         ),
-                        _buildGridWithLabel("最近使用", minPrograms: MIN_PROGRAMS),
+                        _buildGridWithLabel("最近使用", minPrograms: [...MIN_PROGRAMS,...MIN_PROGRAMS,...MIN_PROGRAMS]),
                         SizedBox(
                           height: 10,
                         ),
@@ -493,8 +509,8 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
                 child: Column(
                   children: <Widget>[
                     Container(
-                        width: 50,
-                        height: 50,
+                        width: 46,
+                        height: 46,
                         child: CircleAvatar(
                           backgroundImage: NetworkImage(item.icon),
                         )),
