@@ -335,10 +335,11 @@ class TopMaskLayer extends CustomPainter {
 
     int alpha=255;
 
-    if(shrinkOffset>=0.6){
+    double bgLowLine=0.8;
+    if(shrinkOffset>=bgLowLine){
       alpha=255;
     }else{
-      alpha = (255 * 1/(0.6-_kMinSheetSize)*shrinkOffset-1/(0.6-_kMinSheetSize)*_kMinSheetSize).toInt().clamp(0, 255);
+      alpha = (255 * 1/(bgLowLine-_kMinSheetSize)*shrinkOffset-1/(bgLowLine-_kMinSheetSize)*_kMinSheetSize).toInt().clamp(0, 255);
     }
 
     canvas.save();
@@ -346,7 +347,13 @@ class TopMaskLayer extends CustomPainter {
     canvas.drawColor(Color.fromARGB(alpha, 255, 255, 255), BlendMode.srcATop);
     canvas.restore();
 
-    p.color = Color.fromARGB(alpha, 21, 21, 21);
+    int dotAlpha=255;
+    if(shrinkOffset<highLine){
+      dotAlpha=(255 *(0.5/(highLine-lowLine)*shrinkOffset+1-0.5/(highLine-lowLine))).toInt();
+    }
+    print(dotAlpha);
+
+    p.color = Color.fromARGB(dotAlpha, 21, 21, 21);
 
     if (shrinkOffset > lowLine && shrinkOffset < highLine) {
 
