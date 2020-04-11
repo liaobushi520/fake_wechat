@@ -1,23 +1,19 @@
 
 import 'package:flutter/material.dart';
 
+
+///Todo
+
 class MovieDetailPage extends StatefulWidget{
   @override
   State<StatefulWidget> createState() {
-
     return MovieDetailPageState();
   }
 
 
 }
 
-
-
-
 class MovieDetailPageState extends State<MovieDetailPage>{
-
-
-
   @override
   Widget build(BuildContext context) {
    return Column(

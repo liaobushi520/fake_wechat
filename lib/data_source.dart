@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/page/douban/douban_page.dart';
+import 'package:flutter_app/page/reader/read_page.dart';
 import 'package:flutter_app/page/tiktok/video_feed.dart';
 
 import 'entities.dart';
@@ -85,18 +86,28 @@ final MIN_PROGRAMS = [
       (context, item) {}),
   MinProgram("豆瓣", "http://pic2.orsoon.com/2016/0914/20160914112533658.png",
       (context, item) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DoubanPage(),
-          ),
-        );
-
-      }),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DoubanPage(),
+      ),
+    );
+  }),
   MinProgram(
       "今日头条",
       "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1576669446398&di=1cb9308cd9645a4f434bba43d66056ea&imgtype=0&src=http%3A%2F%2Fimg1.sooshong.com%2Fpics%2F201606%2F4%2F201664223036205.jpg",
+
       (context, item) {}),
+  MinProgram("微信阅读",
+      "https://rescdn.qqmail.com/node/wr/wrpage/style/images/independent/favicon/favicon_48h.png",
+      (context, item) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReadPage(),
+      ),
+    );
+  }),
 ];
 final VIDEO_FEEDS = [
   VideoFeed(
@@ -170,29 +181,61 @@ final CHAT_ENTRANCES = [
 
 final TikTokComments = [
   TiTokComment(
-      Comment("你是好样的", FRIENDS[0], likeCount: 1000, ),
+      Comment(
+        "你是好样的",
+        FRIENDS[0],
+        likeCount: 1000,
+      ),
       subComments: [
-        Comment("你才是好样的", FRIENDS[1], likeCount: 1111, ),
-        Comment("你最棒", FRIENDS[2], likeCount: 1133, )
+        Comment(
+          "你才是好样的",
+          FRIENDS[1],
+          likeCount: 1111,
+        ),
+        Comment(
+          "你最棒",
+          FRIENDS[2],
+          likeCount: 1133,
+        )
       ]),
-
   TiTokComment(
-      Comment("你是好样的", FRIENDS[2], likeCount: 100, ),
+      Comment(
+        "你是好样的",
+        FRIENDS[2],
+        likeCount: 100,
+      ),
       subComments: [
-        Comment("你才是好样的", FRIENDS[3], likeCount: 111, )
+        Comment(
+          "你才是好样的",
+          FRIENDS[3],
+          likeCount: 111,
+        )
       ]),
-
   TiTokComment(
-      Comment("你是好样的", FRIENDS[0], likeCount: 10, ),
+      Comment(
+        "你是好样的",
+        FRIENDS[0],
+        likeCount: 10,
+      ),
       subComments: [
-        Comment("你才是好样的", FRIENDS[2], likeCount: 11, )
-      ])
-
-  ,
+        Comment(
+          "你才是好样的",
+          FRIENDS[2],
+          likeCount: 11,
+        )
+      ]),
   TiTokComment(
-      Comment("你是好样的", FRIENDS[3], likeCount: 110, ),
+      Comment(
+        "你是好样的",
+        FRIENDS[3],
+        likeCount: 110,
+      ),
       subComments: [
-        Comment("你才是好样的", FRIENDS[4], likeCount: 11, )
+        Comment(
+          "你才是好样的",
+          FRIENDS[4],
+          likeCount: 11,
+        )
       ])
 ];
 

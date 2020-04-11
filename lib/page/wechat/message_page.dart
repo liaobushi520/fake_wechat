@@ -215,6 +215,7 @@ class MessagePageState extends State<MessagePage>
   }
 }
 
+
 class RevealHeader extends StatefulWidget {
   final double stackHeight;
 
@@ -336,6 +337,7 @@ class TopMaskLayer extends CustomPainter {
     int alpha=255;
 
     double bgLowLine=0.8;
+
     if(shrinkOffset>=bgLowLine){
       alpha=255;
     }else{
@@ -377,6 +379,7 @@ class TopMaskLayer extends CustomPainter {
 }
 
 class BottomMaskLayer extends CustomPainter {
+
   final double offset;
 
   Paint p = Paint();
@@ -388,7 +391,7 @@ class BottomMaskLayer extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.drawColor(
-        Color.fromARGB(((1 - this.offset) * MAX_ALPHA).toInt(), 42, 40, 60),
+        Color.fromARGB(((1 - this.offset) * MAX_ALPHA).toInt(), 66, 64, 88),
         BlendMode.srcATop);
   }
 
@@ -397,10 +400,6 @@ class BottomMaskLayer extends CustomPainter {
     return oldDelegate.offset != offset;
   }
 }
-
-
-
-
 
 
 class OverScrollEndNotification extends Notification {}
@@ -424,7 +423,7 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
         Container(
           child: Text(
             "小程序",
-            style: TextStyle(color: Colors.white, fontSize: 18),
+            style: TextStyle(color: Colors.white, fontSize: 16),
           ),
           alignment: Alignment.centerLeft,
           padding: EdgeInsets.only(left: 10, top: 10, bottom: 10),
@@ -474,7 +473,7 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
                         SizedBox(
                           height: 10,
                         ),
-                        _buildGridWithLabel("我的小程序", minPrograms: MIN_PROGRAMS)
+                        _buildGridWithLabel("我的小程序", minPrograms: [...MIN_PROGRAMS,...MIN_PROGRAMS,...MIN_PROGRAMS])
                       ],
                     ),
                     margin: EdgeInsets.only(left: 16, right: 16),
@@ -495,7 +494,7 @@ class MinProgramHeaderState extends State<MinProgramHeader> {
       Align(
         child: Text(
           label,
-          style: TextStyle(color: Color(0xffffbdbdbd), fontSize: 12),
+          style: TextStyle(color: Color(0xffffbdbdbd), fontSize: 10),
         ),
         alignment: Alignment.centerLeft,
       )
