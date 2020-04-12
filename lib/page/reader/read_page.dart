@@ -23,6 +23,7 @@ class ReadPageState extends State<ReadPage> {
       body: Stack(
         children: <Widget>[
           GestureDetector(
+
             child: PageView.builder(
                 itemCount: 100,
                 itemBuilder: (context, index) {
@@ -162,7 +163,7 @@ class BookPageState extends State<BookPage> with AutomaticKeepAliveClientMixin {
                       alignment: Alignment(dx, dy),
                     ),
                   ),
-                ) // Image.memory(image,width: 100,height: 100,),
+                )
                 );
           });
           Overlay.of(context).insert(overlayEntry);
