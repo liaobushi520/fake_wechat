@@ -22,9 +22,6 @@ class MessagePage extends StatefulWidget {
 
 const _kMinSheetSize=0.15;
 
-
-
-
 class MessagePageState extends State<MessagePage>
     with SingleTickerProviderStateMixin {
   GlobalKey revealHeaderKey = GlobalKey();
@@ -98,7 +95,7 @@ class MessagePageState extends State<MessagePage>
     return Container(
       padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
       decoration: BoxDecoration(
-          color: Color.fromARGB(255, 237, 237, 237),
+          color: Color.fromARGB(255, 237, 237, 23),
           borderRadius: BorderRadius.only(
               topLeft: Radius.circular(10), topRight: Radius.circular(10))),
       child: Row(
@@ -341,9 +338,8 @@ class TopMaskLayer extends CustomPainter {
     if(shrinkOffset>=bgLowLine){
       alpha=255;
     }else{
-      alpha = (255 * 1/(bgLowLine-_kMinSheetSize)*shrinkOffset-1/(bgLowLine-_kMinSheetSize)*_kMinSheetSize).toInt().clamp(0, 255);
+      alpha = (255 * (1/(bgLowLine-_kMinSheetSize)*shrinkOffset-1/(bgLowLine-_kMinSheetSize)*_kMinSheetSize)).toInt().clamp(0, 255);
     }
-
     canvas.save();
     canvas.clipRect(Rect.fromLTRB(0, 0, size.width, size.height));
     canvas.drawColor(Color.fromARGB(alpha, 255, 255, 255), BlendMode.srcATop);
@@ -356,9 +352,7 @@ class TopMaskLayer extends CustomPainter {
     print(dotAlpha);
 
     p.color = Color.fromARGB(dotAlpha, 21, 21, 21);
-
     if (shrinkOffset > lowLine && shrinkOffset < highLine) {
-
       double gap = maxGap / (lowLine - highLine) * shrinkOffset +
           (maxGap * highLine) / (highLine - lowLine);
 

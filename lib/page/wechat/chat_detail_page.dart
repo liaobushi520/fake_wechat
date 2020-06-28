@@ -341,8 +341,6 @@ class DialoguePanel extends StatelessWidget {
                 child: GestureDetector(
                   child: itemWidget,
                   onLongPressStart: (details) {
-                    print(details.globalPosition);
-                    print(details.localPosition);
                     showMenu(
                         context: context,
                         position: RelativeRect.fromLTRB(
