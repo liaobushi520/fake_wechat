@@ -10,7 +10,7 @@ import 'package:observable_ui/provider.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../amazing_page_view.dart';
-import '../../bottom_sheet.dart' as MyBottomSheet;
+import '../../bottom_sheet.dart' as AutoBottomSheet;
 import '../../data_source.dart';
 import '../../entities.dart';
 
@@ -299,24 +299,26 @@ class CommentBottomSheet extends StatefulWidget {
 class CommentBottomSheetState extends State<CommentBottomSheet> {
   GlobalKey key = GlobalKey();
 
+
   @override
   void initState() {
     super.initState();
   }
 
   show() {
-    MyBottomSheet.DraggableScrollableActuator.expand(key.currentContext);
+    (key.currentState as AutoBottomSheet.DraggableScrollableSheetState)
+        .expand(true);
   }
 
   @override
   Widget build(BuildContext context) {
-    return MyBottomSheet.DraggableScrollableActuator(
-      child: MyBottomSheet.DraggableScrollableSheet(
+    return SizedBox.expand(
+      child: AutoBottomSheet.DraggableScrollableSheet(
         key: key,
         minChildSize: 0.0,
         maxChildSize: 1.0,
-        initialChildSize: 1.0,
-        expand: false,
+        initialChildSize: 0.0,
+        expand: true,
         builder: (BuildContext context, ScrollController scrollController) {
           return Container(
             color: Colors.white,
@@ -504,8 +506,6 @@ class SingleCommentState extends State<SingleComment> {
       ],
     );
   }
-
-
 }
 
 class Jukebox extends StatefulWidget {

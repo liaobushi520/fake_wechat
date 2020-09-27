@@ -138,59 +138,62 @@ class FriendListPageState extends State<FriendListPage>
       }
     }
 
-    return Stack(
-      children: <Widget>[
-        ListView.builder(
-            key: listViewKey,
-            controller: _controller,
-            itemBuilder: (context, index) {
-              var item = items[index];
-              if (item is String) {
-                return _buildLetterIndicator(context, item);
-              } else if (item is Friend) {
-                return _buildFriendItem(context, item);
-              }
-              return _buildTotalFriendCount(context, item);
-            },
-            itemCount: items.length),
-        Positioned(
-          child: Container(
-            child: RapidPositioning(
-              textStyle: TextStyle(color: Colors.black, fontSize: 11),
-              highlightColor: Color.fromARGB(255, 88, 191, 107),
-              onChanged: (content, index) {
-                double offset = 0.0;
-                double listViewHeight = listViewKey.currentContext.size.height;
-                for (Object item in items) {
-                  if (item is Friend) {
-                    offset += _kFriendItemHeight;
-                  } else if (item is String) {
-                    if (item == content) {
-                      if (_contactTotalHeight <= listViewHeight) {
-                        _controller.jumpTo(0);
-                      } else {
-                        if (_contactTotalHeight - offset < listViewHeight) {
-                          _controller
-                              .jumpTo((_contactTotalHeight - listViewHeight));
+    return Container(
+      color: Colors.white,
+      child: Stack(
+        children: <Widget>[
+          ListView.builder(
+              key: listViewKey,
+              controller: _controller,
+              itemBuilder: (context, index) {
+                var item = items[index];
+                if (item is String) {
+                  return _buildLetterIndicator(context, item);
+                } else if (item is Friend) {
+                  return _buildFriendItem(context, item);
+                }
+                return _buildTotalFriendCount(context, item);
+              },
+              itemCount: items.length),
+          Positioned(
+            child: Container(
+              child: RapidPositioning(
+                textStyle: TextStyle(color: Colors.black, fontSize: 11),
+                highlightColor: Color.fromARGB(255, 88, 191, 107),
+                onChanged: (content, index) {
+                  double offset = 0.0;
+                  double listViewHeight = listViewKey.currentContext.size.height;
+                  for (Object item in items) {
+                    if (item is Friend) {
+                      offset += _kFriendItemHeight;
+                    } else if (item is String) {
+                      if (item == content) {
+                        if (_contactTotalHeight <= listViewHeight) {
+                          _controller.jumpTo(0);
                         } else {
-                          _controller.jumpTo(offset);
+                          if (_contactTotalHeight - offset < listViewHeight) {
+                            _controller
+                                .jumpTo((_contactTotalHeight - listViewHeight));
+                          } else {
+                            _controller.jumpTo(offset);
+                          }
                         }
+                        return;
+                      } else {
+                        offset += _kLetterIndicatorHeight;
                       }
-                      return;
-                    } else {
-                      offset += _kLetterIndicatorHeight;
                     }
                   }
-                }
-              },
+                },
+              ),
+              margin: EdgeInsets.only(top: 16, bottom: 16),
             ),
-            margin: EdgeInsets.only(top: 16, bottom: 16),
-          ),
-          right: 0,
-          top: 10,
-          bottom: 10,
-        )
-      ],
+            right: 0,
+            top: 10,
+            bottom: 10,
+          )
+        ],
+      ),
     );
   }
 

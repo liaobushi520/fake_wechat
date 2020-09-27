@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_app/page/wechat/moments_page.dart';
 
 class DiscoveryPage extends StatefulWidget {
   @override
@@ -40,7 +41,9 @@ class DiscoveryPageState extends State<DiscoveryPage>
               color: Colors.white,
             ),
             onTap: () {
-              Navigator.of(context).pushNamed("/moments");
+              Navigator.of(context).push(MaterialPageRoute(builder: (context){
+                return MomentsPage();
+              }));
             },
           ),
         ],

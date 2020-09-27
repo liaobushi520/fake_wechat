@@ -236,6 +236,58 @@ final TikTokComments = [
           FRIENDS[4],
           likeCount: 11,
         )
+      ]),
+  TiTokComment(
+      Comment(
+        "你是好样的",
+        FRIENDS[0],
+        likeCount: 10,
+      ),
+      subComments: [
+        Comment(
+          "你才是好样的",
+          FRIENDS[2],
+          likeCount: 11,
+        )
+      ]),
+  TiTokComment(
+      Comment(
+        "你是好样的",
+        FRIENDS[3],
+        likeCount: 110,
+      ),
+      subComments: [
+        Comment(
+          "你才是好样的",
+          FRIENDS[4],
+          likeCount: 11,
+        )
+      ]),
+  TiTokComment(
+      Comment(
+        "你是好样的",
+        FRIENDS[0],
+        likeCount: 10,
+      ),
+      subComments: [
+        Comment(
+          "你才是好样的",
+          FRIENDS[2],
+          likeCount: 11,
+        )
+      ]),
+  TiTokComment(
+      Comment(
+        "你是好样的",
+        FRIENDS[3],
+        likeCount: 110,
+      ),
+      subComments: [
+        Comment(
+          "你才是好样的",
+          FRIENDS[4],
+          likeCount: 11,
+        )
       ])
 ];
 

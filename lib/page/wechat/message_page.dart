@@ -23,7 +23,7 @@ class MessagePage extends StatefulWidget {
 const _kMinSheetSize=0.15;
 
 class MessagePageState extends State<MessagePage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   GlobalKey revealHeaderKey = GlobalKey();
 
   GlobalKey dotsAnimation = GlobalKey();
@@ -40,51 +40,54 @@ class MessagePageState extends State<MessagePage>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     var model = ViewModelProvider.of<HomeModel>(context);
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          return Stack(
-            children: <Widget>[
-              NotificationListener(
-                onNotification: (notification) {
-                  print(notification);
-                  if (notification
-                      is AutoBottomSheet.DraggableScrollableNotification) {
-                    RevealHeaderState revealHeaderState =
-                        (revealHeaderKey.currentState as RevealHeaderState);
-                    revealHeaderState.update(notification.extent);
+          return RepaintBoundary(
+            child: Stack(
+              children: <Widget>[
+                NotificationListener(
+                  onNotification: (notification) {
+                    print(notification);
+                    if (notification
+                        is AutoBottomSheet.DraggableScrollableNotification) {
+                      RevealHeaderState revealHeaderState =
+                          (revealHeaderKey.currentState as RevealHeaderState);
+                      revealHeaderState.update(notification.extent);
 
-                    DotsAnimationState dotsAnimationState =
-                        (dotsAnimation.currentState as DotsAnimationState);
-                    dotsAnimationState.update(notification.extent);
-                  }
-                  return true;
-                },
-                child: AutoBottomSheet.DraggableScrollableSheet(
-                  minChildSize: _kMinSheetSize,
-                  initialChildSize: 1,
-                  builder: (context, scrollControl) {
-                    return Column(
-                      children: <Widget>[
-                        _buildHeader(),
-                        Expanded(
-                          child: ListView.builder(
-                              controller: scrollControl,
-                              itemCount: model.chatItems.length,
-                              itemBuilder: (context, index) {
-                                return _buildChatItem(
-                                    context, model.chatItems[index]);
-                              }),
-                        )
-                      ],
-                    );
+                      DotsAnimationState dotsAnimationState =
+                          (dotsAnimation.currentState as DotsAnimationState);
+                      dotsAnimationState.update(notification.extent);
+                    }
+                    return true;
                   },
+                  child: AutoBottomSheet.DraggableScrollableSheet(
+                    minChildSize: _kMinSheetSize,
+                    initialChildSize: 1,
+                    builder: (context, scrollControl) {
+                      return Column(
+                        children: <Widget>[
+                          _buildHeader(),
+                          Expanded(
+                            child: ListView.builder(
+                                controller: scrollControl,
+                                itemCount: model.chatItems.length,
+                                itemBuilder: (context, index) {
+                                  return _buildChatItem(
+                                      context, model.chatItems[index]);
+                                }),
+                          )
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-              RevealHeader(revealHeaderKey, constraints.maxHeight),
-              DotsAnimation(dotsAnimation, constraints.maxHeight),
-            ],
+                RevealHeader(revealHeaderKey, constraints.maxHeight),
+                DotsAnimation(dotsAnimation, constraints.maxHeight),
+              ],
+            ),
           );
         },
       ),
@@ -210,6 +213,9 @@ class MessagePageState extends State<MessagePage>
       },
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 
@@ -384,9 +390,11 @@ class BottomMaskLayer extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.save();
     canvas.drawColor(
         Color.fromARGB(((1 - this.offset) * MAX_ALPHA).toInt(), 66, 64, 88),
         BlendMode.srcATop);
+    canvas.restore();
   }
 
   @override

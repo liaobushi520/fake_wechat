@@ -18,8 +18,6 @@ class HomeState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-
-
     return Scaffold(
       body: SafeArea(
         child: PageView(
@@ -43,11 +41,11 @@ class HomeState extends State<HomePage> {
             title: Text('聊天'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.business),
+            icon: Icon(Icons.contacts),
             title: Text('联系人'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.school),
+            icon: Icon(Icons.people),
             title: Text('发现'),
           ),
         ],

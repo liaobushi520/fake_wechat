@@ -133,8 +133,10 @@ class DraggableScrollableSheet extends StatefulWidget {
   final ScrollableWidgetBuilder builder;
 
   @override
-  _DraggableScrollableSheetState createState() =>
-      _DraggableScrollableSheetState();
+  DraggableScrollableSheetState createState() =>
+      DraggableScrollableSheetState();
+  
+  
 }
 
 class EndDragNotification extends Notification {
@@ -215,7 +217,7 @@ class DraggableScrollableNotification extends Notification
   }
 }
 
-/// Manages state between [_DraggableScrollableSheetState],
+/// Manages state between [DraggableScrollableSheetState],
 /// [_DraggableScrollableSheetScrollController], and
 /// [_DraggableScrollableSheetScrollPosition].
 ///
@@ -281,7 +283,7 @@ class _DraggableSheetExtent {
   }
 }
 
-class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
+class DraggableScrollableSheetState extends State<DraggableScrollableSheet>
     with SingleTickerProviderStateMixin {
   _DraggableScrollableSheetScrollController _scrollController;
   _DraggableSheetExtent _extent;
@@ -321,33 +323,22 @@ class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
     animationController.addListener(listener);
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
 
-    if (_InheritedExpandFoldNotifier.shouldExpand(context)) {
-      _scrollController.animateTo(
-        widget.maxChildSize,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.linear,
-      );
-      return;
+  void expand(bool expand){
+    if(expand){
+      animationController.value = _extent._currentExtent.value;
+      animationController.animateTo(widget.maxChildSize,
+          duration: Duration(milliseconds: 200),
+          curve: Curves.fastOutSlowIn);
+    }else{
+      animationController.value = _extent._currentExtent.value;
+      animationController.animateBack(widget.minChildSize,
+          duration: Duration(milliseconds: 200),
+          curve: Curves.fastOutSlowIn);
     }
 
-    if (_InheritedExpandFoldNotifier.shouldReset(context)) {
-      // jumpTo can result in trying to replace semantics during build.
-      // Just animate really fast.
-      // Avoid doing it at all if the offset is already 0.0.
-      if (_scrollController.offset != 0.0) {
-        _scrollController.animateTo(
-          widget.minChildSize,
-          duration: const Duration(milliseconds: 1),
-          curve: Curves.linear,
-        );
-      }
-      _extent._currentExtent.value = _extent.initialExtent;
-    }
   }
+
 
   void _setExtent() {
     setState(() {
@@ -372,17 +363,8 @@ class _DraggableScrollableSheetState extends State<DraggableScrollableSheet>
       ),
       onNotification: (notification) {
         if (notification is EndDragNotification) {
-          if (notification.endValue == widget.minChildSize) {
-            animationController.value = _extent._currentExtent.value;
-            animationController.animateBack(widget.minChildSize,
-                duration: Duration(milliseconds: 200),
-                curve: Curves.fastOutSlowIn);
-          } else {
-            animationController.value = _extent._currentExtent.value;
-            animationController.animateTo(widget.maxChildSize,
-                duration: Duration(milliseconds: 200),
-                curve: Curves.fastOutSlowIn);
-          }
+          expand(notification.endValue != widget.minChildSize);
+          return true;
         }
         return false;
       },
@@ -512,11 +494,9 @@ class _DraggableScrollableSheetScrollPosition
     if (!listShouldScroll) {
       if (extent._currentExtent.value <
           (extent.maxExtent + extent.minExtent) / 2) {
-        //  extent._currentExtent.value = 0.0;
         EndDragNotification(extent.minExtent)
             .dispatch(context.notificationContext);
       } else {
-        // extent._currentExtent.value = 1.0;
         EndDragNotification(extent.maxExtent)
             .dispatch(context.notificationContext);
       }
@@ -582,133 +562,4 @@ class _DraggableScrollableSheetScrollPosition
   }
 }
 
-/// A widget that can notify a descendent [DraggableScrollableSheet] that it
-/// should reset its position to the initial state.
-///
-/// The [Scaffold] uses this widget to notify a persistent bottom sheet that
-/// the user has tapped back if the sheet has started to cover more of the body
-/// than when at its initial position. This is important for users of assistive
-/// technology, where dragging may be difficult to communicate.
-class DraggableScrollableActuator extends StatelessWidget {
-  /// Creates a widget that can notify descendent [DraggableScrollableSheet]s
-  /// to reset to their initial position.
-  ///
-  /// The [child] parameter is required.
-  DraggableScrollableActuator({
-    Key key,
-    @required this.child,
-  }) : super(key: key);
 
-  /// This child's [DraggableScrollableSheet] descendant will be reset when the
-  /// [reset] method is applied to a context that includes it.
-  ///
-  /// Must not be null.
-  final Widget child;
-
-  final _ExpandFoldNotifier _notifier = _ExpandFoldNotifier();
-
-  /// Notifies any descendant [DraggableScrollableSheet] that it should reset
-  /// to its initial position.
-  ///
-  /// Returns `true` if a [DraggableScrollableActuator] is available and
-  /// some [DraggableScrollableSheet] is listening for updates, `false`
-  /// otherwise.
-  static bool expand(BuildContext context, {bool expand = false}) {
-    final _InheritedExpandFoldNotifier notifier = context
-        .dependOnInheritedWidgetOfExactType<_InheritedExpandFoldNotifier>();
-    if (notifier == null) {
-      return false;
-    }
-    return notifier._send(expand);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _InheritedExpandFoldNotifier(child: child, notifier: _notifier);
-  }
-}
-
-/// A [ChangeNotifier] to use with [InheritedResetNotifer] to notify
-/// descendants that they should reset to initial state.
-class _ExpandFoldNotifier extends ChangeNotifier {
-  /// Whether someone called [sendReset] or not.
-  ///
-  /// This flag should be reset after checking it.
-  bool _wasFold = false;
-
-  bool _wasExpand = false;
-
-  /// Fires a reset notification to descendants.
-  ///
-  /// Returns false if there are no listeners.
-  bool sendFold() {
-    if (!hasListeners) {
-      return false;
-    }
-    _wasFold = true;
-    notifyListeners();
-    return true;
-  }
-
-  bool sendExpand() {
-    if (!hasListeners) {
-      return false;
-    }
-    _wasExpand = true;
-    notifyListeners();
-    return true;
-  }
-}
-
-class _InheritedExpandFoldNotifier
-    extends InheritedNotifier<_ExpandFoldNotifier> {
-  /// Creates an [InheritedNotifier] that the [DraggableScrollableSheet] will
-  /// listen to for an indication that it should change its extent.
-  ///
-  /// The [child] and [notifier] properties must not be null.
-  const _InheritedExpandFoldNotifier({
-    Key key,
-    @required Widget child,
-    @required _ExpandFoldNotifier notifier,
-  }) : super(key: key, child: child, notifier: notifier);
-
-  bool _send(bool expand) {
-    if (expand) {
-      return notifier.sendExpand();
-    } else {
-      return notifier.sendFold();
-    }
-  }
-
-  /// Specifies whether the [DraggableScrollableSheet] should reset to its
-  /// initial position.
-  ///
-  /// Returns true if the notifier requested a reset, false otherwise.
-  static bool shouldReset(BuildContext context) {
-    final InheritedWidget widget = context
-        .dependOnInheritedWidgetOfExactType<_InheritedExpandFoldNotifier>();
-    if (widget == null) {
-      return false;
-    }
-    assert(widget is _InheritedExpandFoldNotifier);
-    final _InheritedExpandFoldNotifier inheritedNotifier =
-        widget as _InheritedExpandFoldNotifier;
-    final bool wasCalled = inheritedNotifier.notifier._wasFold;
-    inheritedNotifier.notifier._wasFold = false;
-    return wasCalled;
-  }
-
-  static bool shouldExpand(BuildContext context) {
-    final InheritedWidget widget = context
-        .dependOnInheritedWidgetOfExactType<_InheritedExpandFoldNotifier>();
-    if (widget == null) {
-      return false;
-    }
-    assert(widget is _InheritedExpandFoldNotifier);
-    final _InheritedExpandFoldNotifier inheritedNotifier =
-        widget as _InheritedExpandFoldNotifier;
-    final bool wasCalled = inheritedNotifier.notifier._wasExpand;
-    inheritedNotifier.notifier._wasExpand = false;
-    return wasCalled;
-  }
-}

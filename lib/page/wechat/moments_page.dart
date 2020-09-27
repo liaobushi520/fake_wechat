@@ -390,113 +390,117 @@ class MomentsState extends State<MomentsPage> {
 
   @override
   Widget build(BuildContext context) {
-    var model = ViewModelProvider.of<MomentsModel>(context);
-    return Scaffold(
-      //捕获回退键
-      body: NotificationListener(
-        child: WillPopScope(
-          child: Stack(
-            children: <Widget>[
-              CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: _buildCover(),
-                    ),
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        var item = model.moments[index];
-                        switch (item.type) {
-                          case 1:
-                            return MomentItem(moment: item);
-                          case 4:
-                            return MomentItem(
-                                child: AudioItem(moment: item), moment: item);
-                          case 2:
-                            return MomentItem(
-                                child: buildImageGrid(item), moment: item);
-                          default:
-                            return MomentItem(
-                                child: buildWebPageItem(item), moment: item);
-                        }
-                      }, childCount: model.moments.length),
-                    )
-                  ]),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: CommentEdit(_commentEditKey),
-              ),
-              Positioned(
-                top: -30,
-                left: 30,
-                child: MomentRefreshIndicator(
-                  key: _indicatorKey,
+    var model=MomentsModel();
+    return ViewModelProvider(
+      viewModel: model,
+      child: Scaffold(
+        //捕获回退键
+        body: NotificationListener(
+          child: WillPopScope(
+            child: Stack(
+              children: <Widget>[
+                CustomScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: _buildCover(),
+                      ),
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          var item = model.moments[index];
+                          switch (item.type) {
+                            case 1:
+                              return MomentItem(moment: item);
+                            case 4:
+                              return MomentItem(
+                                  child: AudioItem(moment: item), moment: item);
+                            case 2:
+                              return MomentItem(
+                                  child: buildImageGrid(item), moment: item);
+                            default:
+                              return MomentItem(
+                                  child: buildWebPageItem(item), moment: item);
+                          }
+                        }, childCount: model.moments.length),
+                      )
+                    ]),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: CommentEdit(_commentEditKey),
                 ),
-              ),
-              MomentAppBar(
-                key: _appbarKey,
-              ),
-            ],
+                Positioned(
+                  top: -30,
+                  left: 30,
+                  child: MomentRefreshIndicator(
+                    key: _indicatorKey,
+                  ),
+                ),
+                MomentAppBar(
+                  key: _appbarKey,
+                ),
+              ],
+            ),
+            onWillPop: () {
+              if (model.showCommentEdit.value) {
+                model.showCommentEdit.value = false;
+                return Future.value(false);
+              }
+              return Future.value(true);
+            },
           ),
-          onWillPop: () {
-            if (model.showCommentEdit.value) {
-              model.showCommentEdit.value = false;
-              return Future.value(false);
+          onNotification: (notification) {
+            if (notification is ScrollNotification) {
+              MomentAppBarState state =
+                  (_appbarKey.currentContext as StatefulElement).state;
+              state.handleScrollEvent(
+                  ScrollEvent(offset: notification.metrics.pixels));
             }
-            return Future.value(true);
-          },
-        ),
-        onNotification: (notification) {
-          if (notification is ScrollNotification) {
-            MomentAppBarState state =
-                (_appbarKey.currentContext as StatefulElement).state;
-            state.handleScrollEvent(
-                ScrollEvent(offset: notification.metrics.pixels));
-          }
 
-          if (notification is ScrollNotification && !_refreshing) {
-            MomentRefreshIndicatorState state =
-                (_indicatorKey.currentContext as StatefulElement).state;
-            if (notification is ScrollUpdateNotification &&
-                notification.metrics.pixels <= 0) {
-              if (notification.dragDetails != null) {
-                state.handleScrollEvent(
-                    ScrollEvent(type: 1, offset: notification.metrics.pixels));
-              } else {
-                if (notification.metrics.pixels < -140.0) {
-                  _refreshing = true;
-                  state.handleScrollEvent(ScrollEvent(
-                      type: 2, offset: notification.metrics.pixels));
-                  Future.delayed(Duration(seconds: 5), () {
-                    _refreshing = false;
+            if (notification is ScrollNotification && !_refreshing) {
+              MomentRefreshIndicatorState state =
+                  (_indicatorKey.currentContext as StatefulElement).state;
+              if (notification is ScrollUpdateNotification &&
+                  notification.metrics.pixels <= 0) {
+                if (notification.dragDetails != null) {
+                  state.handleScrollEvent(
+                      ScrollEvent(type: 1, offset: notification.metrics.pixels));
+                } else {
+                  if (notification.metrics.pixels < -140.0) {
+                    _refreshing = true;
+                    state.handleScrollEvent(ScrollEvent(
+                        type: 2, offset: notification.metrics.pixels));
+                    Future.delayed(Duration(seconds: 5), () {
+                      _refreshing = false;
+                      state.handleScrollEvent(ScrollEvent(
+                          type: 3, offset: notification.metrics.pixels));
+                    });
+                  } else {
                     state.handleScrollEvent(ScrollEvent(
                         type: 3, offset: notification.metrics.pixels));
-                  });
-                } else {
-                  state.handleScrollEvent(ScrollEvent(
-                      type: 3, offset: notification.metrics.pixels));
+                  }
                 }
               }
             }
-          }
 
-          if (notification is CommentEditNotification) {
-            CommentEditState state =
-                (_commentEditKey.currentContext as StatefulElement).state;
-            state.handleCommentEvent(notification);
-          } else if (notification is UserScrollNotification) {
-            CommentEditState state =
-                (_commentEditKey.currentContext as StatefulElement).state;
-            state.handleCommentEvent(CommentEditNotification(false));
-          } else if (notification is OverscrollNotification) {
-            print(notification);
-          }
-          return true;
-        },
+            if (notification is CommentEditNotification) {
+              CommentEditState state =
+                  (_commentEditKey.currentContext as StatefulElement).state;
+              state.handleCommentEvent(notification);
+            } else if (notification is UserScrollNotification) {
+              CommentEditState state =
+                  (_commentEditKey.currentContext as StatefulElement).state;
+              state.handleCommentEvent(CommentEditNotification(false));
+            } else if (notification is OverscrollNotification) {
+              print(notification);
+            }
+            return true;
+          },
+        ),
       ),
     );
+
   }
 
   Widget buildImageGrid(Moment moment) {
