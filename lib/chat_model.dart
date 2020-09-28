@@ -12,7 +12,7 @@ class ChatModel {
 
   final ScrollController dialogueScrollControl = ScrollController();
 
-  StreamSubscription<RecordStatus> recorderSubscription;
+  Stream<RecordingDisposition> recorderSubscription;
 
   String recordUri;
 

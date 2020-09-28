@@ -390,7 +390,7 @@ class MomentsState extends State<MomentsPage> {
 
   @override
   Widget build(BuildContext context) {
-    var model=MomentsModel();
+    var model = MomentsModel();
     return ViewModelProvider(
       viewModel: model,
       child: Scaffold(
@@ -464,8 +464,8 @@ class MomentsState extends State<MomentsPage> {
               if (notification is ScrollUpdateNotification &&
                   notification.metrics.pixels <= 0) {
                 if (notification.dragDetails != null) {
-                  state.handleScrollEvent(
-                      ScrollEvent(type: 1, offset: notification.metrics.pixels));
+                  state.handleScrollEvent(ScrollEvent(
+                      type: 1, offset: notification.metrics.pixels));
                 } else {
                   if (notification.metrics.pixels < -140.0) {
                     _refreshing = true;
@@ -500,7 +500,6 @@ class MomentsState extends State<MomentsPage> {
         ),
       ),
     );
-
   }
 
   Widget buildImageGrid(Moment moment) {
@@ -784,10 +783,23 @@ class AudioItem extends StatefulWidget {
 }
 
 class AudioItemState extends State<AudioItem> {
+  final AudioPlayer audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    audioPlayer.flutterSound.openAudioSession().then((value) => null);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    audioPlayer.flutterSound.stopPlayer();
+    audioPlayer.flutterSound.closeAudioSession();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final appModel = ViewModelProvider.of<AppModel>(context);
-
     return GestureDetector(
       child: Container(
         color: Color(0xffeeeeee),
@@ -805,12 +817,11 @@ class AudioItemState extends State<AudioItem> {
                 Positioned(
                   child: GestureDetector(
                     onTap: () {
-                      appModel.audioPlayer
-                          .playOrStop(this.widget.moment.audioLink);
+                      audioPlayer.playOrStop(this.widget.moment.audioLink);
                     },
                     child: PlayOrPauseIcon(
                       audioLink: this.widget.moment.audioLink,
-                      playStream: appModel.audioPlayer.playStream,
+                      playStream: audioPlayer.playStream,
                     ),
                   ),
                 )

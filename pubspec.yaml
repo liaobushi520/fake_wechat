@@ -23,10 +23,11 @@ dependencies:
   image_picker:
     0.6.1
   provider:
-    ^3.0.0
+    ^4.3.2+2
+  permission_handler: ^5.0.1
 
   flutter_sound:
-    ^2.1.1
+    ^6.0.1
 
   video_player:
      ^0.10.5
@@ -34,13 +35,13 @@ dependencies:
     ^0.11.3+16
   palette_generator:
     0.2.3
-
+  path_provider: '1.6.11'
 
   webview_flutter:
     ^0.3.19
 
   observable_ui:
-    path: ../fake_wechat/observable_ui
+    path: observable_ui
 
   sqflite: ^1.1.6
 

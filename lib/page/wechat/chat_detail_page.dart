@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
@@ -7,9 +8,12 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_app/data_source.dart';
 import 'package:flutter_app/photo_preview.dart';
 import 'package:flutter_app/server/ChatAI.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:observable_ui/provider.dart';
 import 'package:observable_ui/widgets2.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../app_model.dart';
 import '../../chat_model.dart';
@@ -31,6 +35,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   GlobalKey _recorderPanelKey = GlobalKey();
 
   FocusNode _focusNode = FocusNode();
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -473,25 +481,34 @@ class ControlPanelState extends State<ControlPanel> {
     widget.focusNode.removeListener(_focusChangedListener);
   }
 
-  _startRecording(ChatModel model, AppModel appModel) async {
-    model.recordUri = await appModel.recorder.startRecorder();
+  Future<bool> _startRecording(ChatModel model, AppModel appModel) async {
+    Map<Permission, PermissionStatus> status = await [Permission.microphone,Permission.storage].request();
+    if (status[Permission.microphone]!=PermissionStatus.granted||status[Permission.storage]!=PermissionStatus.granted){
+       return false;
+    }
+    appModel.recorder.openAudioSession();
+    var tempDir = await getTemporaryDirectory();
+    File outputFile = File ('${tempDir.path}/flutter_sound-tmp.aac');
+    await appModel.recorder.startRecorder(toFile: outputFile.path);
+    model.recordUri =outputFile.path;
     model.recording.value = !model.recording.value;
     print('startRecorder: ${model.recordUri}');
     model.recorderSubscription =
-        appModel.recorder.onRecorderStateChanged.listen((e) {
-      model.duration = e.currentPosition.toInt();
+        appModel.recorder.dispositionStream()..listen((e) {
+      model.duration = e.duration.inMilliseconds;
       model.voiceLevel.value = Random().nextInt(7);
     });
     setState(() {
       _recording = true;
     });
+
+    return true;
   }
 
   _stopRecording(ChatModel model, AppModel appModel) async {
-    String result = await appModel.recorder.stopRecorder();
-    print('stopRecorder: $result');
+    await appModel.recorder.stopRecorder();
+    await appModel.recorder.closeAudioSession();
     if (model.recorderSubscription != null) {
-      model.recorderSubscription.cancel();
       model.recorderSubscription = null;
     }
     if (model.recordUri == null || model.recordUri.length <= 0) {
@@ -603,9 +620,11 @@ class ControlPanelState extends State<ControlPanel> {
                                         ),
                                       ),
                                       onPointerDown: (details) async {
-                                        _startRecording(model, appModel);
-                                        ControlNotification(0, details)
-                                            .dispatch(context);
+                                        if(await _startRecording(model, appModel)){
+                                          ControlNotification(0, details)
+                                              .dispatch(context);
+                                        }
+
                                       },
                                       onPointerMove: (details) async {
                                         var recorderBtn = (_recorderBtnKey
@@ -848,7 +867,9 @@ class MessageBoxState extends State<MessageBox> {
           ),
         ),
         onTap: () {
-          appModel.recorder.startPlayer(message.url).then((s) {});
+          appModel.player.openAudioSession();
+          print("${message.url}");
+          appModel.player.startPlayer(fromURI:message.url).then((s) {});
         },
       ),
     ));

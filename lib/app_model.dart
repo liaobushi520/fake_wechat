@@ -4,5 +4,8 @@ import 'package:flutter_sound/flutter_sound.dart';
 class AppModel {
   final AudioPlayer audioPlayer = AudioPlayer();
 
-  final FlutterSound recorder = new FlutterSound();
+  final FlutterSoundRecorder recorder =  FlutterSoundRecorder();
+
+  final FlutterSoundPlayer player = FlutterSoundPlayer();
+
 }
