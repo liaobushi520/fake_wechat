@@ -139,7 +139,7 @@ class BookPageState extends State<BookPage> with AutomaticKeepAliveClientMixin {
                     height: MAGNIFIER_SIZE,
                     child: ClipOval(
                       child: Container(
-                        foregroundDecoration: BoxDecoration(  shape: BoxShape.circle,boxShadow: [BoxShadow()]),
+                       // foregroundDecoration: BoxDecoration(  shape: BoxShape.circle,boxShadow: [BoxShadow()]),
                         child: Image.memory(
                           image,
                           fit: BoxFit.none,
