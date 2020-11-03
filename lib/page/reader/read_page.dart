@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +23,6 @@ class ReadPageState extends State<ReadPage> {
       body: Stack(
         children: <Widget>[
           GestureDetector(
-
             child: PageView.builder(
                 itemCount: 100,
                 itemBuilder: (context, index) {
@@ -62,27 +61,14 @@ class BookPageState extends State<BookPage> with AutomaticKeepAliveClientMixin {
   GlobalKey globalKey = GlobalKey();
   FocusNode focusNode = FocusNode();
 
+  AnimationController _animationController;
+
   TextEditingController controller = TextEditingController(
       text:
           "前不久听说，业内最近出了《人类简史》这么一本“奇书”，作者是个名叫尤瓦尔·赫拉利的以色列年轻人。此书在2012年以希伯来文出版，很快就被翻译成近30种文字，不仅为全球学术界所瞩目，而且引起了公众的广泛兴趣。一部世界史新著竟能“火”成这样，实在是前所未闻。所以，当中信出版社请我为本书的中文版作序时，我也就出于好奇而暂时应承了下来：“先看看吧。”而这一看，我就立刻“着道”了——拿起了就放不下，几乎是一口气读完。吸引力主要来自作者才思的旷达敏捷，还有译者文笔的生动晓畅。而书中屡屡提及中国的相关史实，也能让人感到一种说不出的亲切，好像自己也融入其中，读来欲罢不能。后来看了策划编辑舒婷的特别说明，才知道该书中文版所参照的英文版，原来是作者特地为中国读者“量身定做”的。他给各国的版本也都下过同样的功夫——作者的功力之深，由此可见一斑。");
 
-  Future<Uint8List> _capturePng() async {
-    try {
-      RenderRepaintBoundary boundary =
-          globalKey.currentContext.findRenderObject();
-      var image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData byteData = await image.toByteData(format: ImageByteFormat.png);
-      Uint8List pngBytes = byteData.buffer.asUint8List();
-      return pngBytes;
-    } catch (e) {
-      print(e);
-    }
-    return null;
-  }
 
   OverlayEntry overlayEntry;
-
-  Uint8List image;
 
   ScrollController scrollController = ScrollController();
 
@@ -91,6 +77,7 @@ class BookPageState extends State<BookPage> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
+
     scrollController.addListener(() {
       print("${scrollController.offset}");
     });
@@ -99,10 +86,10 @@ class BookPageState extends State<BookPage> with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Container(
-      child: Listener(
-        child: RepaintBoundary(
-          key: globalKey,
+    return CaptureScreenContainer(
+      key: globalKey,
+      child: Container(
+        child: Listener(
           child: TextField(
             //  selectionControls: ,
             expands: true,
@@ -117,63 +104,61 @@ class BookPageState extends State<BookPage> with AutomaticKeepAliveClientMixin {
             style: TextStyle(color: Colors.black, fontSize: 24),
             decoration: null,
           ),
+          onPointerDown: (event) async {},
+          onPointerMove: (detail)   {
+            RenderBox renderObject =
+                globalKey.currentContext.findRenderObject();
+            if (renderObject is RenderCaptureScreen) {
+              var image =renderObject.image;
+              double dx =
+                  -1 + (2 * detail.localPosition.dx / renderObject.size.width);
+              double dy = -1 +
+                  (2 *
+                      (detail.localPosition.dy + scrollController.offset) /
+                      (scrollController.offset + renderObject.size.height));
+              overlayEntry?.remove();
+              double left, top;
+              if (detail.localPosition.dx <= MAGNIFIER_SIZE / 2) {
+                left = 0;
+              } else {
+                left = detail.localPosition.dx - MAGNIFIER_SIZE / 2;
+              }
+
+              if (detail.localPosition.dy + MAGNIFIER_SIZE >
+                  renderObject.size.height) {
+                top = detail.localPosition.dy - MAGNIFIER_SIZE;
+              } else {
+                top = detail.localPosition.dy;
+              }
+
+              overlayEntry = OverlayEntry(builder: (context) {
+                return Positioned(
+                    left: left,
+                    top: top,
+                    width: MAGNIFIER_SIZE,
+                    height: MAGNIFIER_SIZE,
+                    child: ClipOval(
+                      child: Container(
+                        foregroundDecoration: BoxDecoration(  shape: BoxShape.circle,boxShadow: [BoxShadow()]),
+                        child: Image.memory(
+                          image,
+                          fit: BoxFit.none,
+                          scale: 1,
+                          alignment: Alignment(dx, dy),
+                        ),
+                      ),
+                    ));
+              });
+              Overlay.of(context).insert(overlayEntry);
+            }
+          },
+          onPointerUp: (event) {
+            overlayEntry?.remove();
+            overlayEntry = null;
+          },
         ),
-        onPointerDown: (event) async {
-          if (image == null) {
-            image = await _capturePng();
-          }
-        },
-        onPointerMove: (detail) async {
-          RenderBox renderObject = globalKey.currentContext.findRenderObject();
-          double dx =
-              -1 + (2 * detail.localPosition.dx / renderObject.size.width);
-          double dy = -1 +
-              (2 *
-                  (detail.localPosition.dy + scrollController.offset) /
-                  (scrollController.offset + renderObject.size.height));
-          overlayEntry?.remove();
-
-          double left, top;
-          if (detail.localPosition.dx <= MAGNIFIER_SIZE / 2) {
-            left = 0;
-          } else {
-            left = detail.localPosition.dx - MAGNIFIER_SIZE / 2;
-          }
-
-          if (detail.localPosition.dy + MAGNIFIER_SIZE >
-              renderObject.size.height) {
-            top = detail.localPosition.dy - MAGNIFIER_SIZE;
-          } else {
-            top = detail.localPosition.dy;
-          }
-
-          overlayEntry = OverlayEntry(builder: (context) {
-            return Positioned(
-                left: left,
-                top: top,
-                width: MAGNIFIER_SIZE,
-                height: MAGNIFIER_SIZE,
-                child: ClipOval(
-                  child: Container(
-                    color: BG_COLORS[0],
-                    child: Image.memory(
-                      image,
-                      fit: BoxFit.none,
-                      scale: 3,
-                      alignment: Alignment(dx, dy),
-                    ),
-                  ),
-                )
-                );
-          });
-          Overlay.of(context).insert(overlayEntry);
-        },
-        onPointerUp: (event) {
-          overlayEntry?.remove();
-          overlayEntry = null;
-        },
+        color: BG_COLORS[0],
       ),
-      color: BG_COLORS[0],
     );
   }
 
@@ -212,4 +197,39 @@ class OperateLayerState extends State {
       ],
     );
   }
+}
+
+class CaptureScreenContainer extends SingleChildRenderObjectWidget {
+  const CaptureScreenContainer({Key key, Widget child})
+      : super(key: key, child: child);
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return RenderCaptureScreen();
+  }
+}
+
+class RenderCaptureScreen extends RenderProxyBox {
+  @override
+  bool get isRepaintBoundary => true;
+
+  Uint8List image;
+
+  RenderCaptureScreen({RenderBox child}) : super(child);
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    super.paint(context, offset);
+    final OffsetLayer offsetLayer = layer as OffsetLayer;
+     offsetLayer?.toImage(Offset.zero & size, pixelRatio: 1.0)?.then((value){
+     return  value.toByteData(format: ui.ImageByteFormat.png);
+     })?.then((value){
+      return value.buffer.asUint8List();
+     })?.then((value){
+        print("update image");
+       image=value;
+     });
+
+  }
+
 }

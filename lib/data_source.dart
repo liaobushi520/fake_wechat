@@ -84,7 +84,7 @@ final MIN_PROGRAMS = [
   }),
   MinProgram("QQ音乐", "http://pic.962.net/up/2016-4/2016418917511892.png",
       (context, item) {}),
-  MinProgram("豆瓣", "http://pic2.orsoon.com/2016/0914/20160914112533658.png",
+  MinProgram("豆瓣", "http://pic.962.net/up/2016-4/2016418917511892.png",
       (context, item) {
     Navigator.push(
       context,
